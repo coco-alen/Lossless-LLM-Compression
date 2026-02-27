@@ -3,23 +3,28 @@ Output-Preserving Compression: break the weight-entropy barrier.
 
 Key insight:
   Standard lossless compression treats weights as raw data — weight entropy
-  is the hard compression limit.  But if modifying a weight's LSBs does NOT
-  change any bf16 output (due to limited floating-point precision in matmul
-  accumulation), those bits are "free" and can be zeroed to lower entropy.
+  is the hard compression limit.  But if modifying a weight's mantissa LSBs
+  does NOT change the model's FINAL OUTPUT LOGITS, those bits are "free"
+  and can be zeroed to lower entropy → better compression.
+
+Why check final logits (not per-layer matmul output)?
+  A small change in one layer's matmul result may be absorbed by:
+    - Residual connections (adding back the unmodified residual stream)
+    - RMSNorm / LayerNorm (re-scaling activations)
+    - Subsequent layers (masking small perturbations)
+  So per-layer checking is too conservative.  End-to-end logit checking
+  finds MORE free bits because it accounts for the full model's tolerance.
 
 Algorithm:
-  1. Run calibration data through the model, capture each linear layer's
-     input activations via hooks.
-  2. For each linear layer, try zeroing the last k = 1..7 mantissa bits of
-     ALL weights simultaneously.
-  3. Recompute Y = X @ W_modified.T in bf16 and check bit-identity with
-     the original output.
-  4. Record the maximum k (free bits) per layer.  k free bits means the
-     effective mantissa is (7-k) bits → lower entropy → better compression.
-
-Because we verify bf16-identity at EACH layer independently, the guarantee
-composes: if every layer's output is bit-identical, the full model output
-is bit-identical for the calibration inputs.
+  1. Run calibration data, record reference logits (the ground truth).
+  2. Process layers SEQUENTIALLY (layer 0, 1, …, L-1).
+     For each layer, for each weight type (q_proj, k_proj, ...):
+       - Binary search k ∈ [0, 7]: temporarily zero k mantissa LSBs,
+         run FULL model forward pass, check if final logits are bit-identical.
+       - Apply the maximum safe k PERMANENTLY before moving to next layer.
+     Sequential ordering ensures cumulative effects are captured:
+     earlier modifications are present when testing later layers.
+  3. Report per-layer free bits, entropy reduction, and compression gain.
 
 Usage:
     python -m new_compression.sensitivity_compress \
@@ -32,9 +37,7 @@ Usage:
 
 import os
 import json
-import math
 from argparse import ArgumentParser
-from collections import defaultdict
 
 import torch
 import numpy as np
@@ -72,141 +75,118 @@ WEIGHT_TYPES = (
 
 def zero_mantissa_lsb(weight_bf16: torch.Tensor, k: int) -> torch.Tensor:
     """
-    Zero the last k mantissa bits of a bf16 tensor.
+    Zero the last k mantissa bits of a bf16 tensor (in-place friendly).
 
     BFloat16 layout: [1 sign | 8 exponent | 7 mantissa]
-    Zeroing k mantissa LSBs means mask = 0xFFFF << k applied to raw bits.
-    For k=0 → no change; k=7 → only sign+exponent remain.
+    k=0 → no change; k=7 → only sign+exponent remain.
     """
     if k <= 0:
-        return weight_bf16.clone()
+        return weight_bf16
     raw = weight_bf16.view(torch.int16)
-    mask = ~((1 << k) - 1)  # e.g. k=2 → mask = 0xFFFC
+    mask = ~((1 << k) - 1)
     return (raw & mask).view(torch.bfloat16)
 
 
 # ---------------------------------------------------------------------------
-# Hook-based activation capture
+# End-to-end logit checking
 # ---------------------------------------------------------------------------
 
-class ActivationCapture:
-    """Capture input activations for specified modules during forward pass."""
-
-    def __init__(self):
-        self.captured = {}   # module_name → list of input tensors
-        self._hooks = []
-
-    def register(self, model, num_layers):
-        """Register hooks on all linear layers inside decoder layers."""
-        for layer_idx in range(num_layers):
-            layer = model.model.layers[layer_idx]
-            for wt in WEIGHT_TYPES:
-                parts = wt.split('.')
-                module = layer
-                for p in parts:
-                    module = getattr(module, p)
-
-                name = f"layers.{layer_idx}.{wt}"
-                self.captured[name] = []
-
-                hook = module.register_forward_hook(
-                    self._make_hook(name)
-                )
-                self._hooks.append(hook)
-
-    def _make_hook(self, name):
-        def hook_fn(module, input, output):
-            # input[0]: (batch, seq_len, in_features)
-            self.captured[name].append(input[0].detach().cpu())
-        return hook_fn
-
-    def remove_hooks(self):
-        for h in self._hooks:
-            h.remove()
-        self._hooks.clear()
+def get_reference_logits(model, calib_token_ids, device):
+    """Run full model forward on all calibration inputs, return logits (cpu)."""
+    ref = []
+    with torch.no_grad():
+        for ids in calib_token_ids:
+            logits = model(ids.to(device), use_cache=False).logits
+            ref.append(logits.cpu())
+    return ref
 
 
-# ---------------------------------------------------------------------------
-# Per-layer analysis
-# ---------------------------------------------------------------------------
-
-def check_output_identity(weight_orig_bf16, weight_mod_bf16, calib_inputs, device):
-    """
-    Check if modifying weight produces bit-identical bf16 output on all
-    calibration inputs.
-
-    Computes Y = X @ W.T in bf16 for both original and modified weights,
-    returns True if all outputs match exactly.
-    """
-    W_orig = weight_orig_bf16.to(device)
-    W_mod = weight_mod_bf16.to(device)
-
-    for X_cpu in calib_inputs:
-        X = X_cpu.to(device).to(torch.bfloat16)
-        # (batch, seq, in_feat) @ (out_feat, in_feat).T → (batch, seq, out_feat)
-        Y_orig = torch.matmul(X, W_orig.T)
-        Y_mod = torch.matmul(X, W_mod.T)
-
-        if not torch.equal(Y_orig, Y_mod):
-            return False
-
+def check_logits_identical(model, calib_token_ids, ref_logits, device):
+    """Return True if model's current logits are bit-identical to ref on all inputs."""
+    with torch.no_grad():
+        for i, ids in enumerate(calib_token_ids):
+            logits = model(ids.to(device), use_cache=False).logits
+            if not torch.equal(logits.cpu(), ref_logits[i]):
+                return False
     return True
 
 
-def find_max_free_bits(weight_bf16, calib_inputs, device):
-    """
-    Find the maximum number of mantissa LSBs that can be zeroed without
-    changing bf16 output on calibration data.
+# ---------------------------------------------------------------------------
+# Weight access helpers
+# ---------------------------------------------------------------------------
 
-    Returns max_k in [0, 7].
-    """
-    max_k = 0
-    for k in range(1, 8):  # 1..7 mantissa bits
-        W_mod = zero_mantissa_lsb(weight_bf16, k)
-        if check_output_identity(weight_bf16, W_mod, calib_inputs, device):
-            max_k = k
-        else:
-            break
-    return max_k
+def get_module(model, layer_idx, wt):
+    """Navigate to a specific nn.Linear inside a decoder layer."""
+    layer = model.model.layers[layer_idx]
+    module = layer
+    for p in wt.split('.'):
+        module = getattr(module, p)
+    return module
 
 
 # ---------------------------------------------------------------------------
-# Entropy estimation
+# Binary search: max free bits checked against final logits
+# ---------------------------------------------------------------------------
+
+def find_max_free_bits_logit(model, layer_idx, wt,
+                             calib_token_ids, ref_logits, device):
+    """
+    Binary search for max k ∈ [0,7] mantissa LSBs that can be zeroed
+    without changing the model's final logits.
+    """
+    module = get_module(model, layer_idx, wt)
+    W_orig = module.weight.data.clone()
+
+    lo, hi = 0, 7
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        # temporarily apply modification
+        module.weight.data.copy_(zero_mantissa_lsb(W_orig, mid))
+        if check_logits_identical(model, calib_token_ids, ref_logits, device):
+            lo = mid      # safe, try more aggressive
+        else:
+            hi = mid - 1  # too aggressive
+
+    # restore original (caller will apply permanently if desired)
+    module.weight.data.copy_(W_orig)
+    return lo
+
+
+# ---------------------------------------------------------------------------
+# Entropy / compression helpers
 # ---------------------------------------------------------------------------
 
 def estimate_entropy_bf16(weight_bf16: torch.Tensor) -> float:
-    """Estimate Shannon entropy (bits per element) of bf16 tensor viewed as int16."""
+    """Shannon entropy (bits/element) of bf16 viewed as int16."""
     raw = weight_bf16.contiguous().view(torch.int16).flatten()
-    vals, counts = torch.unique(raw, return_counts=True)
+    _, counts = torch.unique(raw, return_counts=True)
     probs = counts.float() / counts.sum()
     return -(probs * probs.log2()).sum().item()
 
 
 def estimate_huffman_size(weight_bf16: torch.Tensor) -> int:
-    """Estimate Huffman-compressed size in bytes (high byte + raw low byte, like DFloat11)."""
+    """DFloat11-style estimate: Huffman(high byte) + raw(low byte)."""
     raw = weight_bf16.contiguous().view(torch.uint8)
-    low_bytes = raw[0::2].numpy()   # little-endian: low first
+    low_bytes = raw[0::2].numpy()
     high_bytes = raw[1::2].numpy()
 
-    # Huffman on high byte
     vals, counts = np.unique(high_bytes, return_counts=True)
     freq = {int(v): int(c) for v, c in zip(vals, counts)}
     codec = HuffmanCodec.from_frequencies(freq)
     encoded = codec.encode(high_bytes.tolist())
-
     return len(encoded) + len(low_bytes)
 
 
 # ---------------------------------------------------------------------------
-# Main analysis
+# Main
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = ArgumentParser("Output-Preserving Sensitivity Compression")
+    parser = ArgumentParser("Output-Preserving Compression (logit-level)")
     parser.add_argument('--model_name_or_path', type=str, default='Qwen/Qwen3-1.7B')
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--save_modified_weights', type=str, default=None,
-                        help='If set, save the modified (LSB-zeroed) weights to this path')
+                        help='Save the LSB-zeroed model to this path')
     parser.add_argument('--max_calib_tokens', type=int, default=128,
                         help='Max tokens per calibration prompt')
     args = parser.parse_args()
@@ -233,162 +213,148 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # ---- Capture calibration activations ----
-    print("Running calibration forward passes...")
-    capture = ActivationCapture()
-    capture.register(model, num_layers)
+    # ---- Tokenize calibration prompts ----
+    calib_token_ids = []
+    for prompt in CALIBRATION_PROMPTS:
+        ids = tokenizer(
+            prompt, return_tensors="pt",
+            max_length=args.max_calib_tokens, truncation=True,
+        ).input_ids
+        calib_token_ids.append(ids)
 
-    with torch.no_grad():
-        for prompt in tqdm(CALIBRATION_PROMPTS, desc="Calibration"):
-            inputs = tokenizer(
-                prompt, return_tensors="pt",
-                max_length=args.max_calib_tokens, truncation=True,
-            ).to(device)
-            model(**inputs, use_cache=False)
+    # ---- Compute reference logits ----
+    print("Computing reference logits...")
+    ref_logits = get_reference_logits(model, calib_token_ids, device)
+    print(f"  {len(ref_logits)} prompts, logit shapes: "
+          f"{[l.shape for l in ref_logits[:3]]}...")
 
-    capture.remove_hooks()
-    print(f"Captured activations for {len(capture.captured)} modules "
-          f"({len(CALIBRATION_PROMPTS)} prompts each)")
-
-    # ---- Analyze each layer and weight type ----
-    print("\nAnalyzing mantissa free bits per layer...")
+    # ---- Sequential layer-by-layer analysis ----
+    #
+    # KEY: process in order.  After finding safe k for layer l, APPLY it
+    # permanently, then update reference logits.  This way, when testing
+    # layer l+1, all prior modifications are in effect → cumulative effects
+    # are fully captured.
+    #
+    print("\nAnalyzing free mantissa bits (end-to-end logit check)...")
+    print("  Binary search: ~3 full forward passes × 7 weight types per layer")
     print("=" * 90)
+
     header = f"  {'Layer':<8}"
     for wt in WEIGHT_TYPES:
-        short = wt.split('.')[-1]
-        header += f" {short:>9}"
+        header += f" {wt.split('.')[-1]:>9}"
     print(header)
     print("-" * 90)
 
     results = {}  # (layer_idx, wt) → max_k
-    total_orig_bytes = 0
-    total_modified_bytes = 0
 
-    for layer_idx in range(num_layers):
+    for layer_idx in tqdm(range(num_layers), desc="Layers"):
         row = f"  {layer_idx:<8}"
+
         for wt in WEIGHT_TYPES:
-            name = f"layers.{layer_idx}.{wt}"
-            calib_inputs = capture.captured[name]
-
-            # Get original weight
-            layer = model.model.layers[layer_idx]
-            parts = wt.split('.')
-            module = layer
-            for p in parts:
-                module = getattr(module, p)
-            W = module.weight.data.detach().cpu()
-
-            # Find max free bits
-            max_k = find_max_free_bits(W, calib_inputs, device)
+            max_k = find_max_free_bits_logit(
+                model, layer_idx, wt,
+                calib_token_ids, ref_logits, device,
+            )
             results[(layer_idx, wt)] = max_k
 
+            # Apply permanently
+            if max_k > 0:
+                module = get_module(model, layer_idx, wt)
+                module.weight.data.copy_(
+                    zero_mantissa_lsb(module.weight.data, max_k)
+                )
+
             row += f" {max_k:>9}"
-        print(row)
 
-    # ---- Summary statistics ----
-    print("\n" + "=" * 90)
-    print("Summary: average free bits per weight type")
-    print("=" * 90)
+        # Update reference logits (reflects all modifications up to this layer)
+        ref_logits = get_reference_logits(model, calib_token_ids, device)
+        tqdm.write(row)
 
-    print(f"\n  {'Weight Type':<23} {'Avg Free Bits':>14} {'Orig H (b)':>11} "
-          f"{'Modified H (b)':>15} {'Orig Size':>11} {'Mod Size':>11} {'Ratio':>8}")
-    print(f"  {'-'*23} {'-'*14} {'-'*11} {'-'*15} {'-'*11} {'-'*11} {'-'*8}")
+    # ---- Reload original model for comparison ----
+    print("\nReloading original model for compression comparison...")
+    model_orig = AutoModelForCausalLM.from_pretrained(
+        args.model_name_or_path, torch_dtype=torch.bfloat16,
+    ).eval()
+
+    # ---- Summary ----
+    print("\n" + "=" * 100)
+    print("Summary: free bits & compression gain per weight type")
+    print("=" * 100)
+    print(f"  {'Weight Type':<23} {'Avg Free':>9} {'Orig H':>9} {'Mod H':>9} "
+          f"{'Orig Size':>11} {'Mod Size':>11} {'Saving':>8}")
+    print(f"  {'-'*23} {'-'*9} {'-'*9} {'-'*9} {'-'*11} {'-'*11} {'-'*8}")
+
+    total_orig_bytes = 0
+    total_mod_bytes = 0
+    raw_total = 0
 
     for wt in WEIGHT_TYPES:
         free_bits = [results[(l, wt)] for l in range(num_layers)]
         avg_free = np.mean(free_bits)
 
-        # Compute entropy and size for original vs modified
         orig_tensors = []
         mod_tensors = []
-        for l in range(num_layers):
-            layer = model.model.layers[l]
-            parts = wt.split('.')
-            module = layer
-            for p in parts:
-                module = getattr(module, p)
-            W = module.weight.data.detach().cpu()
-            orig_tensors.append(W)
-            mod_tensors.append(zero_mantissa_lsb(W, results[(l, wt)]))
 
-        W_orig_cat = torch.cat([t.flatten() for t in orig_tensors])
-        W_mod_cat = torch.cat([t.flatten() for t in mod_tensors])
+        for l in range(num_layers):
+            W_orig = get_module(model_orig, l, wt).weight.data.cpu()
+            W_mod = get_module(model, l, wt).weight.data.cpu()
+            orig_tensors.append(W_orig.flatten())
+            mod_tensors.append(W_mod.flatten())
+            raw_total += W_orig.numel() * 2
+
+        W_orig_cat = torch.cat(orig_tensors)
+        W_mod_cat = torch.cat(mod_tensors)
 
         h_orig = estimate_entropy_bf16(W_orig_cat)
         h_mod = estimate_entropy_bf16(W_mod_cat)
-
         orig_bytes = estimate_huffman_size(W_orig_cat)
         mod_bytes = estimate_huffman_size(W_mod_cat)
 
         total_orig_bytes += orig_bytes
-        total_modified_bytes += mod_bytes
+        total_mod_bytes += mod_bytes
+        saving = (1 - mod_bytes / orig_bytes) * 100
 
-        ratio = mod_bytes / orig_bytes * 100
+        print(f"  {wt:<23} {avg_free:>7.1f} b {h_orig:>7.2f} b {h_mod:>7.2f} b "
+              f"{orig_bytes/1e6:>9.2f}MB {mod_bytes/1e6:>9.2f}MB {saving:>6.1f}%")
 
-        print(f"  {wt:<23} {avg_free:>12.1f} b {h_orig:>9.2f} b "
-              f"{h_mod:>13.2f} b {orig_bytes/1e6:>9.2f}MB {mod_bytes/1e6:>9.2f}MB {ratio:>6.1f}%")
+    del model_orig
 
-    raw_total = sum(
-        model.model.layers[l].self_attn.q_proj.weight.numel()
-        for l in range(num_layers)
-        for wt in WEIGHT_TYPES
-    ) * 2  # bf16 = 2 bytes
-    # Fix: compute properly
-    raw_total = 0
-    for l in range(num_layers):
-        layer = model.model.layers[l]
-        for wt in WEIGHT_TYPES:
-            parts = wt.split('.')
-            module = layer
-            for p in parts:
-                module = getattr(module, p)
-            raw_total += module.weight.numel() * 2
+    print(f"\n  Raw bf16 size:            {raw_total/1e6:>10.2f} MB")
+    print(f"  Huffman (original):       {total_orig_bytes/1e6:>10.2f} MB  "
+          f"({total_orig_bytes/raw_total*100:.1f}% of raw)")
+    print(f"  Huffman (logit-zeroed):   {total_mod_bytes/1e6:>10.2f} MB  "
+          f"({total_mod_bytes/raw_total*100:.1f}% of raw)")
+    print(f"  Additional saving:        {(total_orig_bytes - total_mod_bytes)/1e6:>10.2f} MB  "
+          f"({(1 - total_mod_bytes/total_orig_bytes)*100:.1f}% beyond baseline Huffman)")
 
-    print(f"\n  Raw bf16 size:         {raw_total/1e6:>10.2f} MB")
-    print(f"  Huffman (original):    {total_orig_bytes/1e6:>10.2f} MB  "
-          f"({total_orig_bytes/raw_total*100:.1f}%)")
-    print(f"  Huffman (LSB-zeroed):  {total_modified_bytes/1e6:>10.2f} MB  "
-          f"({total_modified_bytes/raw_total*100:.1f}%)")
-    print(f"  Additional saving:     {(total_orig_bytes-total_modified_bytes)/1e6:>10.2f} MB  "
-          f"({(1-total_modified_bytes/total_orig_bytes)*100:.1f}% over baseline Huffman)")
-
-    # ---- Optionally save modified weights ----
+    # ---- Optionally save ----
     if args.save_modified_weights:
         save_dir = args.save_modified_weights
         os.makedirs(save_dir, exist_ok=True)
-        print(f"\nSaving modified weights to {save_dir}...")
-
-        # Apply modifications to model in-place
-        for l in range(num_layers):
-            layer = model.model.layers[l]
-            for wt in WEIGHT_TYPES:
-                parts = wt.split('.')
-                module = layer
-                for p in parts:
-                    module = getattr(module, p)
-                k = results[(l, wt)]
-                if k > 0:
-                    module.weight.data = zero_mantissa_lsb(
-                        module.weight.data.cpu(), k
-                    ).to(module.weight.device)
+        print(f"\nSaving modified model to {save_dir}...")
 
         model.save_pretrained(save_dir)
         tokenizer.save_pretrained(save_dir)
 
-        # Save analysis results
         analysis = {
             'model_name_or_path': args.model_name_or_path,
-            'free_bits': {f"{l}.{wt}": results[(l, wt)]
-                          for l in range(num_layers) for wt in WEIGHT_TYPES},
+            'architecture': arch,
+            'num_layers': num_layers,
+            'method': 'logit-level LSB zeroing (sequential, cumulative)',
+            'num_calib_prompts': len(CALIBRATION_PROMPTS),
+            'free_bits': {
+                f"layers.{l}.{wt}": results[(l, wt)]
+                for l in range(num_layers) for wt in WEIGHT_TYPES
+            },
             'raw_bytes': raw_total,
             'huffman_orig_bytes': total_orig_bytes,
-            'huffman_mod_bytes': total_modified_bytes,
+            'huffman_mod_bytes': total_mod_bytes,
         }
         with open(os.path.join(save_dir, 'sensitivity_analysis.json'), 'w') as f:
             json.dump(analysis, f, indent=2)
 
-        print(f"Done! Modified model saved to {save_dir}")
-        print("This model produces BIT-IDENTICAL bf16 outputs on calibration-like inputs.")
+        print(f"Done!  Modified model saved to: {save_dir}")
+        print("Final logits are BIT-IDENTICAL to original on all calibration inputs.")
 
 
 if __name__ == '__main__':
