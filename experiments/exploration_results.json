@@ -1,0 +1,76 @@
+{
+  "model": "Qwen/Qwen3-1.7B",
+  "num_layers": 28,
+  "summary": [
+    {
+      "method": "1. DFloat11 baseline",
+      "ratio": 66.61892064980098,
+      "bpw": 10.659027303968157
+    },
+    {
+      "method": "2. Huffman(exp)+Huffman(sm)",
+      "ratio": 66.6369637563115,
+      "bpw": 10.661914201009841
+    },
+    {
+      "method": "3. XL-delta(exp)+raw(sm)",
+      "ratio": 71.8049712124325,
+      "bpw": 11.4887953939892
+    },
+    {
+      "method": "4. XL-delta(both)+Huffman",
+      "ratio": 71.82882811341968,
+      "bpw": 11.492612498147148
+    },
+    {
+      "method": "5. XL-delta+predict(both)",
+      "ratio": 73.50530752113887,
+      "bpw": 11.76084920338222
+    },
+    {
+      "method": "6. Exp-conditioned mantissa",
+      "ratio": 66.29288877759662,
+      "bpw": 10.606862204415458
+    },
+    {
+      "method": "6b. Exp-cond (no overhead)",
+      "ratio": 66.18144061593783,
+      "bpw": 10.589030498550052
+    },
+    {
+      "method": "7. Full int16 delta+pred+Huf",
+      "ratio": 73.53448608801479,
+      "bpw": 11.765517774082365
+    },
+    {
+      "method": "8. DFloat11 exp+predict(sm)",
+      "ratio": 66.64281785488129,
+      "bpw": 10.662850856781006
+    },
+    {
+      "method": "9. XL-delta(exp)+predict(sm)",
+      "ratio": 71.82886841751281,
+      "bpw": 11.492618946802049
+    },
+    {
+      "method": "10. XL-delta(both)+pred(exp)",
+      "ratio": 73.50483809908232,
+      "bpw": 11.760774095853172
+    },
+    {
+      "method": "11. XL-mean-delta(both)+Huf",
+      "ratio": 70.36038722310748,
+      "bpw": 11.257661955697197
+    },
+    {
+      "method": "12. XL-delta+pred entropy LB",
+      "ratio": 73.3400261473088,
+      "bpw": 11.734404183569408
+    },
+    {
+      "method": "13. Entropy lower bound",
+      "ratio": 66.21840064014707,
+      "bpw": 10.594944102423531
+    }
+  ]
+}
