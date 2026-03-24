@@ -79,3 +79,6 @@
 | 5 | Two-Stream v4 (8 elem/th) | 77.2% | 165 | PASS | Superseded |
 | **6** | **Two-Stream v5 (16 elem/th, batched)** | **77.1%** | **584** | **PASS** | **⭐ BEST** |
 | 7 | Config sweep | — | — | FAIL | Abandoned |
+| 8 | Fused decode+GEMM (Triton) | 75% | 0.4-0.6x dense | N/A | Prototype, 2-5x slower |
+| 9 | Hybrid ANS on exp stream | **73.4%** | Est. slower | PASS(CPU) | 3.7pp better ratio, nvCOMP unstable |
+| 10 | Interleaved block layout | 77.1% | 250 (0.97x v5) | FAIL | Cache benefit nonexistent on H200 |
