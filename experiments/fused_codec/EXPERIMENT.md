@@ -82,3 +82,23 @@
 | 8 | Fused decode+GEMM (Triton) | 75% | 0.4-0.6x dense | N/A | Prototype, 2-5x slower |
 | 9 | Hybrid ANS on exp stream | **73.4%** | Est. slower | PASS(CPU) | 3.7pp better ratio, nvCOMP unstable |
 | 10 | Interleaved block layout | 77.1% | 250 (0.97x v5) | FAIL | Cache benefit nonexistent on H200 |
+| 11 | Branchless near-lossless | 75.0% | 466 per-layer | N/A | 1.6x faster, escape handling = 38% of cost |
+| 12 | Triton decode | — | — | FAIL | Triton kernel bugs, abandoned |
+
+## Key Insights
+
+1. **Two-stream separation is the winning idea**: Separating FP8 into exponent (2-bit codes) and sign+mantissa (4-bit raw) enables both good compression (77%) and fast fixed-width decode.
+
+2. **Escape handling costs 38% of kernel time** (466 vs 290 GB/s). For near-lossless inference, skipping escapes is a viable option.
+
+3. **Batched decode eliminates kernel launch overhead**: Single kernel for all 197 layers: 584 GB/s vs 290 GB/s per-layer.
+
+4. **The compression-throughput Pareto frontier**:
+   - 70.4%: ANS (CPU only, entropy optimal)
+   - 73.4%: Two-stream + ANS on exp (hybrid, needs nvCOMP)
+   - 75.0%: Branchless near-lossless (466 GB/s per-layer)
+   - **77.1%: Two-stream lossless (584 GB/s batched) ← BEST practical**
+   - 85.7%: nvCOMP ANS (29-56 GB/s)
+   - 100%: Dense FP8
+
+5. **Memory bandwidth utilization**: 584 GB/s = 12% of H200's 4.8 TB/s. The kernel is compute-bound (prefix sum, branches), not bandwidth-bound.
