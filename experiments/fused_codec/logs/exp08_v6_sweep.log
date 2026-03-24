@@ -1,0 +1,22 @@
+==========================================================================================
+FP8 Two-Stream v6: Configuration Sweep
+==========================================================================================
+`torch_dtype` is deprecated! Use `dtype` instead!
+
+--- threads=256, elems/thread=8 (elems/block=2048) ---
+  Ratio: 77.23%  |  Dec GB/s: 252.6  |  Total: 2.36 ms  |  Lossless: FAIL
+
+--- threads=256, elems/thread=16 (elems/block=4096) ---
+  Ratio: 77.14%  |  Dec GB/s: 252.1  |  Total: 2.36 ms  |  Lossless: FAIL
+
+--- threads=256, elems/thread=32 (elems/block=8192) ---
+  Ratio: 77.09%  |  Dec GB/s: 184.5  |  Total: 3.23 ms  |  Lossless: FAIL
+
+--- threads=512, elems/thread=8 (elems/block=4096) ---
+  Ratio: 77.14%  |  Dec GB/s: 252.1  |  Total: 2.36 ms  |  Lossless: FAIL
+
+--- threads=512, elems/thread=16 (elems/block=8192) ---
+  Ratio: 77.09%  |  Dec GB/s: 233.8  |  Total: 2.55 ms  |  Lossless: FAIL
+
+--- threads=512, elems/thread=32 (elems/block=16384) ---
+  Ratio: 77.06%  |  Dec GB/s: 149.8  |  Total: 3.98 ms  |  Lossless: FAIL
