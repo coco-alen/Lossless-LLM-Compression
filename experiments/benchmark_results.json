@@ -1,0 +1,42 @@
+{
+  "Qwen/Qwen3-0.6B_bf16": {
+    "format": "bf16",
+    "total_params": 596049920,
+    "original_mb": 1192.09984,
+    "compressed_mb": 793.136988,
+    "ratio": 66.53276524221326,
+    "n_layers": 310
+  },
+  "Qwen/Qwen3-8B_bf16": {
+    "format": "bf16",
+    "total_params": 8190735360,
+    "original_mb": 16381.47072,
+    "compressed_mb": 10828.743716,
+    "ratio": 66.10361121470784,
+    "n_layers": 399
+  },
+  "Qwen/Qwen3-0.6B_fp8": {
+    "format": "fp8_e4m3fn",
+    "total_params": 596049920,
+    "original_mb": 596.04992,
+    "compressed_mb": 419.743632,
+    "ratio": 70.42088555267317,
+    "n_layers": 310
+  },
+  "Qwen/Qwen3-8B_fp8": {
+    "format": "fp8_e4m3fn",
+    "total_params": 8190735360,
+    "original_mb": 8190.73536,
+    "compressed_mb": 5659.002204,
+    "ratio": 69.09028256041714,
+    "n_layers": 399
+  },
+  "Qwen/Qwen3-0.6B_sim_int4": {
+    "format": "simulated_int4",
+    "total_params": 596042752,
+    "original_mb": 298.021376,
+    "compressed_mb": 220.708056,
+    "ratio": 74.05779376040462,
+    "n_layers": 0
+  }
+}

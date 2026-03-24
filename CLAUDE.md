@@ -9,9 +9,17 @@ If you find any improvements, please be sure to record them. If the improvements
 
 ## Project Overview
 
-DFloat11 is a **lossless compression framework** for LLM and diffusion model weights. It compresses BFloat16 weights ~30% by Huffman-coding the 8-bit exponent, storing the sign+mantissa byte raw. This codebase is a fork of DFloat11. My previous goal is to explore a lossless LLM compression method with a higher compression ratio. I've already done some research, and the code is in the `new_compression` and `experiment` folder, but the results haven't been good.
+DFloat11, as the baseline, is a **lossless compression framework** for LLM and diffusion model weights. It compresses BFloat16 weights ~30% by Huffman-coding the 8-bit exponent, storing the sign+mantissa byte raw. This codebase is a fork of DFloat11. My previous goal is to explore a lossless LLM compression method with a higher compression ratio. I've already done some research, and the code is in the `experiment/new_compression` and `experiment` folder, but the results haven't been good.
 
-Now, let's change the target. Currently, there are some lossless compression methods for LLM weights. However, it seems there is no lossless compression method for the optimizer during LLM training. When using Adamw, it is necessary to store two sets of FP32 values ​​with an amount equal to the number of LLM parameters. Wouldn't this have a larger overhead?
+
+## GPU Environment
+
+- This machine has direct GPU access (no SSH needed)
+- GPU: 1x H200 143GB
+- Experiment environment: `quant`
+- Activate before any Python command: `conda activate quant` (uv, conda, etc.)
+- Code directory: `/home/sky/Lossless-LLM-Compression`
+- Instruction: You will share the GPU with other programs; do not attempt to terminate other programs.
 
 
 ## Build & Install
@@ -93,10 +101,3 @@ Research code exploring compression beyond DFloat11's exponent-only Huffman appr
 - `analyze_cross_layer.py` — Generates 3D waterfall plots comparing original vs delta-from-mean weight distributions across layers; prints entropy/std statistics.
 - `analyze_dual_group.py` — Additional cross-layer analysis.
 
-## Key Conventions
-
-- All weight compression assumes **BFloat16** input tensors — assertions enforce this.
-- The CUDA kernel config uses `threads_per_block=(512,)` and `bytes_per_thread=8` as constants.
-- Compressed models store a `dfloat11_config` dict in `config.json` containing `version`, `threads_per_block`, `bytes_per_thread`, and `pattern_dict`.
-- Multi-device distribution uses HuggingFace Accelerate's `dispatch_model` with `no_split_module_classes` derived from `pattern_dict` to keep compressed buffers on the same device as their module.
-- CPU offloading pins `encoded_exponent` and `sign_mantissa` tensors to host memory and transfers them to GPU on-demand per forward pass.

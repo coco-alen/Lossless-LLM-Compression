@@ -226,3 +226,99 @@ Model: Qwen3-0.6B, 596M params, FP32 optimizer states = 4548 MB total.
 | `35_streaming_compression.py` | ⚠️ | Streaming (no peak improvement) |
 | `36_perparam_compression.py` | ⚠️ | Per-param (great peak, 4x slow) |
 | `37_grouped_compression.py` | ✅⭐ | **Best in-GPU: grouped+chunked+compiled, -285 MB, 1.44x** |
+| `pilot_delta_offload.py` | ❌ | Delta-compressed CPU offload for v (see below) |
+| `pilot_v_prediction.py` | ✅⭐⭐ | **Temporal prediction coding for v: 86-94% exact match, ~1 bit/value residual** |
+
+---
+
+### Pilot: Delta-Compressed CPU Offload for v — `pilot_delta_offload.py`
+**Result: NOT viable. Sparse scatter dominates; no transfer speedup.**
+
+Hypothesis: Since v changes only ~22% of BF16 values per step (β₂=0.999), transfer only the delta instead of full v during CPU offload.
+
+Findings (Qwen3-0.6B, H200):
+- **v changes 32.9% per step** (higher than the 22% measured earlier — possibly due to fewer warmup steps or different random data)
+- Full v size: 1137 MB
+- Sparse COO (idx+val per change): 1123 MB (98.8% of full) — essentially no savings because 6 bytes/change × 33% changes ≈ 2× dense
+- Bitmask + changed values: 445 MB (39.2%) — best format
+- **Transfer times are bandwidth-bound, not size-bound**: sparse COO transfers at the same speed as full dense (42.6 ms vs 43.1 ms roundtrip). PCIe transfers of scattered GPU memory are not faster than contiguous.
+- **Sparse scatter is the killer**: GPU scatter (`tensor[indices] = values`) in the end-to-end benchmark makes delta 7.7x SLOWER than full offload (344 ms vs 43 ms)
+- Delta compute (XOR + mask + nonzero) alone takes ~6 ms, acceptable
+- The bitmask format saves 61% of transfer bytes, but the pack/unpack + scatter overhead far exceeds any transfer savings
+
+**Why it fails:**
+1. PCIe GPU↔CPU transfers are dominated by latency, not bandwidth at these sizes. Transferring 445 MB vs 1137 MB saves only marginal time.
+2. Sparse scatter (`v[changed_indices] = new_values`) is extremely slow on both CPU and GPU — random-access writes kill cache performance.
+3. The full dense `copy_()` uses optimized DMA that sparse formats cannot match.
+
+---
+
+### Pilot: Temporal Prediction Coding for v — `pilot_v_prediction.py`
+**Result: EXTREMELY PROMISING. v is almost entirely predictable from grad².**
+
+Hypothesis: Since v[t+1] = β₂·v[t] + (1-β₂)·grad², and we have grad² during the optimizer step, we can predict v[t+1] exactly. If prediction matches, we can eliminate v storage entirely — just recompute it from v[t] and grad² each step, or store only the tiny residual.
+
+Findings (GPT-2 small, 124M params, FP32 states, H200):
+
+| Step | Exact Match | Residual Entropy (bits/value) | Max |residual| |
+|------|-------------|-------------------------------|----------------|
+| 1    | **100.00%** | 0 (all zero)                  | 0              |
+| 2    | **86.47%**  | 1.56 bits/value               | 4.66e-10       |
+| 3    | **90.13%**  | 1.20 bits/value               | 2.91e-11       |
+| 4    | **92.28%**  | 0.97 bits/value               | 5.82e-11       |
+| 5    | **93.94%**  | 0.79 bits/value               | 1.46e-11       |
+
+Key observations:
+- **Step 1 is 100% exact** — the formula matches perfectly when v_old=0
+- **86-94% of values are predicted exactly** (zero residual) in subsequent steps
+- **Only ~130 unique residual values** out of 124M elements — incredibly low cardinality
+- Residual entropy is only **0.8-1.6 bits/value** (vs 32 bits raw FP32)
+- Residuals are 50/50 positive/negative (FP rounding errors, not systematic bias)
+- Bytes 0 and 1 of residual are always 0 — residuals live in upper bytes only
+- Exact match fraction **increases over time** (93.9% at step 5, trending higher)
+
+**Why it works:** The FP32 multiply-add `β₂·v + (1-β₂)·g²` is deterministic for most values. Mismatches occur only when floating-point rounding differs between the optimizer's fused implementation and our separate computation. These mismatches are tiny (single ULP) and extremely sparse.
+
+**Implications for compression:**
+- v storage (half of optimizer memory) could theoretically be reduced to ~1 bit/value = **97% compression of v**
+- Combined with m (which needs ~12 bits/value from byte-plane analysis), total optimizer memory could drop from 8Ψ to ~1.6Ψ bytes
+- **Key challenge**: Need to match PyTorch's exact FP32 rounding to achieve the prediction, OR store the ~6% nonzero residuals efficiently
+- Even without exact prediction matching, storing a 1-bit "prediction correct?" flag + residual for mismatches would be extremely compact
+
+### Experiment 38: nvCOMP GPU Compression Pilot — `pilot_nvcomp.py`
+**NVIDIA nvCOMP 5.1.0 provides fast GPU-native compression, solving the throughput bottleneck.**
+
+Tested on 100M FP32 values (381.5 MB) on H200 GPU.
+
+**Full FP32 tensor compression (all 4 bytes):**
+| Algorithm | Ratio (m) | Ratio (v) | Enc GB/s | Dec GB/s | Enc ms | Dec ms |
+|-----------|-----------|-----------|----------|----------|--------|--------|
+| ANS (64K) | 93.28% | 93.10% | 101 | 153 | 3.7 | 2.4 |
+| gdeflate_e | 92.76% | 92.62% | 58 | 60 | 6.4 | 6.2 |
+| deflate_e | 92.47% | 92.33% | 45 | 12 | 8.4 | 30 |
+| cascaded | 100.04% | 88.63% | 80 | 133 | 4.7 | 2.8 |
+| LZ4 | 100.42% | 100.42% | 12 | 168 | 31 | 2.2 |
+| bitcomp | 100.17% | 100.17% | 164 | 199 | 2.3 | 1.9 |
+
+**Byte3 (MSB) only compression — fair comparison with prior byte-plane work:**
+| Algorithm | Byte3 ratio (m) | Byte3 ratio (v) | Full-tensor savings | Enc ms | Dec ms |
+|-----------|----------------|----------------|---------------------|--------|--------|
+| ANS | 34.77% | 32.99% | 16.3-16.8% | 1.0-1.1 | 0.7-0.8 |
+| gdeflate_e | 33.84% | 32.45% | 16.5-16.9% | 2.4-2.5 | 2.5 |
+
+**Key findings:**
+- nvCOMP ANS: **~1ms encode, ~0.8ms decode** for 95 MB byte3 data = **85-126 GB/s throughput**
+- vs prior custom GPU Huffman: **2-40 seconds** for 10M values (3000-40000x slower!)
+- vs prior CPU ANS: **23 seconds** overhead (23000x slower!)
+- Byte3-only ANS saves **16.3-16.8%** of full FP32 (vs prior practical 6.25% with fixed codes)
+- Full-tensor ANS saves **6.7-6.9%** directly on raw FP32 bytes, no byte-plane splitting needed
+- All algorithms verified lossless (correct round-trip)
+- LZ4/bitcomp provide no compression on FP32 data (near-random lower bytes defeat them)
+- ANS is the best performer: high compression + extreme throughput
+
+**Comparison with prior best (Experiment 37: grouped byte3 compression):**
+- Prior: 6.25% savings, 1.44x slowdown with torch.compile
+- nvCOMP ANS byte3: **16.5% savings, sub-millisecond encode/decode**
+- nvCOMP ANS full: **7% savings with zero byte-plane splitting complexity**
+
+**Implication:** nvCOMP ANS completely solves the GPU entropy coding bottleneck. It can compress byte3 of FP32 optimizer states at >80 GB/s, making in-GPU compression practical with negligible overhead. Install: `pip install nvidia-nvcomp-cu12`
