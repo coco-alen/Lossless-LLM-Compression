@@ -1,0 +1,167 @@
+==========================================================================================
+FP8 Two-Stream v5 (16 elems/thread + batched) Benchmark
+==========================================================================================
+`torch_dtype` is deprecated! Use `dtype` instead!
+
+--- Per-Layer (single kernel) ---
+Layer                                                  Params   Ratio   Dec us  Dec GB/s   OK
+  model.embed_tokens.weight                        155,582,464   77.2%   241.5    644.2    Y
+  model.layers.0.self_attn.q_proj.weight            2,097,152   77.8%    24.3     86.4    Y
+  model.layers.0.self_attn.o_proj.weight            2,097,152   76.5%    23.4     89.7    Y
+  model.layers.0.mlp.gate_proj.weight               3,145,728   79.8%    23.4    134.4    Y
+  model.layers.0.mlp.up_proj.weight                 3,145,728   76.2%    23.2    135.8    Y
+  model.layers.0.mlp.down_proj.weight               3,145,728   76.3%    22.2    141.8    Y
+  model.layers.1.self_attn.q_proj.weight            2,097,152   77.6%    22.0     95.1    Y
+  model.layers.1.self_attn.o_proj.weight            2,097,152   76.6%    21.5     97.6    Y
+  model.layers.1.mlp.gate_proj.weight               3,145,728   83.2%    21.0    149.7    Y
+  model.layers.1.mlp.up_proj.weight                 3,145,728   75.8%    21.2    148.6    Y
+  model.layers.1.mlp.down_proj.weight               3,145,728   75.7%    21.2    148.2    Y
+  model.layers.2.self_attn.q_proj.weight            2,097,152   77.5%    21.3     98.6    Y
+  model.layers.2.self_attn.o_proj.weight            2,097,152   76.4%    20.4    102.7    Y
+  model.layers.2.mlp.gate_proj.weight               3,145,728   81.4%    20.5    153.6    Y
+  model.layers.2.mlp.up_proj.weight                 3,145,728   75.8%    20.2    155.4    Y
+  model.layers.2.mlp.down_proj.weight               3,145,728   75.8%    19.7    159.4    Y
+  model.layers.3.self_attn.q_proj.weight            2,097,152   77.5%    19.6    106.9    Y
+  model.layers.3.self_attn.o_proj.weight            2,097,152   76.9%    19.8    106.0    Y
+  model.layers.3.mlp.gate_proj.weight               3,145,728   81.4%    19.2    163.8    Y
+  model.layers.3.mlp.up_proj.weight                 3,145,728   76.0%    19.0    166.0    Y
+  model.layers.3.mlp.down_proj.weight               3,145,728   75.9%    19.0    165.4    Y
+  model.layers.4.self_attn.q_proj.weight            2,097,152   77.4%    18.8    111.4    Y
+  model.layers.4.self_attn.o_proj.weight            2,097,152   76.7%    17.9    117.0    Y
+  model.layers.4.mlp.gate_proj.weight               3,145,728   80.7%    17.9    175.8    Y
+  model.layers.4.mlp.up_proj.weight                 3,145,728   76.0%    17.7    177.3    Y
+  model.layers.4.mlp.down_proj.weight               3,145,728   75.9%    17.6    178.7    Y
+  model.layers.5.self_attn.q_proj.weight            2,097,152   77.6%    17.8    118.0    Y
+  model.layers.5.self_attn.o_proj.weight            2,097,152   76.6%    17.3    120.9    Y
+  model.layers.5.mlp.gate_proj.weight               3,145,728   79.1%    17.3    181.9    Y
+  model.layers.5.mlp.up_proj.weight                 3,145,728   76.3%    17.4    180.6    Y
+  model.layers.5.mlp.down_proj.weight               3,145,728   76.2%    17.4    180.8    Y
+  model.layers.6.self_attn.q_proj.weight            2,097,152   77.4%    17.3    121.3    Y
+  model.layers.6.self_attn.o_proj.weight            2,097,152   76.3%    17.2    121.9    Y
+  model.layers.6.mlp.gate_proj.weight               3,145,728   78.8%    17.5    179.4    Y
+  model.layers.6.mlp.up_proj.weight                 3,145,728   76.3%    17.3    182.2    Y
+  model.layers.6.mlp.down_proj.weight               3,145,728   76.2%    17.4    180.9    Y
+  model.layers.7.self_attn.q_proj.weight            2,097,152   77.1%    17.3    121.2    Y
+  model.layers.7.self_attn.o_proj.weight            2,097,152   76.2%    17.2    121.9    Y
+  model.layers.7.mlp.gate_proj.weight               3,145,728   78.9%    17.5    180.1    Y
+  model.layers.7.mlp.up_proj.weight                 3,145,728   76.3%    17.6    178.4    Y
+  model.layers.7.mlp.down_proj.weight               3,145,728   76.1%    17.3    181.3    Y
+  model.layers.8.self_attn.q_proj.weight            2,097,152   77.6%    17.5    120.2    Y
+  model.layers.8.self_attn.o_proj.weight            2,097,152   76.1%    17.2    122.0    Y
+  model.layers.8.mlp.gate_proj.weight               3,145,728   78.6%    17.4    180.8    Y
+  model.layers.8.mlp.up_proj.weight                 3,145,728   76.3%    17.3    181.8    Y
+  model.layers.8.mlp.down_proj.weight               3,145,728   76.2%    17.4    181.2    Y
+  model.layers.9.self_attn.q_proj.weight            2,097,152   77.5%    17.2    121.7    Y
+  model.layers.9.self_attn.o_proj.weight            2,097,152   76.3%    17.2    122.2    Y
+  model.layers.9.mlp.gate_proj.weight               3,145,728   78.9%    17.3    182.2    Y
+  model.layers.9.mlp.up_proj.weight                 3,145,728   76.5%    17.3    181.6    Y
+  model.layers.9.mlp.down_proj.weight               3,145,728   76.1%    17.6    178.7    Y
+  model.layers.10.self_attn.q_proj.weight           2,097,152   77.2%    17.2    121.8    Y
+  model.layers.10.self_attn.o_proj.weight           2,097,152   76.1%    17.5    120.2    Y
+  model.layers.10.mlp.gate_proj.weight              3,145,728   78.8%    17.4    181.2    Y
+  model.layers.10.mlp.up_proj.weight                3,145,728   76.4%    17.8    176.8    Y
+  model.layers.10.mlp.down_proj.weight              3,145,728   76.0%    17.3    181.3    Y
+  model.layers.11.self_attn.q_proj.weight           2,097,152   77.8%    17.3    121.1    Y
+  model.layers.11.self_attn.o_proj.weight           2,097,152   76.0%    17.2    121.8    Y
+  model.layers.11.mlp.gate_proj.weight              3,145,728   77.9%    17.5    179.7    Y
+  model.layers.11.mlp.up_proj.weight                3,145,728   76.6%    17.4    180.8    Y
+  model.layers.11.mlp.down_proj.weight              3,145,728   76.3%    17.4    181.0    Y
+  model.layers.12.self_attn.q_proj.weight           2,097,152   77.5%    17.4    120.6    Y
+  model.layers.12.self_attn.o_proj.weight           2,097,152   75.9%    17.4    120.6    Y
+  model.layers.12.mlp.gate_proj.weight              3,145,728   77.5%    17.4    180.3    Y
+  model.layers.12.mlp.up_proj.weight                3,145,728   76.5%    17.4    180.3    Y
+  model.layers.12.mlp.down_proj.weight              3,145,728   76.2%    17.5    179.9    Y
+  model.layers.13.self_attn.q_proj.weight           2,097,152   77.2%    17.4    120.7    Y
+  model.layers.13.self_attn.o_proj.weight           2,097,152   75.8%    17.6    119.2    Y
+  model.layers.13.mlp.gate_proj.weight              3,145,728   77.2%    17.2    182.9    Y
+  model.layers.13.mlp.up_proj.weight                3,145,728   76.3%    17.3    182.2    Y
+  model.layers.13.mlp.down_proj.weight              3,145,728   76.1%    17.4    180.8    Y
+  model.layers.14.self_attn.q_proj.weight           2,097,152   77.2%    17.4    120.5    Y
+  model.layers.14.self_attn.o_proj.weight           2,097,152   75.7%    17.3    121.4    Y
+  model.layers.14.mlp.gate_proj.weight              3,145,728   76.8%    17.4    181.1    Y
+  model.layers.14.mlp.up_proj.weight                3,145,728   76.1%    17.2    183.1    Y
+  model.layers.14.mlp.down_proj.weight              3,145,728   76.0%    17.4    181.2    Y
+  model.layers.15.self_attn.q_proj.weight           2,097,152   77.2%    17.1    122.5    Y
+  model.layers.15.self_attn.o_proj.weight           2,097,152   75.9%    17.2    121.8    Y
+  model.layers.15.mlp.gate_proj.weight              3,145,728   76.9%    17.4    180.5    Y
+  model.layers.15.mlp.up_proj.weight                3,145,728   76.2%    17.3    182.0    Y
+  model.layers.15.mlp.down_proj.weight              3,145,728   76.0%    17.3    181.9    Y
+  model.layers.16.self_attn.q_proj.weight           2,097,152   77.8%    17.2    121.7    Y
+  model.layers.16.self_attn.o_proj.weight           2,097,152   75.9%    17.4    120.7    Y
+  model.layers.16.mlp.gate_proj.weight              3,145,728   76.9%    17.1    183.7    Y
+  model.layers.16.mlp.up_proj.weight                3,145,728   76.5%    17.2    183.0    Y
+  model.layers.16.mlp.down_proj.weight              3,145,728   76.0%    17.4    180.5    Y
+  model.layers.17.self_attn.q_proj.weight           2,097,152   77.5%    17.3    121.0    Y
+  model.layers.17.self_attn.o_proj.weight           2,097,152   75.9%    17.3    121.4    Y
+  model.layers.17.mlp.gate_proj.weight              3,145,728   76.8%    17.3    182.0    Y
+  model.layers.17.mlp.up_proj.weight                3,145,728   76.7%    17.2    182.6    Y
+  model.layers.17.mlp.down_proj.weight              3,145,728   76.0%    17.4    181.0    Y
+  model.layers.18.self_attn.q_proj.weight           2,097,152   77.5%    17.1    122.4    Y
+  model.layers.18.self_attn.o_proj.weight           2,097,152   75.7%    17.4    120.2    Y
+  model.layers.18.mlp.gate_proj.weight              3,145,728   76.8%    17.4    180.4    Y
+  model.layers.18.mlp.up_proj.weight                3,145,728   76.7%    17.4    181.2    Y
+  model.layers.18.mlp.down_proj.weight              3,145,728   76.2%    17.4    180.7    Y
+  model.layers.19.self_attn.q_proj.weight           2,097,152   77.8%    17.3    121.3    Y
+  model.layers.19.self_attn.o_proj.weight           2,097,152   75.9%    17.4    120.3    Y
+  model.layers.19.mlp.gate_proj.weight              3,145,728   76.7%    17.2    183.0    Y
+  model.layers.19.mlp.up_proj.weight                3,145,728   77.1%    17.2    183.0    Y
+  model.layers.19.mlp.down_proj.weight              3,145,728   76.6%    17.4    181.0    Y
+  model.layers.20.self_attn.q_proj.weight           2,097,152   78.2%    17.4    120.8    Y
+  model.layers.20.self_attn.o_proj.weight           2,097,152   76.2%    17.3    121.4    Y
+  model.layers.20.mlp.gate_proj.weight              3,145,728   76.8%    17.5    180.2    Y
+  model.layers.20.mlp.up_proj.weight                3,145,728   77.5%    17.2    182.7    Y
+  model.layers.20.mlp.down_proj.weight              3,145,728   77.0%    17.5    179.3    Y
+  model.layers.21.self_attn.q_proj.weight           2,097,152   78.5%    17.1    122.6    Y
+  model.layers.21.self_attn.o_proj.weight           2,097,152   76.4%    17.3    121.1    Y
+  model.layers.21.mlp.gate_proj.weight              3,145,728   76.9%    17.3    181.8    Y
+  model.layers.21.mlp.up_proj.weight                3,145,728   78.2%    17.3    182.2    Y
+  model.layers.21.mlp.down_proj.weight              3,145,728   77.7%    17.4    180.8    Y
+  model.layers.22.self_attn.q_proj.weight           2,097,152   78.4%    17.2    121.8    Y
+  model.layers.22.self_attn.o_proj.weight           2,097,152   76.5%    17.2    122.0    Y
+  model.layers.22.mlp.gate_proj.weight              3,145,728   77.1%    17.2    182.9    Y
+  model.layers.22.mlp.up_proj.weight                3,145,728   78.7%    25.8    122.1    Y
+  model.layers.22.mlp.down_proj.weight              3,145,728   78.3%    17.5    179.8    Y
+  model.layers.23.self_attn.q_proj.weight           2,097,152   77.5%    17.5    120.1    Y
+  model.layers.23.self_attn.o_proj.weight           2,097,152   76.5%    17.3    121.1    Y
+  model.layers.23.mlp.gate_proj.weight              3,145,728   77.2%    17.3    182.0    Y
+  model.layers.23.mlp.up_proj.weight                3,145,728   78.9%    17.2    182.8    Y
+  model.layers.23.mlp.down_proj.weight              3,145,728   78.6%    17.3    182.1    Y
+  model.layers.24.self_attn.q_proj.weight           2,097,152   78.2%    17.4    120.8    Y
+  model.layers.24.self_attn.o_proj.weight           2,097,152   76.5%    17.2    121.6    Y
+  model.layers.24.mlp.gate_proj.weight              3,145,728   77.1%    17.2    183.2    Y
+  model.layers.24.mlp.up_proj.weight                3,145,728   79.1%    17.2    182.8    Y
+  model.layers.24.mlp.down_proj.weight              3,145,728   78.8%    17.3    181.9    Y
+  model.layers.25.self_attn.q_proj.weight           2,097,152   78.4%    17.4    120.5    Y
+  model.layers.25.self_attn.o_proj.weight           2,097,152   76.9%    17.3    121.4    Y
+  model.layers.25.mlp.gate_proj.weight              3,145,728   76.9%    17.2    182.5    Y
+  model.layers.25.mlp.up_proj.weight                3,145,728   79.2%    17.4    181.2    Y
+  model.layers.25.mlp.down_proj.weight              3,145,728   78.7%    17.4    180.6    Y
+  model.layers.26.self_attn.q_proj.weight           2,097,152   79.4%    17.3    121.5    Y
+  model.layers.26.self_attn.o_proj.weight           2,097,152   76.8%    17.3    121.4    Y
+  model.layers.26.mlp.gate_proj.weight              3,145,728   76.7%    17.3    182.0    Y
+  model.layers.26.mlp.up_proj.weight                3,145,728   79.0%    17.4    181.1    Y
+  model.layers.26.mlp.down_proj.weight              3,145,728   78.0%    17.4    180.6    Y
+  model.layers.27.self_attn.q_proj.weight           2,097,152   77.6%    17.6    119.2    Y
+  model.layers.27.self_attn.o_proj.weight           2,097,152   77.1%    17.3    121.1    Y
+  model.layers.27.mlp.gate_proj.weight              3,145,728   77.3%    17.5    179.4    Y
+  model.layers.27.mlp.up_proj.weight                3,145,728   78.2%    17.4    180.6    Y
+  model.layers.27.mlp.down_proj.weight              3,145,728   76.6%    17.4    180.6    Y
+
+  Aggregate ratio: 77.14%
+  Aggregate Dec GB/s (single): 158.6
+  Total decode time: 3.76 ms (197 layers)
+  Lossless: ALL PASS
+
+--- Batched (single kernel for ALL layers) ---
+
+  Batched decode time: 1020.8 us (145504 blocks)
+  Batched Dec GB/s: 583.9
+  Batched Lossless: ALL PASS
+
+  Comparison:
+    Dense FP8:              100.0%  (baseline)
+    Our v5 single:          77.1%  @ 159 GB/s
+    Our v5 batched:         77.1%  @ 584 GB/s
+    Our v4 (8 elem/th):      77.2%  @ 165 GB/s
+    nvCOMP ANS:              85.7%  @ 29-56 GB/s
+    Entropy limit:           70.4%
