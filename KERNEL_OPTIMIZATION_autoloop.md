@@ -78,13 +78,12 @@ LOOP FOREVER:
 
 1. Look at the git state: current branch/commit
 2. Modify code with an experimental idea
-3. `git commit -m "exp: <description>"`
 4. Run the experiment: `python experiments/fused_codec/<script>.py > experiments/fused_codec/logs/<exp_name>.log 2>&1`
 5. Read out the results: `grep -E "Aggregate|Dec GB/s|Ratio|Lossless" experiments/fused_codec/logs/<exp_name>.log`
 6. If grep output is empty, the run crashed. Run `tail -n 50` on the log to read the stack trace and attempt a fix. If you can't fix after a few attempts, skip it.
 7. Record the results in `experiments/fused_codec/EXPERIMENT.md`
-8. If decode throughput improved OR compression ratio improved (without breaking the other), keep the commit ("advance the branch")
-9. If both metrics are equal or worse, `git reset --hard HEAD~1` to revert
+8. If decode throughput improved OR compression ratio improved (without breaking the other), git commit ("advance the branch")
+9. If both metrics are equal or worse, revert your change.
 10. Move on to the next idea
 
 **Crashes:** If a run crashes (OOM, CUDA error, bug), fix trivial issues and re-run. If the approach is fundamentally broken, skip it, log "crash" as status, and move on.
