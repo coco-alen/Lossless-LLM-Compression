@@ -1,0 +1,20 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Background and Problem Setup}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Weight Precision Formats}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Entropy Accounting}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Related Work}{section.2}% 5
+\BOOKMARK [1][-]{section.3}{Oracle Baseline: Full-Value Entropy Coding}{}% 6
+\BOOKMARK [2][-]{subsection.3.1}{Method}{section.3}% 7
+\BOOKMARK [2][-]{subsection.3.2}{Main Results}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.3}{FP8 Ablation: Where Does the Gain Come From?}{section.3}% 9
+\BOOKMARK [1][-]{section.4}{Empirical Analysis of FP8 Compressibility}{}% 10
+\BOOKMARK [2][-]{subsection.4.1}{Model Dependence}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.2}{Format Dependence}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.3}{BF16 and INT4}{section.4}% 13
+\BOOKMARK [1][-]{section.5}{Practical FP8 GPU Codec}{}% 14
+\BOOKMARK [2][-]{subsection.5.1}{Two-Stream Design}{section.5}% 15
+\BOOKMARK [2][-]{subsection.5.2}{Results}{section.5}% 16
+\BOOKMARK [2][-]{subsection.5.3}{Negative Results}{section.5}% 17
+\BOOKMARK [1][-]{section.6}{Discussion, Limitations, and Conclusion}{}% 18
+\BOOKMARK [2][-]{subsection.6.1}{Limitations}{section.6}% 19
+\BOOKMARK [2][-]{subsection.6.2}{Conclusion}{section.6}% 20

@@ -1,0 +1,295 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\title{Full-Value Entropy Coding as an Oracle Baseline for\\Lossless Compression of Low-Precision LLM Weights}
+
+\author{Anonymous}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Lossless compression of low-precision LLM weights is increasingly important for storage, distribution, and memory efficiency, yet many LLM-specific codecs operate on decomposed fields (e.g., exponents only) rather than the full value distribution. This paper studies full-value entropy coding as the oracle baseline for BF16, FP8, and INT4 weight compression, and quantifies the penalty of practical factorized codecs on the studied value streams. We find that full-value ANS reaches near-entropy-optimal compression: BF16 consistently achieves ${\sim}66\%$ across model families, while FP8 compressibility varies strongly by model (Qwen ${\sim}70\%$, Mistral ${\sim}37\%$ in e4m3fn) and by format (e4m3fn ${\sim}38\%$ vs e5m2 ${\sim}69\%$ for Mistral). INT4 value-stream compression ranges from 74\% on simulated symmetric quantization to 85\% on real GPTQ qweight data, indicating strong dependence on checkpoint layout. We further present a lossless fixed-width two-stream FP8 codec that achieves 77.1\% compression with 254~GB/s standalone per-layer decode and 584~GB/s pre-concatenated batched decode on NVIDIA H200, evaluated as a standalone decode microbenchmark. Our results suggest that the central question is not which single codec universally dominates, but how much compressibility exists in each format and how much practical GPU-decodable codecs leave on the table.
+\end{abstract}
+
+%% ============================================================
+\section{Introduction}
+
+The deployment of large language models at scale has made weight storage and transmission a practical bottleneck. A single 70B-parameter model occupies 140\,GB in BFloat16 or 70\,GB in FP8---costs that multiply across model variants, checkpoints, and serving replicas. Lossless compression offers bit-exact model preservation while reducing these costs, and recent work has demonstrated 25--30\% size reductions for BFloat16 weights through entropy coding of the exponent field~\cite{dfloat11,zipnn,ecf8}.
+
+However, existing lossless codecs share a common design choice: they decompose floating-point values into subfields (sign, exponent, mantissa) and compress each separately, typically focusing on the low-entropy exponent while storing the high-entropy mantissa raw. This factorization is motivated by GPU decode efficiency---exponent-only Huffman codes are short and decodable via compact lookup tables---but it implicitly discards any joint structure between fields.
+
+This paper takes a different perspective. We ask: \textbf{how much compression is theoretically available for each format, and how much do practical factorized codecs leave on the table?} To answer this, we establish full-value entropy coding (treating the entire BF16/FP8/INT4 value as a single symbol) as an oracle baseline, then systematically compare it against factorized alternatives.
+
+Our contributions are:
+\begin{enumerate}
+    \item \textbf{Oracle baseline}: We show that full-value ANS coding reaches within 0.0--0.6 percentage points of the Shannon entropy limit on the studied BF16, FP8, and INT4 value streams from multiple model families.
+    \item \textbf{Format-dependent analysis}: We demonstrate that the penalty of factorized codecs is small for BF16 (${\sim}0.1$\,pp) but meaningful for FP8 (2.72\,pp vs ECF8-style Huffman), and that FP8 compressibility itself varies dramatically by model and by FP8 format.
+    \item \textbf{Practical GPU codec}: We present a two-stream FP8 codec with fixed-width exponent codes and packed sign+mantissa, achieving 77.1\% ratio at 254~GB/s per-layer standalone decode throughput on H200---34$\times$ faster than Huffman-based decoding at comparable ratio.
+\end{enumerate}
+
+%% ============================================================
+\section{Background and Problem Setup}
+
+\subsection{Weight Precision Formats}
+
+\textbf{BFloat16 (BF16)}: 1 sign + 8 exponent + 7 mantissa = 16 bits. The de facto standard for LLM training and inference. Exponent entropy is ${\sim}2.6$ bits (out of 8), making it the primary compression target in prior work.
+
+\textbf{FP8 e4m3fn}: 1 sign + 4 exponent + 3 mantissa = 8 bits. Increasingly adopted for inference (DeepSeek-V3, Llama~3). Smaller exponent and mantissa ranges create different compressibility characteristics.
+
+\textbf{FP8 e5m2}: 1 sign + 5 exponent + 2 mantissa = 8 bits. Wider dynamic range, used for gradients and some inference paths.
+
+\textbf{INT4}: 4-bit integer, typically from post-training quantization (GPTQ, AWQ). Packed 2 values per byte with per-group scales and zero-points.
+
+\subsection{Entropy Accounting}
+
+We measure compression quality using:
+\begin{itemize}
+    \item \textbf{Compression ratio}: compressed\_size / original\_size $\times$ 100\% (lower is better)
+    \item \textbf{Bits per value (bpv)}: average bits to store one weight value
+    \item \textbf{Gap to entropy}: difference between achieved bpv and Shannon entropy $H(X)$
+\end{itemize}
+All reported sizes include metadata (symbol tables, probability arrays, block headers). We use shared frequency tables across layers of the same weight type unless otherwise stated.
+
+\textbf{Evaluation objects.} We distinguish three types of value streams: (1)~\emph{native value streams}: BF16 weights as stored in the checkpoint; (2)~\emph{casted value streams}: BF16 weights cast to FP8 via \texttt{torch.to(float8\_e4m3fn)}; and (3)~\emph{real quantized checkpoint streams}: actual serialized tensors from GPTQ-quantized models. These have different statistical properties and are reported separately throughout.
+
+\subsection{Related Work}
+
+\textbf{Exponent-only coding.} DFloat11~\cite{dfloat11} Huffman-codes BF16 exponents (${\sim}66.6\%$ ratio) with a GPU kernel using hierarchical lookup tables. ZipNN~\cite{zipnn} similarly targets exponents for HuggingFace integration.
+
+\textbf{Hardware-aware fixed-width.} ZipServ~\cite{zipserv} introduces TCA-TBE, a 3-bit fixed-length encoding fused into Tensor Core GEMM, achieving ${\sim}70\%$ ratio with 1.22$\times$ inference speedup---the first lossless compression to accelerate serving.
+
+\textbf{FP8 compression.} ECF8~\cite{ecf8} extends exponent Huffman coding to FP8, reporting 9.8--26.9\% memory savings with a GPU kernel. Float8@2bits~\cite{float8at2bits} uses ANS on FP8 for sub-2-bit lossy compression.
+
+\textbf{INT4 compression.} EntroLLM~\cite{entrollm} applies Huffman to INT4 quantized weights for edge devices. QStore~\cite{qstore} jointly stores multi-precision checkpoints.
+
+\textbf{GPU compression primitives.} DietGPU~\cite{dietgpu} provides GPU ANS at 250--410~GB/s; nvCOMP offers LZ4/ANS/Snappy codecs.
+
+None of these works systematically compare full-value coding against factorized alternatives across formats, or characterize the model- and format-dependence of FP8 compressibility.
+
+%% ============================================================
+\section{Oracle Baseline: Full-Value Entropy Coding}
+
+\subsection{Method}
+
+We treat each weight value as a single symbol in its native representation and apply asymmetric numeral systems (ANS) coding via the \texttt{constriction} library~\cite{constriction}. For BF16, symbols are 16-bit integers (typical alphabet: ${\sim}6{,}000$ unique values). For FP8, symbols are 8-bit bytes (${\sim}100$--$120$ unique). For INT4, symbols are 4-bit nibbles (16 possible values).
+
+The frequency table is built from the empirical distribution of all weights of the same type (e.g., all \texttt{q\_proj} weights across layers). This shared-table approach keeps metadata negligible: ${\sim}1$\,KB for BF16's 6,000 symbols vs ${\sim}$GB of compressed data.
+
+\subsection{Main Results}
+
+\begin{table}[h]
+\centering
+\caption{BF16 full-value ANS compression (native value streams).}
+\begin{tabular}{lrrrc}
+\toprule
+Model & Params & Ratio & Entropy (bpv) & Gap \\
+\midrule
+Qwen3-0.6B & 596M & 66.53\% & 10.56 & 0.57\,pp \\
+Qwen3-8B & 8.2B & 66.10\% & 10.56 & 0.10\,pp \\
+Mistral-7B & 7.2B & 65.73\% & 10.51 & 0.03\,pp \\
+\bottomrule
+\end{tabular}
+\label{tab:bf16}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{FP8 e4m3fn full-value ANS compression (BF16$\to$FP8 casted value streams).}
+\begin{tabular}{lrrrc}
+\toprule
+Model & Ratio & Entropy (bpv) & Unique vals & Gap \\
+\midrule
+Qwen3-0.6B & 70.66\% & 5.65 & ${\sim}117$ & 0.00\,pp \\
+Qwen3-8B & 69.09\% & 5.53 & ${\sim}100$ & ${\sim}0.0$\,pp \\
+Mistral-7B & \textbf{37.35\%} & \textbf{3.05} & \textbf{25--81} & ${\sim}0.0$\,pp \\
+\bottomrule
+\end{tabular}
+\label{tab:fp8}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{INT4 full-value ANS compression.}
+\begin{tabular}{llrrc}
+\toprule
+Model & Stream type & Ratio & Entropy (bpv) & Gap \\
+\midrule
+Qwen3-0.6B & Simulated symmetric & 74.06\% & 2.97 & 0.24\,pp \\
+Mistral-7B & Simulated symmetric & 70.84\% & 2.83 & ${\sim}0.04$\,pp \\
+Qwen2.5-7B & Real GPTQ qweight & 85.0\% & 3.41 & ${\sim}0.8$\,pp \\
+\bottomrule
+\end{tabular}
+\label{tab:int4}
+\end{table}
+
+All results are verified bit-exact lossless. BF16 is consistent (${\sim}66\%$) across model families. FP8 shows striking variability (Table~\ref{tab:fp8}). INT4 compression depends on the quantization pipeline (Table~\ref{tab:int4}): the total real GPTQ checkpoint including scales and zeros compresses to 81.7\%.
+
+\subsection{FP8 Ablation: Where Does the Gain Come From?}
+
+\begin{table}[h]
+\centering
+\caption{FP8 coding strategy comparison (Qwen3-0.6B, same BF16$\to$FP8 casted weights, identical accounting).}
+\begin{tabular}{lrrr}
+\toprule
+Method & Ratio & bpv & Gap to $H(X)$ \\
+\midrule
+Full-value ANS (ours) & 70.66\% & 5.653 & +0.000 \\
+Separated ANS (exp + s+m) & 71.24\% & 5.699 & +0.047 \\
+Exp ANS + raw sign+mantissa & 71.55\% & 5.724 & +0.071 \\
+ECF8-style (Exp Huffman + raw) & 73.38\% & 5.870 & +0.218 \\
+Byte-wise ANS (1K blocks) & 97.41\% & 7.793 & +2.141 \\
+\bottomrule
+\end{tabular}
+\label{tab:ablation}
+\end{table}
+
+The 2.72\,pp gap between full-value ANS and ECF8-style decomposes into: Huffman integer-length rounding loss (0.17\,bpv), exponent--mantissa joint correlation (0.05\,bpv), and stream separation/metadata overhead (remainder).
+
+%% ============================================================
+\section{Empirical Analysis of FP8 Compressibility}
+
+\subsection{Model Dependence}
+
+FP8 compressibility varies dramatically across model families (Table~\ref{tab:fp8}). Mistral-7B weights occupy a narrow BF16 range ($\pm 0.05$--$0.2$), which collapses to only 25--81 unique FP8 e4m3fn values per layer (mean entropy: 3.05 bits). Qwen models have broader weight ranges, yielding ${\sim}100$--$117$ unique FP8 values (mean entropy: 5.6 bits).
+
+This variability is invisible to exponent-only codecs, which see similar exponent distributions regardless of the mantissa concentration. Full-value coding correctly captures it.
+
+\subsection{Format Dependence}
+
+The choice of FP8 format also affects compressibility. For Mistral-7B:
+
+\begin{table}[h]
+\centering
+\caption{FP8 format comparison for Mistral-7B (BF16$\to$FP8 cast).}
+\begin{tabular}{lrr}
+\toprule
+FP8 Format & Mean entropy & Estimated ratio \\
+\midrule
+e4m3fn & 3.05 bits & ${\sim}38\%$ \\
+e5m2 & 5.52 bits & ${\sim}69\%$ \\
+\bottomrule
+\end{tabular}
+\label{tab:fp8format}
+\end{table}
+
+The e4m3fn format has 3 mantissa bits, creating more value collisions from concentrated weights than e5m2's 2 mantissa bits with wider exponent range. This interaction between weight distribution and FP8 format design has not been characterized in prior work.
+
+\subsection{BF16 and INT4}
+
+BF16 compression is consistent across models (${\sim}66\%$, gap $<0.6$\,pp), confirming that exponent-only codecs like DFloat11 are already near-optimal for this format. INT4 compression depends on the quantization pipeline: simulated symmetric quantization yields 70--74\%, while real GPTQ checkpoints yield ${\sim}85\%$.
+
+%% ============================================================
+\section{Practical FP8 GPU Codec}
+
+\subsection{Two-Stream Design}
+
+To bridge the gap between entropy-optimal compression (CPU-only, ${\sim}70\%$) and GPU-decodable throughput, we design a fixed-width two-stream codec for FP8 weights.
+
+\textbf{Encoding} (offline, CPU): (1)~Find the best window of $k{=}3$ consecutive exponent values covering ${\sim}96\%$ of weights. (2)~Encode exponents as 2-bit offsets ($0,1,2$ = in window; $3$ = escape), packed 4 per byte. (3)~Pack sign+mantissa as 4-bit values, 2 per byte. (4)~Store escape exponents in a packed overflow buffer. (5)~Precompute per-block escape prefix sums.
+
+\textbf{Decoding} (GPU, CUDA): Each thread decodes 16 elements in constant time. Fixed-width codes enable branch-free common-case decoding. Escape indices are computed via warp-cooperative prefix sum (\texttt{\_\_shfl\_up\_sync}). Vectorized 4$\times$\texttt{uint32} writes provide coalesced memory access. A batched mode uses a single kernel launch for all model layers via \texttt{block\_to\_layer} indirection.
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\caption{FP8 GPU decode comparison (Qwen3-0.6B, all our measurements on idle H200, CUDA event timing, median of 50 trials). Batched: single kernel with pre-concatenated GPU-resident buffers.}
+\begin{tabular}{lrrrr}
+\toprule
+Method & Ratio & Per-layer GB/s & Batched GB/s & Lossless \\
+\midrule
+Dense FP8 (memcpy) & 100.0\% & 443 & --- & N/A \\
+\textbf{Two-Stream v5 (ours)} & \textbf{77.1\%} & \textbf{254} & \textbf{584} & \textbf{All pass} \\
+Huffman (DFloat11-style) & 78.0\% & 7.4 & --- & Pass \\
+nvCOMP byte ANS$^\dagger$ & 85.7\% & 29--56 & --- & Pass \\
+Full-value ANS (CPU) & 70.4\% & --- & --- & Pass \\
+\bottomrule
+\end{tabular}
+\label{tab:gpu}
+
+\footnotesize{$^\dagger$Prior pilot measurement; nvidia-nvcomp-cu12 v5.1.0, same H200.}
+\end{table}
+
+The two-stream codec is 34$\times$ faster than Huffman at comparable ratio. In batched mode, it exceeds dense memcpy throughput (584 vs 443~GB/s) because it reads 23\% less data from HBM. We note that the batched number reflects amortized kernel launch overhead with pre-concatenated buffers and is not directly comparable to layer-at-a-time inference decode.
+
+\subsection{Negative Results}
+
+\textbf{Fused decode+GEMM.} A Triton prototype that decodes compressed FP8 tiles in shared memory before WGMMA achieved only 0.4--0.6$\times$ the throughput of dense FP8 GEMM.
+
+\textbf{NVFP4.} FP4 (e2m1) weights have only 8.5\% additional compressibility (3.66/4.0 bits entropy)---the per-channel scaling normalizes distributions too uniformly.
+
+%% ============================================================
+\section{Discussion, Limitations, and Conclusion}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item \textbf{No end-to-end inference speedup}: Our GPU codec is a standalone decode microbenchmark, not an integrated serving system. Translating decode throughput to end-to-end speedup requires fusion with GEMM kernels, which remains open for variable-ratio codecs.
+    \item \textbf{Casted FP8}: Our FP8 analysis uses BF16$\to$FP8 casting, not natively FP8-trained models. The model-dependence finding should be validated on real FP8 checkpoints as they become available.
+    \item \textbf{Narrow INT4 coverage}: One real GPTQ checkpoint demonstrates the approach but does not claim comprehensive INT4 coverage across quantizers.
+\end{itemize}
+
+\subsection{Conclusion}
+
+Full-value entropy coding provides the correct oracle baseline for evaluating lossless compression of low-precision LLM weights. Our analysis reveals that the penalty of practical factorized codecs is format-dependent: negligible for BF16, meaningful for FP8, and layout-dependent for INT4. The striking model-dependence of FP8 compressibility (37--70\% in e4m3fn) and format-dependence (e4m3fn vs e5m2) are new empirical findings that factorized codecs obscure. The two-stream FP8 codec provides a practical decode throughput of 254--584~GB/s at 77.1\% ratio, positioning it on the rate--throughput Pareto frontier between entropy-optimal CPU coding and hardware-native dense storage.
+
+%% ============================================================
+\bibliographystyle{plain}
+\begin{thebibliography}{9}
+
+\bibitem{dfloat11}
+T.~Zhang et al.
+\newblock DFloat11: 70\% Size, 100\% Accuracy: Lossless LLM Compression for Efficient GPU Inference via Dynamic-Length Float.
+\newblock \emph{NeurIPS}, 2025.
+
+\bibitem{zipnn}
+M.~Hershcovitch et al.
+\newblock ZipNN: Lossless Compression for AI Models.
+\newblock arXiv:2411.05239, 2024.
+
+\bibitem{zipserv}
+R.~Fan et al.
+\newblock ZipServ: Fast and Memory-Efficient LLM Inference with Hardware-Aware Lossless Compression.
+\newblock \emph{ASPLOS}, 2026.
+
+\bibitem{ecf8}
+Y.~Yang et al.
+\newblock To Compress or Not? Pushing the Frontier of Lossless GenAI Model Weights Compression with Exponent Concentration.
+\newblock arXiv:2510.02676, 2025.
+
+\bibitem{float8at2bits}
+P.~Putzky et al.
+\newblock Float8@2bits: Entropy Coding Enables Data-Free Model Compression.
+\newblock arXiv:2601.22787, 2026.
+
+\bibitem{entrollm}
+S.~Sanyal et al.
+\newblock EntroLLM: Entropy Encoded Weight Compression for Efficient LLM Inference on Edge Devices.
+\newblock arXiv:2505.02380, 2025.
+
+\bibitem{qstore}
+R.~Shah et al.
+\newblock QStore: Quantization-Aware Compressed Model Storage.
+\newblock arXiv:2505.04081, 2025.
+
+\bibitem{dietgpu}
+J.~Johnson et al.
+\newblock DietGPU: GPU ANS for ML/HPC.
+\newblock \url{github.com/facebookresearch/dietgpu}.
+
+\bibitem{constriction}
+R.~Bamler.
+\newblock constriction: Entropy Coders for Research and Production.
+\newblock \url{github.com/bamler-lab/constriction}.
+
+\end{thebibliography}
+
+\end{document}

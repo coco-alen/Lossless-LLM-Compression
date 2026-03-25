@@ -606,3 +606,70 @@ not yet optimized to DFloat11's speed level. Next steps:
 1. Implement group encoding with shared table
 2. Optimize CUDA kernel (coalesced reads, better occupancy)
 3. Compare end-to-end with DFloat11 on same hardware
+
+## 2026-03-24: FP8 Compression Ablation Study (Qwen3-0.6B)
+
+### Setup
+- Model: Qwen3-0.6B, all weights cast to float8_e4m3fn
+- 596M FP8 values (568.4 MB raw), 183 unique values
+- Full-value entropy: 5.6526 bpv, exponent: 1.7239, sign+mantissa: 3.9754
+- Joint vs separated entropy gap: 0.0467 bpv (small correlation)
+- Script: `experiments/fused_codec/fp8_ablation.py`
+
+### Results
+
+| # | Method | Ratio | bpv | Entropy Gap | Metadata |
+|---|--------|-------|-----|-------------|----------|
+| 1 | Full-value ANS | **70.66%** | 5.6526 | +0.0000 | 915 B |
+| 2 | Exp ANS + raw sign+man | 71.55% | 5.7239 | +0.0713 | 79 B |
+| 3 | Byte-wise ANS (1K blk) | 97.41% | 7.7931 | +2.1405 | 165 MB |
+| 4 | Exp Huffman + raw s+m (ECF8) | 73.38% | 5.8704 | +0.2178 | 84 B |
+| 5 | Separated ANS (e+sm) | 71.24% | 5.6993 | +0.0467 | 155 B |
+
+### Key Findings
+- **Full-value ANS is optimal**: achieves entropy limit (70.66%), 0 gap
+- **Separation wastes 0.05-0.07 bpv**: methods 2/5 lose joint correlation
+- **Huffman penalty**: method 4 loses 0.22 bpv vs ANS (Huffman rounding)
+- **Per-block ANS is catastrophic**: 1K blocks generate 165 MB metadata (28.5% of total), inflating to 97.4%
+- **Sign+mantissa is NOT random for FP8**: only 3.98 bpv (vs 4.0 max), but nearly full — storing raw wastes 0.025 bits/value
+- Joint coding advantage is small (0.047 bpv) because exp and sign+mantissa are nearly independent in FP8
+
+---
+
+## 2026-03-24: Real GPTQ INT4 Lossless Compression Benchmark
+
+### Setup
+- Model: Qwen2.5-7B-Instruct-GPTQ-Int4 (shard 1, ~4GB)
+- Loaded safetensors directly, unpacked INT4 from packed int32 qweight tensors
+- Script: `experiments/benchmark_real_int4.py`
+
+### INT4 qweight Results
+- 5.59B INT4 values across 168 tensors
+- **Global entropy: 3.408 bits** (max 4.0) -> 14.8% savings potential
+- Distribution is bell-shaped centered on value 8 (17.3%), values 7/9 at ~14.6% each
+- Per-tensor entropy varies: min=2.88, max=3.47, mean=3.39
+- **ANS global: 85.21%** of packed size (3.408 bpv, exactly at entropy)
+- **ANS per-tensor: 85.04%** (3.402 bpv, slightly better due to per-tensor distribution)
+
+### Other Components
+| Component | Original | Compressed | Ratio |
+|-----------|----------|------------|-------|
+| qweight (INT4) | 2,797 MB | 2,378 MB | 85.0% |
+| scales (fp16) | 86 MB | 57 MB | 66.2% |
+| qzeros (INT4) | 22 MB | ~0 MB | 0.0% (all value=7) |
+| g_idx (int32) | 4 MB | 0.4 MB | 10.0% (trivially compressible) |
+| bias/norm/embed (fp16) | 1,091 MB | 832 MB | 76.3% |
+| **TOTAL** | **4,000 MB** | **3,268 MB** | **81.7%** |
+
+### vs Generic Compression (qweight only)
+- LZ4: 99.9% (nearly useless on packed INT4)
+- zlib-9: 86.2% (slightly worse than ANS)
+- ANS per-tensor: 85.0% (entropy-optimal)
+
+### Key Findings
+- **qzeros are all value 7** (zero-point=7 for all groups) -> trivially compressible
+- **g_idx is a trivial sequential pattern** -> can be regenerated from group_size
+- INT4 values are bell-shaped (not uniform), confirming 15% lossless savings potential
+- Scales (fp16) compress similarly to BF16 weights (~66%)
+- Embed/norm weights dominate the "other" category (1 GB) and compress to 76%
+- **Effective bits per weight: 5.72 -> 4.67 (savings of 1.05 bpw)**

@@ -285,12 +285,25 @@ def decompress_group(compressed: dict) -> list[torch.Tensor]:
 # Size computation and analysis
 # ---------------------------------------------------------------------------
 
+def compressed_size_breakdown(compressed: dict) -> dict:
+    """Detailed size breakdown: payload vs metadata."""
+    payload = len(compressed['compressed_words']) * 4  # ANS bitstream
+    table = len(compressed['symbol_table']) * 4  # int32 symbol values
+    probs = len(compressed['probabilities']) * 4  # float32 probabilities
+    metadata = table + probs
+    total = payload + metadata
+    return {
+        'payload_bytes': payload,
+        'metadata_bytes': metadata,
+        'table_bytes': table,
+        'probs_bytes': probs,
+        'total_bytes': total,
+    }
+
+
 def compressed_size_bytes(compressed: dict) -> int:
     """Total compressed size in bytes (data + metadata)."""
-    data = len(compressed['compressed_words']) * 4
-    table = len(compressed['symbol_table']) * 4  # int32
-    probs = len(compressed['probabilities']) * 4  # float32
-    return data + table + probs
+    return compressed_size_breakdown(compressed)['total_bytes']
 
 
 def original_size_bytes(compressed: dict) -> int:
