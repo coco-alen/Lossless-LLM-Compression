@@ -1,0 +1,863 @@
+{
+  "Qwen/Qwen3-0.6B-FP8": {
+    "model": "Qwen/Qwen3-0.6B-FP8",
+    "overall": {
+      "n_values": 440401920,
+      "unique_full": 254,
+      "unique_exp": 16,
+      "unique_sm": 16,
+      "H_full": 6.662784171809354,
+      "H_exp": 2.7182977354556455,
+      "H_sm": 3.9787780945022897,
+      "H_separated": 6.697075829957935,
+      "mutual_info": 0.03429165814858148,
+      "methods": {
+        "full_value_ans": {
+          "bpv": 6.662784171809354,
+          "ratio": 83.28480214761692,
+          "label": "Full-value ANS"
+        },
+        "separated_ans": {
+          "bpv": 6.697075829957935,
+          "ratio": 83.71344787447418,
+          "label": "Separated ANS (exp + s+m)"
+        },
+        "exp_ans_raw_sm": {
+          "bpv": 6.7182977354556455,
+          "ratio": 83.97872169319557,
+          "label": "Exp ANS + raw s+m"
+        },
+        "ecf8_style": {
+          "bpv": 6.768297735455645,
+          "ratio": 84.60372169319557,
+          "label": "Exp Huffman + raw s+m (ECF8)"
+        }
+      },
+      "exp_distribution": {
+        "0": 82980,
+        "1": 88150,
+        "2": 171391,
+        "3": 342242,
+        "4": 684404,
+        "5": 1367650,
+        "6": 2734235,
+        "7": 5455651,
+        "8": 10849339,
+        "9": 21358677,
+        "10": 40967269,
+        "11": 73046338,
+        "12": 109605668,
+        "13": 114554546,
+        "14": 54708968,
+        "15": 4384412
+      }
+    },
+    "per_type": {
+      "down_proj": {
+        "n_values": 88080384,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.641934081145868,
+        "H_exp": 2.6991945259571555,
+        "H_sm": 3.9787841615925474,
+        "H_separated": 6.677978687549703,
+        "mutual_info": 0.03604460640383511,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.641934081145868,
+            "ratio": 83.02417601432334,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.677978687549703,
+            "ratio": 83.47473359437129,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.6991945259571555,
+            "ratio": 83.73993157446445,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.749194525957155,
+            "ratio": 84.36493157446444,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "gate_proj": {
+        "n_values": 88080384,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.64921856369536,
+        "H_exp": 2.7052418625730663,
+        "H_sm": 3.9787780416991696,
+        "H_separated": 6.684019904272236,
+        "mutual_info": 0.034801340576875894,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.64921856369536,
+            "ratio": 83.115232046192,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.684019904272236,
+            "ratio": 83.55024880340295,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.705241862573066,
+            "ratio": 83.81552328216333,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.755241862573066,
+            "ratio": 84.44052328216333,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "k_proj": {
+        "n_values": 29360128,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.678663233698404,
+        "H_exp": 2.7332566195709007,
+        "H_sm": 3.978623687146686,
+        "H_separated": 6.711880306717587,
+        "mutual_info": 0.033217073019183196,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.678663233698404,
+            "ratio": 83.48329042123005,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.711880306717587,
+            "ratio": 83.89850383396984,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.7332566195709,
+            "ratio": 84.16570774463625,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.783256619570901,
+            "ratio": 84.79070774463626,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "o_proj": {
+        "n_values": 58720256,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.593204777346758,
+        "H_exp": 2.6536241873622863,
+        "H_sm": 3.9789656656803287,
+        "H_separated": 6.6325898530426155,
+        "mutual_info": 0.03938507569585781,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.593204777346758,
+            "ratio": 82.41505971683448,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.6325898530426155,
+            "ratio": 82.90737316303269,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.653624187362286,
+            "ratio": 83.17030234202858,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.703624187362286,
+            "ratio": 83.79530234202858,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "q_proj": {
+        "n_values": 58720256,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.693598399172917,
+        "H_exp": 2.744488305615087,
+        "H_sm": 3.9786993244090194,
+        "H_separated": 6.723187630024107,
+        "mutual_info": 0.02958923085119025,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.693598399172917,
+            "ratio": 83.66997998966146,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.723187630024107,
+            "ratio": 84.03984537530134,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.7444883056150875,
+            "ratio": 84.3061038201886,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.794488305615086,
+            "ratio": 84.93110382018858,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "up_proj": {
+        "n_values": 88080384,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.602871298467349,
+        "H_exp": 2.6628324933900904,
+        "H_sm": 3.9787328573356926,
+        "H_separated": 6.641565350725783,
+        "mutual_info": 0.03869405225843359,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.602871298467349,
+            "ratio": 82.53589123084186,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.641565350725783,
+            "ratio": 83.01956688407228,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.66283249339009,
+            "ratio": 83.28540616737612,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.71283249339009,
+            "ratio": 83.91040616737612,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "v_proj": {
+        "n_values": 29360128,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.575067659530494,
+        "H_exp": 2.6379407269090045,
+        "H_sm": 3.978824236188778,
+        "H_separated": 6.616764963097783,
+        "mutual_info": 0.041697303567288735,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.575067659530494,
+            "ratio": 82.18834574413117,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.616764963097783,
+            "ratio": 82.70956203872228,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.6379407269090045,
+            "ratio": 82.97425908636255,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.687940726909004,
+            "ratio": 83.59925908636255,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      }
+    }
+  },
+  "Qwen/Qwen3-4B-Instruct-2507-FP8": {
+    "model": "Qwen/Qwen3-4B-Instruct-2507-FP8",
+    "overall": {
+      "n_values": 3633315840,
+      "unique_full": 254,
+      "unique_exp": 16,
+      "unique_sm": 16,
+      "H_full": 6.629543715879418,
+      "H_exp": 2.6890104365040144,
+      "H_sm": 3.978858431094538,
+      "H_separated": 6.6678688675985525,
+      "mutual_info": 0.03832515171913453,
+      "methods": {
+        "full_value_ans": {
+          "bpv": 6.629543715879418,
+          "ratio": 82.86929644849272,
+          "label": "Full-value ANS"
+        },
+        "separated_ans": {
+          "bpv": 6.6678688675985525,
+          "ratio": 83.34836084498191,
+          "label": "Separated ANS (exp + s+m)"
+        },
+        "exp_ans_raw_sm": {
+          "bpv": 6.689010436504015,
+          "ratio": 83.61263045630018,
+          "label": "Exp ANS + raw s+m"
+        },
+        "ecf8_style": {
+          "bpv": 6.739010436504014,
+          "ratio": 84.23763045630017,
+          "label": "Exp Huffman + raw s+m (ECF8)"
+        }
+      },
+      "exp_distribution": {
+        "0": 636054,
+        "1": 676104,
+        "2": 1308068,
+        "3": 2613000,
+        "4": 5217578,
+        "5": 10412668,
+        "6": 20770679,
+        "7": 41259325,
+        "8": 80997866,
+        "9": 155640726,
+        "10": 291446439,
+        "11": 524189967,
+        "12": 850648084,
+        "13": 1030108361,
+        "14": 569674779,
+        "15": 47716142
+      }
+    },
+    "per_type": {
+      "down_proj": {
+        "n_values": 896532480,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.629542105852703,
+        "H_exp": 2.6895104249156914,
+        "H_sm": 3.978876667241069,
+        "H_separated": 6.6683870921567605,
+        "mutual_info": 0.038844986304057194,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.629542105852703,
+            "ratio": 82.86927632315879,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.6683870921567605,
+            "ratio": 83.35483865195951,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.689510424915691,
+            "ratio": 83.61888031144615,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.739510424915691,
+            "ratio": 84.24388031144613,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "gate_proj": {
+        "n_values": 896532480,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.640539256138744,
+        "H_exp": 2.7003081253130743,
+        "H_sm": 3.9788388333056166,
+        "H_separated": 6.679146958618691,
+        "mutual_info": 0.03860770247994694,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.640539256138744,
+            "ratio": 83.0067407017343,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.679146958618691,
+            "ratio": 83.48933698273365,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.700308125313074,
+            "ratio": 83.75385156641343,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.750308125313074,
+            "ratio": 84.37885156641343,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "k_proj": {
+        "n_values": 94371840,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.624816017214982,
+        "H_exp": 2.68279391101995,
+        "H_sm": 3.9788562000519034,
+        "H_separated": 6.661650111071854,
+        "mutual_info": 0.03683409385687142,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.624816017214982,
+            "ratio": 82.81020021518728,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.661650111071854,
+            "ratio": 83.27062638839817,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.6827939110199495,
+            "ratio": 83.53492388774937,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.73279391101995,
+            "ratio": 84.15992388774937,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "o_proj": {
+        "n_values": 377487360,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.559909841510731,
+        "H_exp": 2.623209733869161,
+        "H_sm": 3.9788925067011256,
+        "H_separated": 6.602102240570287,
+        "mutual_info": 0.042192399059556074,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.559909841510731,
+            "ratio": 81.99887301888413,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.602102240570287,
+            "ratio": 82.52627800712858,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.623209733869161,
+            "ratio": 82.79012167336451,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.673209733869161,
+            "ratio": 83.41512167336451,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "q_proj": {
+        "n_values": 377487360,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.645350499832107,
+        "H_exp": 2.7001557235025966,
+        "H_sm": 3.9787674019106634,
+        "H_separated": 6.6789231254132595,
+        "mutual_info": 0.03357262558115259,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.645350499832107,
+            "ratio": 83.06688124790134,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.6789231254132595,
+            "ratio": 83.48653906766575,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.700155723502597,
+            "ratio": 83.75194654378247,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.750155723502596,
+            "ratio": 84.37694654378245,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "up_proj": {
+        "n_values": 896532480,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.60997179829962,
+        "H_exp": 2.671532062313106,
+        "H_sm": 3.978878079803205,
+        "H_separated": 6.650410142116311,
+        "mutual_info": 0.04043834381669065,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.60997179829962,
+            "ratio": 82.62464747874525,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.650410142116311,
+            "ratio": 83.13012677645388,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.671532062313106,
+            "ratio": 83.39415077891383,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.721532062313106,
+            "ratio": 84.01915077891383,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "v_proj": {
+        "n_values": 94371840,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.554485343749357,
+        "H_exp": 2.6187457017713482,
+        "H_sm": 3.9789069977266474,
+        "H_separated": 6.597652699497996,
+        "mutual_info": 0.04316735574863895,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.554485343749357,
+            "ratio": 81.93106679686696,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.597652699497996,
+            "ratio": 82.47065874372494,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.618745701771348,
+            "ratio": 82.73432127214186,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.668745701771348,
+            "ratio": 83.35932127214186,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      }
+    }
+  },
+  "RedHatAI/Llama-3.2-1B-Instruct-FP8": {
+    "model": "RedHatAI/Llama-3.2-1B-Instruct-FP8",
+    "overall": {
+      "n_values": 973078528,
+      "unique_full": 254,
+      "unique_exp": 16,
+      "unique_sm": 16,
+      "H_full": 6.700036152342624,
+      "H_exp": 2.7502396599777805,
+      "H_sm": 3.9784835423066505,
+      "H_separated": 6.728723202284431,
+      "mutual_info": 0.028687049941807707,
+      "methods": {
+        "full_value_ans": {
+          "bpv": 6.700036152342624,
+          "ratio": 83.7504519042828,
+          "label": "Full-value ANS"
+        },
+        "separated_ans": {
+          "bpv": 6.728723202284431,
+          "ratio": 84.1090400285554,
+          "label": "Separated ANS (exp + s+m)"
+        },
+        "exp_ans_raw_sm": {
+          "bpv": 6.7502396599777805,
+          "ratio": 84.37799574972226,
+          "label": "Exp ANS + raw s+m"
+        },
+        "ecf8_style": {
+          "bpv": 6.80023965997778,
+          "ratio": 85.00299574972226,
+          "label": "Exp Huffman + raw s+m (ECF8)"
+        }
+      },
+      "exp_distribution": {
+        "0": 754851,
+        "1": 805584,
+        "2": 1560910,
+        "3": 3120921,
+        "4": 6242575,
+        "5": 12473002,
+        "6": 24900575,
+        "7": 49430312,
+        "8": 96226926,
+        "9": 174767115,
+        "10": 257273708,
+        "11": 233414376,
+        "12": 95560692,
+        "13": 15469723,
+        "14": 1058947,
+        "15": 18311
+      }
+    },
+    "per_type": {
+      "down_proj": {
+        "n_values": 268435456,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.554612286192383,
+        "H_exp": 2.6168617366223366,
+        "H_sm": 3.9782751647154986,
+        "H_separated": 6.595136901337835,
+        "mutual_info": 0.04052461514545147,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.554612286192383,
+            "ratio": 81.93265357740479,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.595136901337835,
+            "ratio": 82.43921126672294,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.616861736622337,
+            "ratio": 82.7107717077792,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.666861736622336,
+            "ratio": 83.3357717077792,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "gate_proj": {
+        "n_values": 268435456,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.664843428172418,
+        "H_exp": 2.717905079475709,
+        "H_sm": 3.978161316295519,
+        "H_separated": 6.696066395771228,
+        "mutual_info": 0.03122296759881049,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.664843428172418,
+            "ratio": 83.31054285215522,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.696066395771228,
+            "ratio": 83.70082994714035,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.71790507947571,
+            "ratio": 83.97381349344637,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.7679050794757085,
+            "ratio": 84.59881349344636,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "k_proj": {
+        "n_values": 16777216,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.725153662134702,
+        "H_exp": 2.775647895795497,
+        "H_sm": 3.9780098401992707,
+        "H_separated": 6.753657735994768,
+        "mutual_info": 0.028504073860065482,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.725153662134702,
+            "ratio": 84.06442077668378,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.753657735994768,
+            "ratio": 84.4207216999346,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.7756478957954975,
+            "ratio": 84.69559869744371,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.8256478957954965,
+            "ratio": 85.3205986974437,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "o_proj": {
+        "n_values": 67108864,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.65346683501979,
+        "H_exp": 2.707538032548965,
+        "H_sm": 3.9782166898333853,
+        "H_separated": 6.685754722382351,
+        "mutual_info": 0.0322878873625605,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.65346683501979,
+            "ratio": 83.16833543774737,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.685754722382351,
+            "ratio": 83.57193402977938,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.707538032548965,
+            "ratio": 83.84422540686207,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.757538032548965,
+            "ratio": 84.46922540686205,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "q_proj": {
+        "n_values": 67108864,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.739948100881114,
+        "H_exp": 2.790272967163121,
+        "H_sm": 3.977700697469543,
+        "H_separated": 6.767973664632664,
+        "mutual_info": 0.028025563751549853,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.739948100881114,
+            "ratio": 84.24935126101393,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.767973664632664,
+            "ratio": 84.5996708079083,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.790272967163121,
+            "ratio": 84.87841208953901,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.840272967163121,
+            "ratio": 85.50341208953901,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "up_proj": {
+        "n_values": 268435456,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.669093538440357,
+        "H_exp": 2.723713879563097,
+        "H_sm": 3.9790407496350335,
+        "H_separated": 6.702754629198131,
+        "mutual_info": 0.03366109075777324,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.669093538440357,
+            "ratio": 83.36366923050447,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.702754629198131,
+            "ratio": 83.78443286497664,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.723713879563097,
+            "ratio": 84.04642349453871,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.773713879563097,
+            "ratio": 84.67142349453871,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      },
+      "v_proj": {
+        "n_values": 16777216,
+        "unique_full": 254,
+        "unique_exp": 16,
+        "unique_sm": 16,
+        "H_full": 6.65423225708194,
+        "H_exp": 2.708117434347252,
+        "H_sm": 3.9792860649429262,
+        "H_separated": 6.687403499290179,
+        "mutual_info": 0.03317124220823864,
+        "methods": {
+          "full_value_ans": {
+            "bpv": 6.65423225708194,
+            "ratio": 83.17790321352425,
+            "label": "Full-value ANS"
+          },
+          "separated_ans": {
+            "bpv": 6.687403499290179,
+            "ratio": 83.59254374112723,
+            "label": "Separated ANS (exp + s+m)"
+          },
+          "exp_ans_raw_sm": {
+            "bpv": 6.708117434347252,
+            "ratio": 83.85146792934066,
+            "label": "Exp ANS + raw s+m"
+          },
+          "ecf8_style": {
+            "bpv": 6.758117434347252,
+            "ratio": 84.47646792934064,
+            "label": "Exp Huffman + raw s+m (ECF8)"
+          }
+        }
+      }
+    }
+  }
+}

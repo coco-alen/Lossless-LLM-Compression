@@ -18,7 +18,7 @@ DFloat11, as the baseline, is a **lossless compression framework** for LLM and d
 - GPU: 1x H200 143GB
 - Experiment environment: `quant`
 - Activate before any Python command: `conda activate quant` (uv, conda, etc.)
-- Code directory: `/home/sky/Lossless-LLM-Compression`
+- Code directory: `/data02/home/yipin/project/Lossless-LLM-Compression`
 - Instruction: You will share the GPU with other programs; do not attempt to terminate other programs.
 
 
