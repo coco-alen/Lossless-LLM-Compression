@@ -1,0 +1,139 @@
+\section{Evaluation}
+\label{sec:eval}
+
+We evaluate SplitZip along five research questions:
+\textbf{RQ1:} Does SplitZip reduce transfer time in a real PD serving stack?
+\textbf{RQ2:} Is the lossless path truly exact across models, prompts, and contexts?
+\textbf{RQ3:} How does codec throughput translate to pipeline speedup?
+\textbf{RQ4:} How does SplitZip compare to alternatives?
+\textbf{RQ5:} Is the exponent pattern stable across architectures?
+
+\subsection{Setup}
+
+\textbf{Hardware.} NVIDIA H200 GPUs (143~GB HBM3e, 4.8~TB/s bandwidth). Mooncake Transfer Engine v0.3.10 with TCP transport and etcd metadata.
+
+\textbf{Models.} Five models from three families: Qwen2.5-\{1.5B, 3B, 7B\}, TinyLlama-1.1B-Chat, Phi-2 (2.7B).
+
+\textbf{Workloads.} 140 diverse prompts (knowledge, reasoning, code, creative, technical) across two model families (Qwen, Llama). Context lengths: 128--2840 tokens.
+
+\textbf{Baselines.} Raw BF16 (no compression), FP8 E4M3, LZ4, zstd (level 1).
+
+\subsection{Exponent Structure Across Models (RQ5)}
+
+Table~\ref{tab:exponent} shows that BF16 exponent concentration is consistent across all five models: top-15 coverage ranges from 99.0\% to 99.8\%, and the dominant exponent values (121--128) are identical across families. Shannon entropy of the exponent field ranges from 2.92 to 3.44 bits, well below the 8-bit allocation. Short and long contexts show less than 0.5\% difference in coverage, confirming context-length stability.
+
+\subsection{Codec Microbenchmarks (RQ3)}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Codec performance at 268~MB per-layer size (Llama-3-70B scale) on H200.}
+\label{tab:codec}
+\begin{tabular}{lccccc}
+\toprule
+Mode & Ratio & Enc (GB/s) & Dec (GB/s) & Errors & Correct \\
+\midrule
+Lossless (4-bit + escape) & 1.333$\times$ & 252 & 1460 & 0\% & PASS \\
+Near-lossless (3-bit) & 1.455$\times$ & 1709 & 1204 & 1.25\% & $\sim$PASS \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:codec} summarizes codec throughput. The lossless encode at 252~GB/s is bottlenecked by escape collection; the decode at 1460~GB/s is near memory bandwidth. The 3-bit variant avoids escape handling entirely, reaching 1709~GB/s encode. Both modes far exceed cross-node network bandwidth (15--190~GB/s), ensuring the codec is never the bottleneck in the pipelined transfer.
+
+\subsection{Transfer Acceleration in Mooncake (RQ1)}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Real Mooncake Transfer Engine speedup (TCP transport, single node). SplitZip-compressed transfers are consistently faster than raw BF16.}
+\label{tab:mooncake}
+\begin{tabular}{rrrrc}
+\toprule
+Tokens & KV Size & Raw (ms) & Compressed (ms) & Speedup \\
+\midrule
+256 & 512\,KB & 1.95 & 0.86 & 2.27$\times$ \\
+1024 & 2\,MB & 1.62 & 1.39 & 1.16$\times$ \\
+2048 & 4\,MB & 2.77 & 2.26 & 1.22$\times$ \\
+8192 & 16\,MB & 10.89 & 7.45 & 1.46$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:mooncake} reports transfer-only times measured via Mooncake's \texttt{transfer\_sync\_write} API between two TransferEngine endpoints. Compressed transfers are faster at all tested sizes, with speedup ranging from 1.16$\times$ at 2~MB to 2.27$\times$ at 512~KB. The larger speedup at small sizes reflects fixed overhead in the transfer path that is amortized differently.
+
+\subsection{End-to-End Pipeline Speedup (RQ3)}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Pipeline speedup for Llama-3-70B at 64K context (80 layers, 21.5~GB KV) with layer-pipelined transfer. All Mooncake bandwidth tiers benefit.}
+\label{tab:pipeline}
+\begin{tabular}{lccc}
+\toprule
+Network & BW (GB/s) & Lossless & Near-lossless \\
+\midrule
+GPU-Direct RDMA & 15 & 1.331$\times$ & 1.452$\times$ \\
+CPU-RDMA & 47 & 1.328$\times$ & 1.451$\times$ \\
+RoCE 4$\times$200G & 87 & 1.324$\times$ & 1.452$\times$ \\
+RoCE 8$\times$400G & 190 & 1.313$\times$ & 1.448$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:pipeline} shows end-to-end pipeline speedup including measured encode and decode overhead. Layer pipelining hides codec costs behind transfer time: per-layer encode (0.24~ms) and decode (0.18~ms) are dwarfed by per-layer transfer (1.1--14~ms depending on bandwidth). The lossless mode achieves a consistent 1.31--1.33$\times$ speedup, closely tracking the 1.333$\times$ compression ratio. The near-lossless mode reaches 1.45$\times$, tracking its 1.455$\times$ ratio.
+
+\subsection{Correctness and Quality (RQ2)}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Lossless correctness verification across context lengths. All tests pass with zero lossless errors and zero logit difference.}
+\label{tab:correctness}
+\begin{tabular}{rcccr}
+\toprule
+Tokens & KV Size & Text Match & Logit Diff & Errors \\
+\midrule
+128 & 4.5\,MB & YES & 0.000000 & 0 \\
+256 & 8.0\,MB & YES & 0.000000 & 0 \\
+494 & 15.0\,MB & YES & 0.000000 & 0 \\
+970 & 28.3\,MB & YES & 0.000000 & 0 \\
+1939 & 56.1\,MB & YES & 0.000000 & 0 \\
+2840 & 81.9\,MB & YES & 0.000000 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Lossless mode.} Table~\ref{tab:correctness} confirms bitwise exact reconstruction at all tested context lengths (128--2840 tokens). Zero lossless errors and zero logit difference at every length.
+
+\textbf{Quality across prompts.} We evaluate 140 diverse prompts across two model families:
+\begin{itemize}[nosep,leftmargin=*]
+\item \textbf{Qwen2.5-1.5B:} 110 prompts $\to$ 110/110 text match (100\%), max logit diff = 0.000000
+\item \textbf{TinyLlama-1.1B:} 30 prompts $\to$ 30/30 text match (100\%), max logit diff = 0.000000
+\end{itemize}
+
+The KV error rate for the near-lossless variant is 0.518\% $\pm$ 0.012\% on Qwen and 0.621\% on TinyLlama---extremely stable across prompt types, yet producing zero observable output difference.
+
+\subsection{Comparison with Alternatives (RQ4)}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Comparison with alternative compression approaches on BF16 KV cache.}
+\label{tab:baselines}
+\begin{tabular}{lcccc}
+\toprule
+Method & Lossless? & Ratio & Enc (GB/s) & GPU? \\
+\midrule
+Raw BF16 & --- & 1.0$\times$ & $\infty$ & --- \\
+LZ4 & Yes & 1.0$\times$ & 0.7 & No \\
+zstd (L1) & Yes & 1.29$\times$ & 0.7 & No \\
+FP8 E4M3 & No & 2.0$\times$ & 2081 & Yes \\
+\textbf{SplitZip (lossless)} & \textbf{Yes} & \textbf{1.333$\times$} & \textbf{252} & \textbf{Yes} \\
+SplitZip (near-lossless) & $\sim$Yes & 1.455$\times$ & 1709 & Yes \\
+FP8 + SplitZip & No & 2.77$\times$ & --- & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:baselines} positions SplitZip among alternatives. LZ4 achieves zero compression on BF16. zstd reaches 1.29$\times$ but at 0.7~GB/s---over 300$\times$ slower than SplitZip. FP8 achieves 2$\times$ but is lossy. SplitZip uniquely combines lossless reconstruction, GPU-native speed, and meaningful compression. It also composes with FP8: applying SplitZip to FP8 E5M2 KV caches yields 2.77$\times$ total compression versus BF16.

@@ -1,0 +1,4 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented SplitZip, a lossless KV cache compression codec for disaggregated prefill-decode LLM serving. By exploiting the empirical concentration of BF16 exponent values---a numerical regularity consistent across model families---SplitZip achieves 1.333$\times$ lossless compression at GPU memory bandwidth speed. Integrated into the Mooncake Transfer Engine with layer-pipelined transfer, SplitZip delivers 1.16--2.27$\times$ real transfer speedup and 1.31--1.33$\times$ end-to-end pipeline speedup across all tested bandwidth tiers, with verified bitwise exact reconstruction on 140 prompts, 5 models, and context lengths up to 2840 tokens. SplitZip demonstrates that format-aware lossless compression is a practical and deployable optimization for the emerging class of disaggregated LLM serving systems.

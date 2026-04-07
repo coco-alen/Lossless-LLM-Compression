@@ -1,0 +1,10 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\textbf{Why SplitZip works.} The codec exploits a numerical regularity of BF16 representations, not model semantics. After layer normalization, attention key and value activations naturally concentrate near unit magnitude, placing their BF16 exponents in a narrow range around 124--127. This property holds because layer normalization constrains the scale of intermediate representations, and the BF16 format allocates 8 bits to an exponent field that needs only 3--4 bits of entropy for these values.
+
+\textbf{When SplitZip helps most.} The benefit is largest when KV transfer is on the critical path---disaggregated PD serving over cross-node links. At 15~GB/s (GPU-Direct RDMA) for Llama-3-70B at 64K context, SplitZip saves 375~ms of TTFT with lossless compression. Even at 190~GB/s (RoCE 8$\times$400G), the 1.31$\times$ pipeline speedup translates to 26~ms saved per request.
+
+\textbf{Composability with FP8.} SplitZip is orthogonal to precision reduction. For models already serving with FP8 KV caches, SplitZip provides an additional 1.19$\times$ (E4M3) or 1.39$\times$ (E5M2) lossless compression on top, because FP8 exponents exhibit the same concentration property.
+
+\textbf{Limitations.} (1)~SplitZip's 1.333$\times$ ratio is modest compared to FP8's 2$\times$, and the benefit depends on KV transfer being a bottleneck---in monolithic (non-disaggregated) serving, KV is not transferred and SplitZip does not apply. (2)~Our Mooncake integration uses TCP transport; RDMA performance may differ, though the reduced byte count should translate proportionally. (3)~The quality evaluation spans five models up to 7B parameters and 2840-token contexts; larger models and longer contexts may reveal edge cases not covered here. (4)~The near-lossless variant is empirically safe in all our tests, but this is not a formal guarantee---deployments requiring strict exactness should use the lossless mode.

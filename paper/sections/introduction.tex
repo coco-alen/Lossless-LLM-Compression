@@ -1,0 +1,30 @@
+\section{Introduction}
+\label{sec:intro}
+
+Large language model (LLM) serving increasingly relies on disaggregated architectures that separate the prefill phase---which processes the full input prompt in parallel---from the decode phase, which generates tokens autoregressively~\cite{distserve,splitwise,mooncake}. This separation allows each phase to use hardware optimized for its workload: high-throughput GPUs for prefill, latency-optimized GPUs for decode. Disaggregated prefill-decode (PD) serving is now deployed at scale by systems including Mooncake~\cite{mooncake}, DistServe~\cite{distserve}, Splitwise~\cite{splitwise}, and vLLM's disaggregated mode.
+
+However, PD disaggregation introduces a new first-order bottleneck: the KV cache generated during prefill must be transferred to the decode node before token generation can begin. For a 70B-parameter model at 64K context, the KV cache exceeds 20~GB---a transfer that takes 430~ms on 400~Gbps InfiniBand or 1.4~seconds on GPU-Direct RDMA at 15~GB/s. This KV transfer directly increases time-to-first-token (TTFT), the most user-visible latency metric in interactive serving.
+
+Every existing PD system transfers KV caches as raw BF16 tensors without compression. This is surprising given the maturity of compression for other LLM data (weights, gradients, activations), and it represents a clear optimization opportunity. However, the alternatives are unsatisfying:
+
+\begin{itemize}[nosep,leftmargin=*]
+\item \textbf{Generic lossless codecs} (LZ4, zstd) provide near-zero compression on BF16 floating-point data. In our measurements, LZ4 achieves 1.0$\times$ on BF16 KV tensors---no compression at all.
+\item \textbf{Lossy quantization} (FP8) achieves 2$\times$ but sacrifices bit-exactness, introducing quantization error (max error 0.25 for E4M3) that complicates debugging, reproducibility, and correctness guarantees.
+\item \textbf{CPU-based codecs} are too slow for the serving path. Even zstd at compression level~1 runs at 0.7~GB/s---over 300$\times$ slower than GPU memory bandwidth.
+\end{itemize}
+
+In this paper, we observe that BF16 KV cache tensors contain a simple, exploitable structure that existing codecs miss: \emph{the 8-bit exponent field concentrates on only 15--16 unique values}, with the top~8 values (121--128) covering 88--95\% of all elements. This concentration holds across model families (Qwen, Llama, Phi), model sizes (1.1B--7B), and context lengths (128--2840 tokens). It is a numerical property of BF16-represented neural network activations, not a model-specific artifact.
+
+We present \textbf{SplitZip}, a lossless KV cache compression codec designed for the PD transfer path. SplitZip maps the top-15 most frequent exponent values to 4-bit nibble codes, packs pairs of codes into bytes, and stores rare exponents ($\sim$0.02\%) in a tiny escape stream to guarantee bitwise exact reconstruction. The design is implemented with Triton GPU kernels achieving 252~GB/s encode and 1460~GB/s decode throughput, and integrated into the Mooncake Transfer Engine with layer-pipelined transfer that overlaps encode, network transfer, and decode across model layers.
+
+Our main contributions are:
+
+\begin{enumerate}[nosep,leftmargin=*]
+\item \textbf{Empirical characterization:} We show that BF16 KV cache exponents exhibit strong concentration across 5 models from 3 architecture families, making fixed-width nibble coding effective without per-model tuning.
+
+\item \textbf{Codec design:} SplitZip achieves 1.333$\times$ lossless compression with a simple, GPU-friendly design that avoids variable-length coding and bit-level packing. An optional 3-bit near-lossless variant reaches 1.455$\times$ with zero observed quality impact.
+
+\item \textbf{System integration:} We integrate SplitZip into the Mooncake Transfer Engine and demonstrate 1.16--2.27$\times$ transfer speedup on real Mooncake TCP transport, with 1.31--1.33$\times$ end-to-end pipeline speedup across all tested bandwidth tiers.
+
+\item \textbf{Correctness validation:} We verify bitwise exact reconstruction on 140 prompts across 2 model families and context lengths up to 2840 tokens, with zero logit difference.
+\end{enumerate}

@@ -98,6 +98,5 @@ Research code exploring compression beyond DFloat11's exponent-only Huffman appr
 
 ### Analysis Scripts (root)
 
-- `analyze_cross_layer.py` — Generates 3D waterfall plots comparing original vs delta-from-mean weight distributions across layers; prints entropy/std statistics.
-- `analyze_dual_group.py` — Additional cross-layer analysis.
+- `entropy_analysis.py` — Computes per-format entropy statistics (BF16, FP8, INT4) for quick profiling.
 

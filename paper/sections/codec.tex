@@ -1,0 +1,49 @@
+\section{SplitZip Codec}
+\label{sec:codec}
+
+\subsection{BF16 Exponent Coding}
+
+Each BF16 value is a 16-bit word with layout \texttt{[sign(1)|exponent(8)|mantissa(7)]}. SplitZip separates this into two 8-bit fields:
+\begin{itemize}[nosep,leftmargin=*]
+\item \textbf{Exponent byte:} bits [14:7], representing the 8-bit biased exponent.
+\item \textbf{Sign+mantissa byte:} \texttt{sign(1)|mantissa(7)}, constructed as \texttt{(value >> 8) \& 0x80 | value \& 0x7F}.
+\end{itemize}
+
+The exponent byte is compressed; the sign+mantissa byte is stored raw. To compress exponents, we build a per-layer \emph{encode lookup table} (LUT) of 256 entries mapping each possible exponent value to a 4-bit index:
+\begin{itemize}[nosep,leftmargin=*]
+\item The 15 most frequent exponent values in a calibration pass map to indices 0--14.
+\item All other exponent values map to index 15 (the \emph{escape code}).
+\end{itemize}
+
+Encoding packs two consecutive 4-bit indices into a single byte: \texttt{(idx$_0$ << 4) | idx$_1$}. For $n$ BF16 elements, this produces $n/2$ packed bytes.
+
+The calibration pass runs once during model initialization. In our experiments, the top-15 exponents cover 99.0--99.8\% of all KV elements, and the codebook is stable across prompts and context lengths.
+
+\subsection{Escape Stream for Rare Exponents}
+
+When an exponent maps to escape code 15, SplitZip must record the original exponent value to ensure lossless reconstruction. The escape stream consists of:
+\begin{itemize}[nosep,leftmargin=*]
+\item An array of \texttt{int32} positions (indices of escaped elements).
+\item An array of \texttt{uint8} raw exponent values.
+\end{itemize}
+
+In practice, escapes are extremely rare: 0.016\% of elements in our measurements ($\sim$23,000 out of 140 million per 268~MB layer). The escape stream overhead is $\sim$115~KB per layer, or 0.04\% of the original data.
+
+At decode time, the main decode kernel reconstructs all elements using the 16-entry decode LUT. A second tiny kernel then patches the escaped positions with their correct exponent values. This two-kernel design keeps the main decode path fast and branch-free.
+
+\subsection{3-Bit Near-Lossless Variant}
+
+For deployments where slightly higher compression is preferred and the affected elements are negligible, SplitZip offers a 3-bit variant that maps the top-8 exponents to 3-bit codes and packs 8 codes into 3 bytes (24 bits). This yields:
+\[
+\text{Ratio} = \frac{16\,\text{bits}}{3\,\text{bits (exp)} + 8\,\text{bits (sm)}} = \frac{16}{11} = 1.455\times
+\]
+
+The 3-bit variant affects $\sim$1.25\% of elements (those outside the top-8 exponents), which are mapped to the nearest valid code. In our evaluation across 140 prompts and 2 model families, this approximation produces \emph{bit-identical text output} and zero logit difference compared to uncompressed serving.
+
+\subsection{Correctness Properties}
+
+The lossless (4-bit) mode provides the following guarantee: for any BF16 tensor $\mathbf{x}$,
+\[
+\text{decode}(\text{encode}(\mathbf{x})) = \mathbf{x} \quad \text{(bitwise)}
+\]
+This is verified by our test suite across all tensor sizes (4~MB to 268~MB) and all tested models. The decode LUT is the exact inverse of the encode LUT for codes 0--14, and the escape stream preserves the original exponent for code 15.

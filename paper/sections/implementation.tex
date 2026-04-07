@@ -1,0 +1,42 @@
+\section{GPU Implementation and System Integration}
+\label{sec:impl}
+
+\subsection{Triton Kernels}
+
+SplitZip's encode and decode are implemented as Triton GPU kernels optimized for the H200's memory subsystem.
+
+\textbf{Encode kernel.} Each Triton program processes $4 \times \texttt{BLOCK}$ pairs of BF16 elements (where $\texttt{BLOCK}=256$). For each pair, it: (1) loads two \texttt{int16} values, (2) extracts exponents via bit-shift, (3) looks up 4-bit indices in the encode LUT, (4) packs into a nibble byte, and (5) stores the sign+mantissa bytes. The 4-step unrolled loop improves instruction-level parallelism. Measured throughput: \textbf{252~GB/s} at 268~MB on H200.
+
+\textbf{Decode kernel.} Same structure in reverse: load packed nibble bytes, unpack via shift-and-mask, look up exponents in the 16-entry decode LUT, load sign+mantissa bytes, and reconstruct BF16 via bit-combine. Decode is faster than encode because it avoids escape collection. Measured throughput: \textbf{1460~GB/s} at 268~MB.
+
+\textbf{Escape collection.} After the encode kernel, a PyTorch-based pass identifies nibbles equal to 15 in the packed output and collects their positions and raw exponents. This is the encode bottleneck---future work could fuse this into the encode kernel for higher throughput.
+
+\textbf{Escape fix kernel.} A small Triton kernel patches escaped positions in the decoded output. With $\sim$23K escapes per 268~MB layer, this kernel runs in microseconds.
+
+The 3-bit near-lossless variant uses fully vectorized encode/decode kernels that process 8 elements per program (packing into 3 bytes), achieving \textbf{1709~GB/s} encode and \textbf{1204~GB/s} decode by eliminating the escape path entirely.
+
+\subsection{Integration into Mooncake Transfer Engine}
+
+We integrate SplitZip into the Mooncake Transfer Engine (v0.3.10)~\cite{mooncake}, the production KV cache transfer library used by vLLM and SGLang for disaggregated serving. The integration follows Mooncake's managed-buffer API:
+
+\begin{enumerate}[nosep,leftmargin=*]
+\item \textbf{Prefill side:} After KV cache generation, SplitZip encodes the KV tensor on GPU, serializes the compressed output (packed exponents + sign+mantissa + escape stream + metadata header) into a CPU buffer, and writes it to a Mooncake managed buffer via \texttt{write\_bytes\_to\_buffer}.
+\item \textbf{Transfer:} Mooncake's \texttt{transfer\_sync\_write} sends the compressed buffer to the decode endpoint. The transfer moves 75\% of the original bytes.
+\item \textbf{Decode side:} The decode endpoint reads the compressed buffer, deserializes, and runs the SplitZip decode kernel on GPU to reconstruct the original BF16 KV cache.
+\end{enumerate}
+
+The integration adds $\sim$30 lines of code on top of the Mooncake API. No modifications to Mooncake's transport layer are required.
+
+\subsection{Layer-Pipelined Transfer}
+
+A naive implementation would encode all layers, transfer all compressed data, then decode all layers---incurring the full codec overhead as additional latency. SplitZip instead pipelines at layer granularity:
+
+\begin{itemize}[nosep,leftmargin=*]
+\item While layer $i$'s compressed data transfers over the network, layer $i+1$ is being encoded on the prefill GPU, and layer $i-1$ is being decoded on the decode GPU.
+\end{itemize}
+
+Since per-layer encode (0.24~ms) and decode (0.18~ms) are much faster than per-layer transfer (2.4~ms on RoCE 4$\times$200G for 268~MB), the codec overhead is completely hidden. The effective transfer time equals the compressed transfer time, with only a single-layer startup and drain penalty:
+\[
+T_{\text{pipeline}} = T_{\text{enc}}^{(1)} + N \cdot \max(T_{\text{enc}}, T_{\text{xfer}}, T_{\text{dec}}) + T_{\text{dec}}^{(N)}
+\]
+where $N$ is the number of layers. In practice, $T_{\text{xfer}}$ dominates, so $T_{\text{pipeline}} \approx N \cdot T_{\text{xfer}}^{\text{compressed}}$.

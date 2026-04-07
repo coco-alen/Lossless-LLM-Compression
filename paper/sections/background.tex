@@ -1,0 +1,43 @@
+\section{Background and Motivation}
+\label{sec:background}
+
+\subsection{Disaggregated Prefill-Decode Serving}
+
+Modern LLM serving systems increasingly separate the \emph{prefill} phase (processing the full input prompt to generate the KV cache) from the \emph{decode} phase (autoregressive token generation using the cached KV states). This disaggregation allows each phase to run on hardware optimized for its characteristics: prefill is compute-bound and benefits from high-throughput GPUs, while decode is memory-bandwidth-bound and benefits from lower-latency configurations~\cite{distserve,splitwise}.
+
+In this architecture, the KV cache produced by the prefill node must be transferred to the decode node before the first output token can be generated. Systems such as Mooncake~\cite{mooncake} use RDMA or TCP transport via a dedicated Transfer Engine, while DistServe~\cite{distserve} uses pull-based RDMA, and Splitwise~\cite{splitwise} pipelines layer-wise transfers via NCCL. FlowKV~\cite{flowkv} addresses fragmented KV memory with segmented kernel launches.
+
+The KV transfer time directly impacts TTFT and scales linearly with context length and model depth. For Llama-3-70B at 64K context, the total KV cache is approximately 21.5~GB across 80 layers---a significant data volume for cross-node transfer.
+
+\subsection{Why BF16 KV Caches Are Hard to Compress}
+
+BF16 (Brain Floating Point 16) uses 1 sign bit, 8 exponent bits, and 7 mantissa bits. The mantissa field has high entropy ($\sim$7 bits), making BF16 data appear near-random to generic byte-stream compressors. In our experiments, LZ4 achieves 1.0$\times$ compression on BF16 KV tensors---zero compression---because it cannot exploit the floating-point structure.
+
+Lossy approaches such as FP8 quantization~\cite{kivi} achieve 2$\times$ compression but introduce quantization error (max absolute error 0.25 for E4M3 format). While acceptable for some applications, lossy KV compression complicates exact reproducibility and may interact unpredictably with attention mechanisms in long-context or retrieval-augmented settings.
+
+\subsection{Empirical Exponent Concentration}
+\label{sec:exponent}
+
+We profile the exponent distribution of KV cache tensors across five models from three architecture families (Table~\ref{tab:exponent}). A striking pattern emerges: \textbf{the 8-bit BF16 exponent field uses only 15--16 unique values out of 256 possible}, with the top-8 values covering 88--95\% of all KV elements.
+
+\begin{table}[t]
+\centering
+\small
+\caption{BF16 KV cache exponent statistics across model families. Top-8 and Top-15 exponent values cover the vast majority of elements. The same exponent values (121--128) dominate in all families.}
+\label{tab:exponent}
+\begin{tabular}{llcccl}
+\toprule
+Model & Family & Top-8 & Top-15 & Entropy & Top Values \\
+\midrule
+Qwen2.5-1.5B & Qwen & 95.5\% & 99.6\% & 2.92\,b & [122--129] \\
+Qwen2.5-3B & Qwen & 95.8\% & 99.8\% & 2.92\,b & [121--129] \\
+Qwen2.5-7B & Qwen & 94.5\% & 99.6\% & 3.01\,b & [121--128] \\
+TinyLlama-1.1B & Llama & 88.4\% & 99.5\% & 3.43\,b & [121--128] \\
+Phi-2 (2.7B) & Phi & 93.2\% & 99.5\% & 3.02\,b & [121--128] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The exponent concentration is remarkably consistent: the same values (121--128, corresponding to magnitudes $\approx 2^{-6}$ to $2^{1}$) appear across all tested architectures. This is a numerical property of BF16-represented neural network activations---the dynamic range of attention keys and values naturally concentrates near unit magnitude after layer normalization.
+
+This observation motivates a simple but effective coding strategy: assign short fixed-width codes to the frequent exponents and handle rare ones via an escape mechanism. With only 15 frequent values, 4-bit codes (16 entries) suffice with one code reserved for escapes.
