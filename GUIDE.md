@@ -82,7 +82,11 @@ experiments/
     ├── fp8_kv_profile.py            # FP8 KV cache entropy profiling
     ├── quality_eval.py              # 140-prompt quality evaluation
     ├── pipeline_and_quality.py      # Pipeline simulation + long-context test
+    ├── real_kv_eval.py              # ★ Full eval on Qwen3-30B-A3B real KV caches
     ├── mooncake_integration.py      # Real Mooncake Transfer Engine integration
+    ├── bandwidth_simulation.py      # v1 simulation (.cpu() serialize path)
+    ├── bandwidth_simulation_v2.py   # ★ v2 simulation (pinned-memory DMA path)
+    ├── e2e_simulation.py            # ★ Wall-clock end-to-end measurement
     └── main_track_push.py           # Long-context + serving-path proxy
 
 paper/                               # LaTeX paper (10 pages, compiled PDF)
@@ -108,10 +112,16 @@ dfloat11/                            # Base DFloat11 codebase (dependency)
 
 ```bash
 conda activate quant  # or your CUDA-enabled Python environment
-pip install torch triton transformers dahuffman safetensors
-# For Mooncake integration:
-pip install mooncake-transfer-engine
-conda install -c conda-forge etcd  # needed for Mooncake metadata
+pip install torch triton transformers dahuffman safetensors accelerate
+pip install lz4 zstandard                    # for baseline_comparison.py
+pip install mooncake-transfer-engine          # for Mooncake integration
+conda install -c conda-forge etcd -y          # for Mooncake metadata server
+```
+
+Mooncake needs `libcudart.so.12` on the library path at runtime:
+
+```bash
+export LD_LIBRARY_PATH="$(python -c 'import nvidia.cuda_runtime, os; print(os.path.dirname(nvidia.cuda_runtime.__file__))')/lib:$LD_LIBRARY_PATH"
 ```
 
 Hardware: NVIDIA H200 (or any Ampere/Hopper GPU with BF16 support).
@@ -184,20 +194,88 @@ Expected: lossless PASS at 128–2840 tokens, pipeline speedup 1.33x on all tier
 
 ### 8. Real Mooncake Transfer Engine Integration
 
-Requires etcd running locally:
+Requires etcd running locally. The script starts two TransferEngine endpoints on localhost and measures both raw and compressed transfer times.
 
 ```bash
-# Terminal 1: Start etcd
-etcd --listen-client-urls http://localhost:2379 --advertise-client-urls http://localhost:2379
+# Terminal 1: Start etcd (needed for Mooncake metadata)
+etcd --data-dir /tmp/etcd-splitzip \
+     --listen-client-urls http://localhost:2379 \
+     --advertise-client-urls http://localhost:2379 &
 
-# Terminal 2: Run integration test
-LD_LIBRARY_PATH=$(python -c "import nvidia.cuda_runtime; print(nvidia.cuda_runtime.__path__[0])")/lib:$LD_LIBRARY_PATH \
+# Terminal 2: Run integration (needs libcudart.so.12 on LD_LIBRARY_PATH)
+export LD_LIBRARY_PATH="$(python -c 'import nvidia.cuda_runtime, os; print(os.path.dirname(nvidia.cuda_runtime.__file__))')/lib:$LD_LIBRARY_PATH"
 CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/mooncake_integration.py
 ```
 
-Expected: real Mooncake TCP transfer speedup 1.16–2.27x depending on KV size.
+Notes on the API:
+- `write_bytes_to_buffer(addr, data, length)` — 3 args
+- `transfer_sync_write(target_hostname, local_buf, remote_buf, length)` — target first
+- Mooncake topology discovery will show `Found 0 HCAs` on machines without active RDMA; TCP loopback is used instead.
 
-### 9. Cross-Model Robustness
+Expected on a machine without RDMA: end-to-end speedup <1x on localhost TCP (~1.7 GB/s loopback) because Python `.cpu().numpy().tobytes()` serialization dominates. See step 10 for a fair end-to-end benchmark that uses pinned memory.
+
+### 9. Real KV Cache Evaluation (Qwen3-30B-A3B)
+
+Loads Qwen3-30B-A3B, generates real KV caches from 8 semantically diverse prompts, and runs the full codec evaluation.
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/real_kv_eval.py
+```
+
+Expected on H200 (deterministic — identical across runs):
+```
+  Unique exponents: 38
+  Entropy: 3.548 / 8 bits
+  Top-8 coverage: 84.79%
+  Top-15 coverage: 99.08%
+  Overall: 32.6 MB → 25.2 MB
+  Actual compression ratio: 1.2935x
+  Overall escape rate: 0.9246%
+  All layers correct: YES ✓
+```
+
+Real MoE KV has higher entropy (3.55 bits vs 2.55 on randn) → ratio 1.294x rather than 1.333x. Results are saved to `experiments/splitzip/real_kv_eval_results.json`.
+
+### 10. Bandwidth Simulation (Pinned-Memory Fast Path)
+
+Measures real GPU codec + real pinned-memory DMA, then simulates network transfer at datacenter-realistic bandwidths (10G–400G+). This is the right benchmark for the integration path — no Python serialization, models what a C++ integration would achieve.
+
+```bash
+CUDA_VISIBLE_DEVICES=2 python experiments/splitzip/bandwidth_simulation_v2.py
+```
+
+Expected on H200 (PCIe Gen5):
+```
+PCIe DMA: GPU→CPU 53.6 GB/s, CPU→GPU 53.4 GB/s
+Llama-3-70B 64K: encode 1.05 ms, decode 0.18 ms, ratio 1.333x
+At 25G Ethernet:   speedup 1.333x (saves 1718 ms / 21.5 GB KV transfer)
+At 100G Ethernet:  speedup 1.333x (saves 431 ms)
+At 400G RoCE:      speedup 1.333x (saves 110 ms)
+```
+
+### 11. End-to-End Wall-Clock Benchmark
+
+Runs the actual full pipeline (real DMA + real kernels + calibrated network delay via `time.sleep`) and measures wall-clock time. Every stage uses `torch.cuda.synchronize()` to ensure DMA completion is included.
+
+```bash
+CUDA_VISIBLE_DEVICES=2 python experiments/splitzip/e2e_simulation.py
+```
+
+Expected wall-clock results (Llama-3-70B 64K, 268 MB/layer):
+
+| Network | Raw E2E | SplitZip E2E | Speedup |
+|---------|---------|--------------|---------|
+| 10G Ethernet | 225 ms | 172 ms | 1.31x |
+| 25G Ethernet | 96 ms | 75 ms | 1.28x |
+| 100G Ethernet | 32 ms | 26 ms | 1.22x |
+| 200G RoCE | 21 ms | 18 ms | 1.18x |
+| 400G RoCE | 15 ms | 13 ms | 1.16x |
+
+The per-layer breakdown at 100G confirms where time is spent: GPU encode 1.5 ms + DMA↓ 3.9 ms + network 16.1 ms + DMA↑ 4.0 ms + GPU decode 0.3 ms = 25.8 ms total SplitZip vs 31.5 ms raw (DMA 5.0 + net 21.5 + DMA 5.0).
+
+**Note:** Small KV sizes (16.8 MB/layer) only beat raw at ≤25G bandwidths. Large KV (268 MB/layer) always wins up to 400G+.
+
+### 12. Cross-Model Robustness
 
 To verify the exponent pattern on a different model:
 
@@ -219,14 +297,27 @@ Expected: same top-8 exponents (121–128), entropy 3.0–3.4 bits.
 | Lossless (4-bit + escape) | 1.333x | 252 GB/s | 1460 GB/s | 0% | PASS |
 | Near-lossless (3-bit) | 1.455x | 1709 GB/s | 1204 GB/s | 1.25% | ~PASS |
 
-### Real Mooncake Transfer Speedup (TCP)
+### End-to-End Wall-Clock Speedup (Llama-3-70B 64K, 268 MB/layer)
 
-| KV Size | Raw | Compressed | Speedup |
-|---------|-----|-----------|---------|
-| 512 KB | 1.95 ms | 0.86 ms | 2.27x |
-| 2 MB | 1.62 ms | 1.39 ms | 1.16x |
-| 4 MB | 2.77 ms | 2.26 ms | 1.22x |
-| 16 MB | 10.89 ms | 7.45 ms | 1.46x |
+Real DMA + real kernels + simulated network delay, full `cuda.synchronize()` on every stage:
+
+| Network | Raw E2E | SplitZip E2E | Speedup |
+|---------|---------|--------------|---------|
+| 10G Ethernet | 225 ms | 172 ms | 1.31x |
+| 25G Ethernet | 96 ms | 75 ms | 1.28x |
+| 100G Ethernet | 32 ms | 26 ms | 1.22x |
+| 200G RoCE | 21 ms | 18 ms | 1.18x |
+| 400G RoCE | 15 ms | 13 ms | 1.16x |
+
+### Real KV Cache on Qwen3-30B-A3B (MoE)
+
+| Metric | Value |
+|--------|-------|
+| Compression ratio | 1.294x |
+| Escape rate | 0.925% |
+| Exponent entropy | 3.548 bits |
+| Top-15 coverage | 99.08% |
+| Lossless | PASS (all 48 layers) |
 
 ### Pipeline Speedup (Llama-3-70B, 64K context, 80 layers)
 
