@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Mooncake Transfer Engine measurements. The first four rows are controlled single-layer transfers over TCP. The final row uses real Qwen3-30B-A3B BF16 KV caches; its full-path speedup includes encode, transfer, and decode.}
+\label{tab:real-kv-mooncake}
+\begin{tabularx}{\linewidth}{Xrrrrc}
+\toprule
+Payload & Size & Raw xfer & Compressed xfer & Xfer speedup & Full path \\
+\midrule
+Controlled, 256 tokens & 512\,KB & 1.95\,ms & 0.86\,ms & 2.27$\times$ & -- \\
+Controlled, 1024 tokens & 2\,MB & 1.62\,ms & 1.39\,ms & 1.16$\times$ & -- \\
+Controlled, 2048 tokens & 4\,MB & 2.77\,ms & 2.26\,ms & 1.22$\times$ & -- \\
+Controlled, 8192 tokens & 16\,MB & 10.89\,ms & 7.45\,ms & 1.46$\times$ & -- \\
+Qwen3-30B-A3B real KV & 402.7\,MB & 146.88\,ms & 115.44\,ms & 1.27$\times$ & 1.238$\times$ \\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,65 @@
+note: Running TeX ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+note: Running BibTeX on main.aux ...
+note: Rerunning TeX because bibtex was run ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+warning: internal consistency problem when checking if main.bbl changed
+note: Rerunning TeX because "main.bbl" changed ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+warning: internal consistency problem when checking if main.bbl changed
+note: Rerunning TeX because "main.bbl" changed ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+warning: internal consistency problem when checking if main.bbl changed
+note: Rerunning TeX because "main.bbl" changed ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+warning: internal consistency problem when checking if main.bbl changed
+note: Rerunning TeX because "main.bbl" changed ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+warning: internal consistency problem when checking if main.bbl changed
+note: Rerunning TeX because "main.bbl" changed ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+warning: sections/our_method:1: Underfull \vbox (badness 1168) has occurred while \output is active
+warning: tables/baseline_comparison:19: Underfull \hbox (badness 3375) in paragraph at lines 19--19
+warning: main.bbl:56: Underfull \hbox (badness 6252) in paragraph at lines 52--56
+warning: internal consistency problem when checking if main.bbl changed
+warning: TeX rerun seems needed, but stopping at 6 passes
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `main.blg` (194 B)
+note: Writing `main.aux` (9.01 KiB)
+note: Writing `main.log` (20.73 KiB)
+note: Writing `main.pdf` (69.18 KiB)
+note: Writing `main.out` (3.14 KiB)
+note: Writing `main.bbl` (2.81 KiB)

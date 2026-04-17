@@ -1,0 +1,28 @@
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Disaggregated PD serving.}
+Mooncake~\cite{mooncake} introduces a KV-cache-centric disaggregated architecture with a Transfer Engine for RDMA and TCP transport.
+DistServe~\cite{distserve} separates prefill and decode to improve goodput under latency constraints, while Splitwise~\cite{splitwise} pipelines phase-split inference across heterogeneous GPUs.
+FlowKV~\cite{flowkv} focuses on fragmented KV memory transfer and segmented kernel launches.
+These systems reduce scheduling or transfer overhead, but they do not make KV transfer itself smaller through a lossless, GPU-native codec.
+
+\textbf{Lossless neural-network compression.}
+DFloat11~\cite{dfloat11} compresses BF16 model weights by coding exponent bits and preserving sign and mantissa information.
+ZipServ~\cite{zipserv} uses hardware-aware lossless compression to reduce memory movement for LLM inference, and ZipNN~\cite{zipnn} studies lossless compression for weights, checkpoints, and low-precision tensors.
+\splitzip is closest in spirit to this line of work, but its target is different: the latency-critical KV transfer path in disaggregated serving, where compression, network transfer, and decompression must be overlapped at layer granularity.
+
+\textbf{Lossy KV compression and quantization.}
+KIVI~\cite{kivi} reduces KV-cache memory through quantization, while HACK~\cite{hack} explores quantized KV computation in a disaggregated setting.
+These methods can offer larger nominal compression ratios than \splitzip, but they modify KV values.
+\splitzip is designed for deployments that need exact BF16 reconstruction, and it is complementary to native FP8 serving because it can compress the FP8 representation losslessly after quantization.
+
+\textbf{Communication compression.}
+MegaScale-MoE~\cite{megascalemoe} uses FP8 compression for MoE communication during training, and Flash Communication~\cite{flashcomm} targets tensor-parallel inference communication.
+Those approaches reduce distributed tensor traffic, but they address training or tensor-parallel activation exchange rather than PD KV-cache handoff.
+\splitzip focuses on the serialized KV payload that sits directly on the TTFT path.
+
+\textbf{GPU lossless codecs.}
+General GPU compression libraries such as nvCOMP provide LZ4, Cascaded, and entropy-coding primitives.
+They are valuable for generic data, but floating-point KV tensors need a format-aware decomposition: the BF16 mantissa stream is hard to compress, while the exponent stream is highly structured.
+\splitzip uses this decomposition directly instead of applying byte-stream compression to the whole tensor.

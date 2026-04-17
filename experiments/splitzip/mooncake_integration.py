@@ -53,13 +53,15 @@ def run_mooncake_kv_transfer():
         run_direct_benchmark()
         return
 
+    from experiments.splitzip.lossless_fast import FastLosslessCodec
+
     # Test data: KV cache for one layer
     # Qwen2.5-7B: 4 KV heads, head_dim=128
-    for n_tokens in [1024, 4096]:
+    for n_tokens in [1024, 4096, 16384]:
         kv_shape = (2, 4, n_tokens, 128)  # K+V, heads, seq, dim
         kv_data = torch.randn(kv_shape, dtype=torch.bfloat16)
         kv_bytes = kv_data.numel() * 2
-        kv_flat = kv_data.numpy().tobytes() if hasattr(kv_data, 'numpy') else kv_data.view(torch.uint8).numpy().tobytes()
+        kv_flat = kv_data.contiguous().view(torch.uint8).numpy().tobytes()
 
         print(f"\n--- KV: {n_tokens} tokens, {kv_bytes/1024:.0f} KB ---")
 
@@ -68,30 +70,47 @@ def run_mooncake_kv_transfer():
         buf_decode = te_decode.allocate_managed_buffer(kv_bytes)
 
         # Write KV data to prefill buffer
-        te_prefill.write_bytes_to_buffer(buf_prefill, kv_flat)
+        # API: write_bytes_to_buffer(buffer_addr, data, length)
+        te_prefill.write_bytes_to_buffer(buf_prefill, kv_flat, len(kv_flat))
 
         # Raw transfer (no compression)
-        t0 = time.perf_counter()
-        ret = te_prefill.transfer_sync_write(
-            buf_prefill, "localhost:23457", buf_decode, kv_bytes)
-        raw_time = time.perf_counter() - t0
+        # API: transfer_sync_write(target_hostname, local_buf, remote_buf, length)
+        # Warmup
+        for _ in range(3):
+            te_prefill.transfer_sync_write(
+                "localhost:23457", buf_prefill, buf_decode, kv_bytes)
+
+        n_runs = 20
+        raw_times = []
+        for _ in range(n_runs):
+            t0 = time.perf_counter()
+            te_prefill.transfer_sync_write(
+                "localhost:23457", buf_prefill, buf_decode, kv_bytes)
+            raw_times.append(time.perf_counter() - t0)
+        raw_time = sorted(raw_times)[n_runs // 2]  # median
 
         # Verify
         received = te_decode.read_bytes_from_buffer(buf_decode, kv_bytes)
         match = (received == kv_flat)
 
         raw_bw = kv_bytes / raw_time / 1e9 if raw_time > 0 else float('inf')
-        print(f"  Raw transfer: {raw_time*1000:.2f} ms, {raw_bw:.1f} GB/s, match={match}")
+        print(f"  Raw transfer (median of {n_runs}): {raw_time*1000:.2f} ms, "
+              f"{raw_bw:.1f} GB/s, match={match}")
 
         # SplitZip compressed transfer
-        # Step 1: Compress on prefill side
-        from experiments.splitzip.lossless_fast import FastLosslessCodec
-        codec = FastLosslessCodec('cpu')  # CPU for Mooncake managed buffers
-        codec.calibrate(kv_data.view(-1))
+        codec = FastLosslessCodec('cuda')
+        codec.calibrate(kv_data.cuda().view(-1).to(torch.bfloat16))
 
-        t0 = time.perf_counter()
+        # Warmup compress path
         kv_gpu = kv_data.cuda()
-        r = codec.encode(kv_gpu.view(-1))
+        for _ in range(5):
+            r = codec.encode(kv_gpu.view(-1).to(torch.bfloat16))
+            codec.decode(*r)
+
+        # Step 1: Compress on prefill side (GPU)
+        torch.cuda.synchronize()
+        t0 = time.perf_counter()
+        r = codec.encode(kv_gpu.view(-1).to(torch.bfloat16))
         pk, sm, esc_pos, esc_val, n, n_esc = r
         # Serialize compressed data
         pk_bytes = pk.cpu().numpy().tobytes()
@@ -102,40 +121,55 @@ def run_mooncake_kv_transfer():
                         esc_val.cpu().numpy().tobytes())
         header = struct.pack('III', n, n_esc, len(esc_bytes))
         compressed = header + pk_bytes + sm_bytes + esc_bytes
+        torch.cuda.synchronize()
         compress_time = time.perf_counter() - t0
 
         comp_bytes = len(compressed)
         ratio = kv_bytes / comp_bytes
 
-        # Step 2: Transfer compressed
+        # Step 2: Transfer compressed via Mooncake
         comp_buf_p = te_prefill.allocate_managed_buffer(comp_bytes)
         comp_buf_d = te_decode.allocate_managed_buffer(comp_bytes)
-        te_prefill.write_bytes_to_buffer(comp_buf_p, compressed)
+        te_prefill.write_bytes_to_buffer(comp_buf_p, compressed, len(compressed))
 
-        t0 = time.perf_counter()
-        ret = te_prefill.transfer_sync_write(
-            comp_buf_p, "localhost:23457", comp_buf_d, comp_bytes)
-        transfer_time = time.perf_counter() - t0
+        # Warmup
+        for _ in range(3):
+            te_prefill.transfer_sync_write(
+                "localhost:23457", comp_buf_p, comp_buf_d, comp_bytes)
+
+        xfer_times = []
+        for _ in range(n_runs):
+            t0 = time.perf_counter()
+            te_prefill.transfer_sync_write(
+                "localhost:23457", comp_buf_p, comp_buf_d, comp_bytes)
+            xfer_times.append(time.perf_counter() - t0)
+        transfer_time = sorted(xfer_times)[n_runs // 2]
 
         # Step 3: Decompress on decode side
-        t0 = time.perf_counter()
         recv_comp = te_decode.read_bytes_from_buffer(comp_buf_d, comp_bytes)
-        # Deserialize
         hdr = struct.unpack('III', recv_comp[:12])
         n_recv, n_esc_recv, esc_len = hdr
         offset = 12
-        pk_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_recv//2]), dtype=torch.uint8).cuda()
+        pk_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_recv//2]),
+                                   dtype=torch.uint8).cuda()
         offset += n_recv // 2
-        sm_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_recv]), dtype=torch.uint8).cuda()
+        sm_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_recv]),
+                                   dtype=torch.uint8).cuda()
         offset += n_recv
         if n_esc_recv > 0:
-            ep_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_esc_recv*4]), dtype=torch.int32).cuda()
+            ep_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_esc_recv*4]),
+                                       dtype=torch.int32).cuda()
             offset += n_esc_recv * 4
-            ev_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_esc_recv]), dtype=torch.uint8).cuda()
+            ev_recv = torch.frombuffer(bytearray(recv_comp[offset:offset+n_esc_recv]),
+                                       dtype=torch.uint8).cuda()
         else:
             ep_recv = torch.empty(0, dtype=torch.int32, device='cuda')
             ev_recv = torch.empty(0, dtype=torch.uint8, device='cuda')
+
+        torch.cuda.synchronize()
+        t0 = time.perf_counter()
         decoded = codec.decode(pk_recv, sm_recv, ep_recv, ev_recv, n_recv, n_esc_recv)
+        torch.cuda.synchronize()
         decompress_time = time.perf_counter() - t0
 
         # Verify lossless
@@ -146,11 +180,12 @@ def run_mooncake_kv_transfer():
         speedup = raw_time / total_comp if total_comp > 0 else float('inf')
 
         print(f"  Compressed: ratio={ratio:.3f}x")
-        print(f"    Compress: {compress_time*1000:.2f} ms")
-        print(f"    Transfer: {transfer_time*1000:.2f} ms ({comp_bytes/transfer_time/1e9:.1f} GB/s)")
+        print(f"    Compress:   {compress_time*1000:.2f} ms")
+        print(f"    Transfer:   {transfer_time*1000:.2f} ms "
+              f"({comp_bytes/transfer_time/1e9:.1f} GB/s)")
         print(f"    Decompress: {decompress_time*1000:.2f} ms")
-        print(f"    Total: {total_comp*1000:.2f} ms vs raw {raw_time*1000:.2f} ms")
-        print(f"    Speedup: {speedup:.3f}x, Lossless: {lossless}")
+        print(f"    Total:      {total_comp*1000:.2f} ms vs raw {raw_time*1000:.2f} ms")
+        print(f"    End-to-end speedup: {speedup:.3f}x, Lossless: {lossless}")
 
         # Cleanup
         te_prefill.free_managed_buffer(buf_prefill, kv_bytes)

@@ -1,37 +1,58 @@
-\documentclass[11pt,a4paper]{article}
-\usepackage[margin=1in]{geometry}
-\usepackage{booktabs}
-\usepackage{amsmath,amssymb}
+\documentclass{article}
+
+% The NeurIPS 2026 style loads natbib by default.
+\PassOptionsToPackage{numbers,sort&compress}{natbib}
+\usepackage{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
 \usepackage{xcolor}
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{subcaption}
-\usepackage{enumitem}
+\usepackage[shortlabels]{enumitem}
 \usepackage{tabularx}
+\usepackage{array}
+\usepackage{xspace}
 
-\title{SplitZip: Lossless KV Cache Compression for\\Disaggregated Prefill-Decode LLM Serving}
+\newcommand{\splitzip}{SplitZip\xspace}
 
-\author{Anonymous}
-\date{}
+\title{SplitZip: Lossless KV Cache Compression for\\Disaggregated LLM Serving}
+
+\author{%
+  Anonymous Author(s) \\
+  Affiliation \\
+  Address \\
+  \texttt{email} \\
+}
 
 \begin{document}
 \maketitle
 
-\input{sections/abstract}
+\begin{abstract}
+Disaggregated prefill-decode serving improves LLM utilization by separating compute-heavy prompt processing from latency-sensitive generation, but it exposes KV-cache transfer as a first-order time-to-first-token bottleneck. We present \splitzip, a GPU-native codec for KV-cache transfer that exploits a stable numerical regularity of BF16 and FP8 KV tensors: their exponent fields occupy a small subset of the representable range. \splitzip stores sign and mantissa bits verbatim, packs frequent exponents into fixed-width codes, and uses an escape stream for rare BF16 exponents to guarantee bitwise exact reconstruction. On controlled H200 microbenchmarks, the BF16 lossless codec reaches $1.333\times$ compression with 252/1460~GB/s encode/decode throughput; on real Qwen3-30B-A3B BF16 KV caches, it obtains $1.293$--$1.301\times$ compression with exact reconstruction and a $1.238\times$ end-to-end Mooncake TCP transfer speedup. The same format-aware idea applies to native FP8 caches, giving an additional $1.19\times$ (E4M3) to $1.39\times$ (E5M2) lossless compression on top of FP8 storage. Across six model settings and 140 generation prompts, \splitzip preserves lossless BF16 outputs exactly and provides a deployable compression layer for disaggregated LLM serving.
+\end{abstract}
+
 \input{sections/introduction}
-\input{sections/background}
-\input{sections/design}
-\input{sections/codec}
-\input{sections/implementation}
-\input{sections/evaluation}
-\input{sections/discussion}
-\input{sections/related}
+\input{sections/related_work}
+\input{sections/our_method}
+\input{sections/experiments}
 \input{sections/conclusion}
 
-\bibliographystyle{plain}
+{\small
+\bibliographystyle{plainnat}
 \bibliography{references}
+}
+
+\newpage
+\input{checklist}
 
 \end{document}

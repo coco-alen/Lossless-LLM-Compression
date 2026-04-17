@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Projected layer-pipelined speedup for a Llama-3-70B-style 64K-context request (80 layers, 21.5~GB BF16 KV) using controlled H200 kernel timings. The lossless mode uses the optimized 4-bit path; the 3-bit row is near-lossless.}
+\label{tab:pipeline}
+\begin{tabular}{lccc}
+\toprule
+Network & Bandwidth & Lossless BF16 & 3-bit variant \\
+\midrule
+GPU-Direct RDMA & 15\,GB/s & 1.331$\times$ & 1.452$\times$ \\
+CPU-RDMA & 47\,GB/s & 1.328$\times$ & 1.451$\times$ \\
+RoCE 4$\times$200G & 87\,GB/s & 1.324$\times$ & 1.452$\times$ \\
+RoCE 8$\times$400G & 190\,GB/s & 1.313$\times$ & 1.448$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}

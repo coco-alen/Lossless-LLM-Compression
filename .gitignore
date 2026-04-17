@@ -6,3 +6,8 @@ build/
 .env
 .venv
 default.etcd/
+
+*.aux
+*.bbl
+*.blg
+*.out

@@ -1,30 +1,30 @@
 \section{Introduction}
 \label{sec:intro}
 
-Large language model (LLM) serving increasingly relies on disaggregated architectures that separate the prefill phase---which processes the full input prompt in parallel---from the decode phase, which generates tokens autoregressively~\cite{distserve,splitwise,mooncake}. This separation allows each phase to use hardware optimized for its workload: high-throughput GPUs for prefill, latency-optimized GPUs for decode. Disaggregated prefill-decode (PD) serving is now deployed at scale by systems including Mooncake~\cite{mooncake}, DistServe~\cite{distserve}, Splitwise~\cite{splitwise}, and vLLM's disaggregated mode.
+Large language model (LLM) serving increasingly separates the prefill phase, which processes the input prompt in parallel, from the decode phase, which generates tokens autoregressively~\cite{distserve,splitwise,mooncake}. This disaggregated prefill-decode (PD) design improves hardware utilization because prefill and decode have different compute and memory behavior. The separation, however, turns the KV cache into an explicit cross-node payload: the prefill worker must move all keys and values to the decode worker before generation can continue.
 
-However, PD disaggregation introduces a new first-order bottleneck: the KV cache generated during prefill must be transferred to the decode node before token generation can begin. For a 70B-parameter model at 64K context, the KV cache exceeds 20~GB---a transfer that takes 430~ms on 400~Gbps InfiniBand or 1.4~seconds on GPU-Direct RDMA at 15~GB/s. This KV transfer directly increases time-to-first-token (TTFT), the most user-visible latency metric in interactive serving.
+The payload is large enough to dominate time-to-first-token (TTFT). For a Llama-3-70B-style model at 64K context, the BF16 KV cache is roughly 21.5~GB across 80 layers. Even with high-end cross-node links, moving that cache can add hundreds of milliseconds before the first decoded token appears. Existing PD serving systems therefore optimize routing, scheduling, memory placement, and transfer overlap, but they commonly still move KV tensors in their native BF16 or FP8 representation.
 
-Every existing PD system transfers KV caches as raw BF16 tensors without compression. This is surprising given the maturity of compression for other LLM data (weights, gradients, activations), and it represents a clear optimization opportunity. However, the alternatives are unsatisfying:
+Compression appears attractive, but straightforward alternatives do not match the serving path:
 
 \begin{itemize}[nosep,leftmargin=*]
-\item \textbf{Generic lossless codecs} (LZ4, zstd) provide near-zero compression on BF16 floating-point data. In our measurements, LZ4 achieves 1.0$\times$ on BF16 KV tensors---no compression at all.
-\item \textbf{Lossy quantization} (FP8) achieves 2$\times$ but sacrifices bit-exactness, introducing quantization error (max error 0.25 for E4M3) that complicates debugging, reproducibility, and correctness guarantees.
-\item \textbf{CPU-based codecs} are too slow for the serving path. Even zstd at compression level~1 runs at 0.7~GB/s---over 300$\times$ slower than GPU memory bandwidth.
+\item \textbf{Generic lossless codecs} see BF16 tensors as high-entropy byte streams. In our measurements, LZ4 gives essentially no reduction on BF16 KV caches, while zstd level~1 is CPU-bound and too slow for the critical path.
+\item \textbf{Lossy KV quantization} can halve the payload with FP8, but it changes the tensor values. That is useful in many deployments, yet it complicates exact replay, debugging, and correctness-sensitive serving.
+\item \textbf{Weight-oriented lossless codecs} exploit floating-point structure, but they are designed for model storage and loading rather than layer-pipelined KV transfer between PD workers.
 \end{itemize}
 
-In this paper, we observe that BF16 KV cache tensors contain a simple, exploitable structure that existing codecs miss: \emph{the 8-bit exponent field concentrates on only 15--16 unique values}, with the top~8 values (121--128) covering 88--95\% of all elements. This concentration holds across model families (Qwen, Llama, Phi), model sizes (1.1B--7B), and context lengths (128--2840 tokens). It is a numerical property of BF16-represented neural network activations, not a model-specific artifact.
+We observe that KV caches contain a simple format-level regularity that these alternatives miss. In BF16, the 8-bit exponent field of KV tensors concentrates on a small set of values: the top 15 exponents cover 99.1--99.8\% of elements across the models we profile, including both dense and MoE LLMs. The sign bit and mantissa remain high-entropy, so \splitzip leaves them uncompressed and only encodes the exponent stream.
 
-We present \textbf{SplitZip}, a lossless KV cache compression codec designed for the PD transfer path. SplitZip maps the top-15 most frequent exponent values to 4-bit nibble codes, packs pairs of codes into bytes, and stores rare exponents ($\sim$0.02\%) in a tiny escape stream to guarantee bitwise exact reconstruction. The design is implemented with Triton GPU kernels achieving 252~GB/s encode and 1460~GB/s decode throughput, and integrated into the Mooncake Transfer Engine with layer-pipelined transfer that overlaps encode, network transfer, and decode across model layers.
+This paper presents \splitzip, a format-aware KV-cache codec designed for disaggregated serving. The primary BF16 mode maps frequent exponents to 4-bit codes, packs two codes per byte, and stores rare exponents in an escape stream. Since the sign and mantissa bytes are kept verbatim and escaped exponents are restored exactly, decoding reconstructs the original BF16 KV cache bit for bit. The same design can also be applied to native FP8 KV caches, where it gives additional lossless compression relative to the FP8 representation.
 
 Our main contributions are:
 
 \begin{enumerate}[nosep,leftmargin=*]
-\item \textbf{Empirical characterization:} We show that BF16 KV cache exponents exhibit strong concentration across 5 models from 3 architecture families, making fixed-width nibble coding effective without per-model tuning.
+\item \textbf{KV exponent characterization.} We profile BF16 KV caches across six model settings, including Qwen, Llama, Phi, and Qwen3-MoE, and show that exponent concentration is stable enough for fixed-width coding.
 
-\item \textbf{Codec design:} SplitZip achieves 1.333$\times$ lossless compression with a simple, GPU-friendly design that avoids variable-length coding and bit-level packing. An optional 3-bit near-lossless variant reaches 1.455$\times$ with zero observed quality impact.
+\item \textbf{A lossless GPU codec for BF16 KV transfer.} \splitzip combines 4-bit exponent coding with an escape stream, preserving exact BF16 values while keeping the GPU kernels simple and bandwidth-oriented.
 
-\item \textbf{System integration:} We integrate SplitZip into the Mooncake Transfer Engine and demonstrate 1.16--2.27$\times$ transfer speedup on real Mooncake TCP transport, with 1.31--1.33$\times$ end-to-end pipeline speedup across all tested bandwidth tiers.
+\item \textbf{Native BF16 and FP8 evaluation.} We evaluate raw BF16, BF16+\splitzip, native FP8 E4M3/E5M2, and FP8+\splitzip to separate exact compression benefits from lossy precision reduction.
 
-\item \textbf{Correctness validation:} We verify bitwise exact reconstruction on 140 prompts across 2 model families and context lengths up to 2840 tokens, with zero logit difference.
+\item \textbf{Serving-path validation.} We integrate \splitzip with Mooncake Transfer Engine and measure speedups on both controlled layer-size transfers and real Qwen3-30B-A3B KV caches, while validating exact reconstruction and generation fidelity.
 \end{enumerate}

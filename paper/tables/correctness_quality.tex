@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Lossless BF16 correctness across context lengths. All rows reconstruct the KV cache bitwise and produce zero measured logit difference.}
+\label{tab:correctness}
+\begin{tabular}{rcccr}
+\toprule
+Tokens & KV size & Text match & Max logit diff & Errors \\
+\midrule
+128 & 4.5\,MB & Yes & 0.000000 & 0 \\
+256 & 8.0\,MB & Yes & 0.000000 & 0 \\
+494 & 15.0\,MB & Yes & 0.000000 & 0 \\
+970 & 28.3\,MB & Yes & 0.000000 & 0 \\
+1939 & 56.1\,MB & Yes & 0.000000 & 0 \\
+2840 & 81.9\,MB & Yes & 0.000000 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}

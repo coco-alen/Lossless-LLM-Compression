@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Comparison with baselines and related compression methods. Ratios are relative to BF16 KV size unless noted. Methods marked ``different target'' are not PD KV-transfer codecs.}
+\label{tab:baselines}
+\begin{tabularx}{\linewidth}{lcccX}
+\toprule
+Method & BF16 exact & Ratio & GPU path & Notes \\
+\midrule
+Raw BF16 & Yes & 1.00$\times$ & Yes & No compression \\
+LZ4 & Yes & 1.00$\times$ & No & Generic CPU codec; no BF16 KV gain \\
+zstd L1 & Yes & 1.29$\times$ & No & CPU-bound, about 0.7~GB/s in our tests \\
+FP8 E4M3 & No & 2.00$\times$ & Yes & Native precision reduction, lossy vs BF16 \\
+DFloat11 & Yes & $\sim$1.30$\times$ & Partial & Lossless weight codec, different target \\
+ZipNN / ZipServ & Yes & varies & Yes & Lossless model/storage focus, different target \\
+\splitzip BF16 & Yes & 1.293--1.333$\times$ & Yes & Lossless PD KV-transfer codec \\
+\splitzip 3-bit & No & 1.455$\times$ & Yes & Near-lossless ablation \\
+\bottomrule
+\end{tabularx}
+\end{table}

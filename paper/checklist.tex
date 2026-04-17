@@ -1,0 +1,85 @@
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item {\bf Claims}
+    \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: The abstract and introduction distinguish controlled microbenchmarks, real-KV Mooncake measurements, lossless BF16 reconstruction, native FP8 compression, and the limitations of each setting.
+
+\item {\bf Limitations}
+    \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: Section~\ref{sec:limitations} discusses the transfer-path scope, modest lossless ratio, real-model escape overhead, TCP-only Mooncake measurements, and the status of the 3-bit variant.
+
+\item {\bf Theory assumptions and proofs}
+    \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete proof?
+    \item[] Answer: \answerNA{}.
+    \item[] Justification: The paper is an empirical systems paper and does not claim new theoretical results beyond the direct bitwise reconstruction property of the lossless codec.
+
+\item {\bf Experimental result reproducibility}
+    \item[] Question: Does the paper fully disclose all information needed to reproduce the main experimental results to the extent that it affects the main claims?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: The experiments section specifies hardware, models, Mooncake version, transport, precision settings, baselines, and the distinction between controlled and real-KV runs.
+
+\item {\bf Open access to data and code}
+    \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: The repository includes the SplitZip implementation and experiment scripts used for profiling, baseline comparisons, Mooncake integration, and quality evaluation.
+
+\item {\bf Experimental setting/details}
+    \item[] Question: Does the paper specify all training and test details necessary to understand the results?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: No model training is performed. The test setup, evaluated models, context lengths, transport stack, precision modes, and measured quantities are described in Section~\ref{sec:experiments}.
+
+\item {\bf Experiment statistical significance}
+    \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about statistical significance?
+    \item[] Answer: \answerNo{}.
+    \item[] Justification: The current draft reports medians and deterministic correctness checks but does not yet include confidence intervals or error bars for transfer timing variability.
+
+\item {\bf Experiments compute resources}
+    \item[] Question: For each experiment, does the paper provide sufficient information on compute resources needed to reproduce the experiments?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: The experiments section reports H200 GPUs and the Mooncake TCP setup. A final supplement should add wall-clock estimates for each script.
+
+\item {\bf Code of ethics}
+    \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: The work studies compression and systems performance for existing LLM serving workloads and does not involve human subjects, private data collection, or model release.
+
+\item {\bf Broader impacts}
+    \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: Section~\ref{sec:limitations} discusses efficiency benefits and the general risk that lower serving cost can also make undesirable model uses cheaper.
+
+\item {\bf Safeguards}
+    \item[] Question: Does the paper describe safeguards for responsible release of data or models that have a high risk for misuse?
+    \item[] Answer: \answerNA{}.
+    \item[] Justification: The paper does not release a new model, dataset, or user-facing generative system; it releases a compression method for KV tensors.
+
+\item {\bf Licenses for existing assets}
+    \item[] Question: Are creators or original owners of assets used in the paper properly credited and are licenses and terms of use explicitly mentioned and respected?
+    \item[] Answer: \answerNo{}.
+    \item[] Justification: The draft cites related systems and models, but the final version should explicitly list licenses and terms for Mooncake, model checkpoints, and prompt/data sources.
+
+\item {\bf New assets}
+    \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+    \item[] Answer: \answerYes{}.
+    \item[] Justification: The repository documents SplitZip usage and includes scripts for profiling, quality evaluation, and transfer benchmarking.
+
+\item {\bf Crowdsourcing and research with human subjects}
+    \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and compensation details?
+    \item[] Answer: \answerNA{}.
+    \item[] Justification: The work does not involve crowdsourcing or human-subject experiments.
+
+\item {\bf Institutional review board approvals or equivalent for research with human subjects}
+    \item[] Question: Does the paper describe potential risks to study participants and whether IRB approvals were obtained?
+    \item[] Answer: \answerNA{}.
+    \item[] Justification: The work does not involve human-subject experiments.
+
+\item {\bf Declaration of LLM usage}
+    \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research?
+    \item[] Answer: \answerNA{}.
+    \item[] Justification: LLMs are the served workloads under evaluation, not an original or non-standard component used to develop the compression method.
+
+\end{enumerate}

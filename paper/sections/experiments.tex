@@ -1,0 +1,64 @@
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate \splitzip around five questions. (RQ1) Does it reduce transfer time in a real PD transfer stack? (RQ2) Does the BF16 path reconstruct KV caches exactly? (RQ3) Which algorithmic components matter? (RQ4) How does it compare with raw BF16, native FP8, and other compression methods? (RQ5) Does the exponent pattern hold across models?
+
+\subsection{Setup}
+
+\textbf{Hardware and system.}
+Microbenchmarks use NVIDIA H200 GPUs. Serving-path measurements use Mooncake Transfer Engine v0.3.10 with TCP transport and etcd metadata. We report both controlled tensor microbenchmarks and real-KV measurements because the escape stream depends on the actual exponent distribution.
+
+\textbf{Models and workloads.}
+The model sweep covers Qwen2.5-\{1.5B, 3B, 7B\}, TinyLlama-1.1B-Chat, Phi-2, and Qwen3-30B-A3B. Quality validation uses 140 prompts across Qwen and TinyLlama families, with context lengths from 128 to 2840 tokens. The real-KV serving-path evaluation uses Qwen3-30B-A3B BF16 KV caches collected from semantic prompts and transferred through Mooncake.
+
+\textbf{Baselines.}
+We compare against raw BF16 transfer, native FP8 E4M3/E5M2, CPU LZ4, CPU zstd level~1, and representative lossless neural-network compression methods where the target differs from PD KV transfer.
+
+\subsection{Real BF16 KV transfer through Mooncake}
+\label{sec:real-bf16}
+
+Table~\ref{tab:real-kv-mooncake} reports transfer measurements. Controlled Mooncake tests show that compressed transfers are faster than raw BF16 across tested sizes. The real Qwen3-30B-A3B row is the most representative setting: on 402.7~MB of BF16 KV data, \splitzip reduces the transfer-only median from 146.88~ms to 115.44~ms and improves the full encode-transfer-decode path by $1.238\times$ while preserving bitwise correctness.
+
+\input{tables/real_kv_mooncake}
+
+The real-KV compression ratio is lower than the controlled $1.333\times$ value because Qwen3-MoE has higher exponent entropy and a higher escape rate. This is the expected tradeoff of a lossless escape stream: the method keeps exactness, but realistic rare exponents consume side-stream bytes.
+
+\subsection{Algorithm ablation}
+\label{sec:ablation}
+
+Table~\ref{tab:codec-ablation} ablates the main design choices. Splitting sign+mantissa from exponent is not enough by itself; compression comes from coding the exponent stream. Removing the escape stream gives the nominal 4-bit payload but loses exactness on rare exponents. The full BF16 codec restores those exponents and is bitwise exact. The 3-bit variant gives a higher ratio by keeping only top-8 exponent codes, but it is a near-lossless mode and is therefore secondary to the lossless BF16 contribution.
+
+\input{tables/codec_ablation}
+
+\subsection{Native BF16 and native FP8 precision}
+\label{sec:native-precision}
+
+Table~\ref{tab:native-precision} separates two notions that are easy to conflate. BF16+\splitzip is lossless with respect to BF16. FP8+\splitzip is lossless with respect to native FP8 tensors, but it inherits the quantization error of FP8 relative to BF16. We obtain the FP8 profile by converting measured BF16 KV tensors to FP8 layouts and then compressing the FP8 byte representation. In deployments already serving native FP8 KV caches, \splitzip provides extra lossless savings: $1.19\times$ on E4M3 and $1.39\times$ on E5M2 in our FP8 profiling.
+
+\input{tables/native_precision}
+
+\subsection{Layer-pipeline projection}
+
+Table~\ref{tab:pipeline} uses measured controlled-kernel timings to project layer-pipelined transfer for a Llama-3-70B-style 64K-context request. The lossless BF16 mode closely tracks the $1.333\times$ controlled compression ratio at 15--87~GB/s. At very high link bandwidth, the margin depends on maintaining optimized encode throughput; the real-KV result in Table~\ref{tab:real-kv-mooncake} is therefore the more conservative serving-path evidence.
+
+\input{tables/pipeline_speedup}
+
+\subsection{Correctness and generation quality}
+
+Table~\ref{tab:correctness} verifies exact reconstruction across context lengths. In lossless BF16 mode, all tested contexts have zero reconstruction errors and zero logit difference. Across 140 generation prompts, Qwen2.5-1.5B and TinyLlama-1.1B produce identical text under uncompressed BF16 and lossless \splitzip reconstruction.
+
+\input{tables/correctness_quality}
+
+\subsection{Comparison with other methods}
+
+Table~\ref{tab:baselines} positions \splitzip against raw transfer, general-purpose lossless codecs, native FP8, and related neural-network compression systems. FP8 gives a larger nominal size reduction but is lossy relative to BF16. CPU lossless codecs are either ineffective on BF16 KV bytes or too slow for a latency-sensitive transfer path. \splitzip occupies a different point: exact BF16 reconstruction, GPU execution, and integration with the PD transfer path.
+
+\input{tables/baseline_comparison}
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\splitzip is most useful when KV transfer is on the TTFT critical path. It does not help monolithic serving where KV tensors are never transferred across workers. The BF16 lossless ratio is modest compared with lossy FP8, and real models with more diverse exponent distributions reduce the ratio through larger escape streams. Our real Mooncake measurements use TCP transport on a single-node setup; RDMA should benefit from reduced byte count, but absolute speedups need direct RDMA validation. Finally, the optional 3-bit variant is included as an ablation and secondary operating point, not as the primary correctness guarantee.
+
+\textbf{Broader impact.}
+Reducing KV-transfer overhead can lower the cost and energy footprint of LLM serving. As with other inference-efficiency improvements, it can also lower the cost of serving harmful or low-quality models; \splitzip changes the serving system's data movement, not model capabilities or safety behavior.
