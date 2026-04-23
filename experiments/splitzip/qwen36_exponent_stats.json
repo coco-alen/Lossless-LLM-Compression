@@ -1,0 +1,16 @@
+[
+  {
+    "model": "Qwen3.6-27B",
+    "model_id": "Qwen/Qwen3.6-27B",
+    "family": "Qwen",
+    "status": "skipped_config_error",
+    "error": "ValueError('The checkpoint you are trying to load has model type `qwen3_5` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.\\n\\nYou can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`')"
+  },
+  {
+    "model": "Qwen3.6-35B-A3B",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "family": "Qwen-MoE",
+    "status": "skipped_config_error",
+    "error": "ValueError('The checkpoint you are trying to load has model type `qwen3_5_moe` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.\\n\\nYou can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`')"
+  }
+]
