@@ -5,10 +5,11 @@
 SplitZip is a lossless compression codec for BF16 KV cache tensors, designed to reduce transfer time in disaggregated prefill-decode (PD) LLM serving systems like Mooncake, DistServe, and vLLM.
 
 **Key numbers:**
-- **1.333x** lossless compression (bitwise exact, zero errors)
-- **252 / 1460 GB/s** encode / decode on H200 GPU
-- **1.16–2.27x** real transfer speedup on Mooncake Transfer Engine
-- **1.31–1.33x** end-to-end pipeline speedup across all tested bandwidth tiers
+- **1.301–1.333x** BF16 lossless compression (bitwise exact, zero errors)
+- **1.059x / 1.214x** extra lossless compression on native FP8 E4M3 / E5M2
+- **1.225x** BF16 end-to-end speedup on Mooncake TCP loopback
+- **1.111x** E5M2 end-to-end speedup over raw native E5M2 on Mooncake TCP loopback
+- **2.200x** E5M2+SplitZip end-to-end speedup relative to raw BF16 transfer
 
 ## The Algorithm
 
@@ -51,7 +52,23 @@ The output is **bitwise identical** to the original BF16 tensor.
 
 ### Near-Lossless 3-Bit Variant
 
-Uses only 8 codes (3 bits), packing 8 exponents into 3 bytes (24 bits). Ratio: 1.455x. The ~1.25% of elements outside the top-8 are mapped to the nearest valid code. In testing across 140 prompts and 2 model families, this produces **bit-identical text output** with zero logit difference.
+Uses only 8 codes (3 bits), packing 8 exponents into 3 bytes (24 bits). Ratio: 1.455x. The ~1.25% of elements outside the top-8 are mapped to the nearest valid code. This is a diagnostic/ablation path only; the main contribution and the FP8 results below are lossless/native-exact.
+
+### Native FP8 Lossless Extension
+
+SplitZip can also compress native FP8 KV cache bytes without changing the FP8 representation:
+
+```
+E4M3 layout: [sign(1) | exponent(4) | mantissa(3)]
+E5M2 layout: [sign(1) | exponent(5) | mantissa(2)]
+```
+
+The implemented exact FP8 path keeps sign+mantissa bits verbatim, packs top-8 exponent codes into 3-bit fields, and stores uncommon exponents in a compact block-local escape stream. On Qwen2.5-1.5B tiled KV, the current exact ratios are:
+
+- E4M3 + SplitZip: **1.059x** over native FP8, **2.118x** versus BF16 bytes
+- E5M2 + SplitZip: **1.214x** over native FP8, **2.428x** versus BF16 bytes
+
+E4M3 has limited exact gains because its escape rate is high enough to consume most of the nominal 3-bit exponent savings. E5M2 is the stronger native-FP8 target.
 
 ### Layer-Pipelined Transfer
 
@@ -80,10 +97,12 @@ experiments/
     ├── kv_codec.py                  # KV codec with PD transfer simulation
     ├── baseline_comparison.py       # Compare vs FP8, LZ4, zstd
     ├── fp8_kv_profile.py            # FP8 KV cache entropy profiling
+    ├── fp8_e5m2_top8_compact_bench.py # ★ Exact FP8 E4M3/E5M2 compact codec
     ├── quality_eval.py              # 140-prompt quality evaluation
     ├── pipeline_and_quality.py      # Pipeline simulation + long-context test
     ├── real_kv_eval.py              # ★ Full eval on Qwen3-30B-A3B real KV caches
     ├── mooncake_integration.py      # Real Mooncake Transfer Engine integration
+    ├── mooncake_format_latency.py   # ★ BF16/E4M3/E5M2 Mooncake latency summary
     ├── bandwidth_simulation.py      # v1 simulation (.cpu() serialize path)
     ├── bandwidth_simulation_v2.py   # ★ v2 simulation (pinned-memory DMA path)
     ├── e2e_simulation.py            # ★ Wall-clock end-to-end measurement
@@ -98,6 +117,8 @@ dfloat11/                            # Base DFloat11 codebase (dependency)
 | File | What It Does | When to Use |
 |------|-------------|-------------|
 | `lossless_fast.py` | Truly lossless 4-bit codec with escape handling. The production implementation. | Main codec for benchmarking and integration. |
+| `fp8_e5m2_top8_compact_bench.py` | Native-FP8 exact E4M3/E5M2 top-8 codec with compact block-local escapes. | Reproduce FP8 lossless ratios and kernel timings. |
+| `mooncake_format_latency.py` | Measures Mooncake TCP loopback payload latency and composes full encode-transfer-decode latency. | Reproduce BF16/E4M3/E5M2 end-to-end latency table. |
 | `opt_rounds3.py` | 3-bit near-lossless codec with fully unrolled vectorized Triton kernels. | Higher compression (1.455x) when 1.25% approximation is acceptable. |
 | `kv_codec.py` | Triton split/recombine kernels + PD transfer simulation at various bandwidths. | Pipeline speedup projections for different network tiers. |
 | `quality_eval.py` | Runs 110+ prompts on a model, measures text match and logit difference. | Validate that compression does not affect model output. |
@@ -111,11 +132,12 @@ dfloat11/                            # Base DFloat11 codebase (dependency)
 ### Prerequisites
 
 ```bash
-conda activate quant  # or your CUDA-enabled Python environment
+conda activate yipin_quant  # or your CUDA-enabled Python environment
 pip install torch triton transformers dahuffman safetensors accelerate
 pip install lz4 zstandard                    # for baseline_comparison.py
 pip install mooncake-transfer-engine          # for Mooncake integration
-conda install -c conda-forge etcd -y          # for Mooncake metadata server
+conda install -c conda-forge rdma-core etcd -y # Mooncake runtime + metadata server
+conda install -c conda-forge tectonic -y       # LaTeX build
 ```
 
 Mooncake needs `libcudart.so.12` on the library path at runtime:
@@ -147,8 +169,8 @@ CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/lossless_fast.py
 
 Expected output:
 ```
-  268M: encode=252 GB/s, decode=1460 GB/s, ratio=1.333x, escapes=23K (0.016%), PASS ✓
-  Pipeline: GPU-Direct→1.331x, CPU-RDMA→1.328x, RoCE4x200→1.324x
+  268M: encode≈257 GB/s, decode≈470 GB/s, ratio=1.333x, escapes≈23K (0.016%), PASS ✓
+  Pipeline: GPU-Direct→1.331x, CPU-RDMA→1.326x, RoCE4x200→1.321x, RoCE8x400→1.308x
 ```
 
 ### 3. Run 3-Bit Near-Lossless Benchmark
@@ -182,9 +204,26 @@ CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/fp8_kv_profile.py \
     --model Qwen/Qwen2.5-7B --device cuda
 ```
 
-Expected: FP8 E4M3 gets additional 1.19x lossless on top of FP8. FP8 E5M2 + SplitZip = 2.77x total.
+Expected entropy profile: FP8 E4M3 has a ~1.16–1.19x exponent-coding ceiling; FP8 E5M2 has a ~1.34–1.39x exponent-coding ceiling.
 
-### 7. Long-Context + Pipeline Simulation
+### 7. Exact Native-FP8 Codec Benchmark
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/fp8_e5m2_top8_compact_bench.py \
+    --fmt e4m3 --model Qwen/Qwen2.5-1.5B --size-mb 134
+
+CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/fp8_e5m2_top8_compact_bench.py \
+    --fmt e5m2 --model Qwen/Qwen2.5-1.5B --size-mb 134
+```
+
+Expected current exact ratios on tiled Qwen KV:
+
+| Native FP8 | Extra ratio | Total vs BF16 | Exact |
+|------------|-------------|---------------|-------|
+| E4M3 + SplitZip | 1.059x | 2.118x | PASS |
+| E5M2 + SplitZip | 1.214x | 2.428x | PASS |
+
+### 8. Long-Context + Pipeline Simulation
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/pipeline_and_quality.py
@@ -192,7 +231,7 @@ CUDA_VISIBLE_DEVICES=0 python experiments/splitzip/pipeline_and_quality.py
 
 Expected: lossless PASS at 128–2840 tokens, pipeline speedup 1.33x on all tiers.
 
-### 8. Real Mooncake Transfer Engine Integration
+### 9. Real Mooncake Transfer Engine Integration
 
 Requires etcd running locally. The script starts two TransferEngine endpoints on localhost and measures both raw and compressed transfer times.
 
@@ -212,9 +251,31 @@ Notes on the API:
 - `transfer_sync_write(target_hostname, local_buf, remote_buf, length)` — target first
 - Mooncake topology discovery will show `Found 0 HCAs` on machines without active RDMA; TCP loopback is used instead.
 
-Expected on a machine without RDMA: end-to-end speedup <1x on localhost TCP (~1.7 GB/s loopback) because Python `.cpu().numpy().tobytes()` serialization dominates. See step 10 for a fair end-to-end benchmark that uses pinned memory.
+Expected on a machine without RDMA: Mooncake topology discovery will report 0 HCAs and use TCP. The older integration script includes Python serialization overhead; use the next step for the clean BF16/E4M3/E5M2 latency table.
 
-### 9. Real KV Cache Evaluation (Qwen3-30B-A3B)
+### 10. BF16/E4M3/E5M2 Mooncake Loopback Latency
+
+This is the current end-to-end latency summary used by the paper. It measures real Mooncake TCP loopback transfer times for the native and compressed payload sizes, then composes full latency with codec encode/decode throughput:
+
+```bash
+etcd --data-dir /tmp/etcd-splitzip-latency \
+     --listen-client-urls http://localhost:2379 \
+     --advertise-client-urls http://localhost:2379 &
+
+conda run -n yipin_quant python experiments/splitzip/mooncake_format_latency.py
+```
+
+Expected on the current local TCP loopback setup:
+
+| Format | Raw native | Full path | Speedup vs native | Speedup vs raw BF16 |
+|--------|------------|-----------|-------------------|---------------------|
+| BF16 + SplitZip | 49.60 ms | 40.49 ms | 1.225x | 1.225x |
+| E4M3 + SplitZip | 25.06 ms | 26.96 ms | 0.929x | 1.840x |
+| E5M2 + SplitZip | 25.06 ms | 22.55 ms | 1.111x | 2.200x |
+
+Interpretation: E4M3's current exact ratio is too small to overcome codec overhead on fast local loopback, while E5M2 remains positive versus native FP8.
+
+### 11. Real KV Cache Evaluation (Qwen3-30B-A3B)
 
 Loads Qwen3-30B-A3B, generates real KV caches from 8 semantically diverse prompts, and runs the full codec evaluation.
 
@@ -236,7 +297,7 @@ Expected on H200 (deterministic — identical across runs):
 
 Real MoE KV has higher entropy (3.55 bits vs 2.55 on randn) → ratio 1.294x rather than 1.333x. Results are saved to `experiments/splitzip/real_kv_eval_results.json`.
 
-### 10. Bandwidth Simulation (Pinned-Memory Fast Path)
+### 12. Bandwidth Simulation (Pinned-Memory Fast Path)
 
 Measures real GPU codec + real pinned-memory DMA, then simulates network transfer at datacenter-realistic bandwidths (10G–400G+). This is the right benchmark for the integration path — no Python serialization, models what a C++ integration would achieve.
 
@@ -253,7 +314,7 @@ At 100G Ethernet:  speedup 1.333x (saves 431 ms)
 At 400G RoCE:      speedup 1.333x (saves 110 ms)
 ```
 
-### 11. End-to-End Wall-Clock Benchmark
+### 13. End-to-End Wall-Clock Benchmark
 
 Runs the actual full pipeline (real DMA + real kernels + calibrated network delay via `time.sleep`) and measures wall-clock time. Every stage uses `torch.cuda.synchronize()` to ensure DMA completion is included.
 
@@ -275,7 +336,7 @@ The per-layer breakdown at 100G confirms where time is spent: GPU encode 1.5 ms 
 
 **Note:** Small KV sizes (16.8 MB/layer) only beat raw at ≤25G bandwidths. Large KV (268 MB/layer) always wins up to 400G+.
 
-### 12. Cross-Model Robustness
+### 14. Cross-Model Robustness
 
 To verify the exponent pattern on a different model:
 

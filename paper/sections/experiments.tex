@@ -33,9 +33,13 @@ Table~\ref{tab:codec-ablation} ablates the main design choices. Splitting sign+m
 \subsection{Native BF16 and native FP8 precision}
 \label{sec:native-precision}
 
-Table~\ref{tab:native-precision} separates two notions that are easy to conflate. BF16+\splitzip is lossless with respect to BF16. FP8+\splitzip is lossless with respect to native FP8 tensors, but it inherits the quantization error of FP8 relative to BF16. We obtain the FP8 profile by converting measured BF16 KV tensors to FP8 layouts and then compressing the FP8 byte representation. In deployments already serving native FP8 KV caches, \splitzip provides extra lossless savings: $1.19\times$ on E4M3 and $1.39\times$ on E5M2 in our FP8 profiling.
+Table~\ref{tab:native-precision} separates two notions that are easy to conflate. BF16+\splitzip is lossless with respect to BF16. FP8+\splitzip is lossless with respect to native FP8 tensors, but it inherits the quantization error of FP8 relative to BF16. We obtain the FP8 profile by converting measured BF16 KV tensors to FP8 layouts and then compressing the FP8 byte representation. In deployments already serving native FP8 KV caches, the current exact compact codecs provide additional lossless savings of $1.059\times$ on E4M3 and $1.214\times$ on E5M2. The entropy profile suggests larger possible ratios, but Table~\ref{tab:native-precision} reports the implemented lossless GPU path.
 
 \input{tables/native_precision}
+
+Table~\ref{tab:format-transfer-latency} composes these implemented ratios with measured Mooncake TCP loopback transfer times and GPU encode/decode throughput. On this local loopback setup, BF16+\splitzip improves full-path transfer latency by $1.225\times$. E4M3+\splitzip is slightly slower than raw native E4M3 because its $1.059\times$ ratio is too small to cover encode/decode overhead at this loopback bandwidth, although it remains $1.840\times$ faster than raw BF16 transfer. E5M2+\splitzip gives a useful native-FP8 speedup of $1.111\times$ and a $2.200\times$ speedup relative to raw BF16 transfer.
+
+\input{tables/format_transfer_latency}
 
 \subsection{Layer-pipeline projection}
 

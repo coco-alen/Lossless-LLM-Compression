@@ -55,51 +55,34 @@ def _collect_escapes(pk, inp, enc_lut,
     offs = pid * BLOCK + tl.arange(0, BLOCK)
     mask = offs < n_pairs
 
-    packed = tl.load(pk + offs, mask=mask, other=0)
+    packed = tl.load(pk + offs, mask=mask, other=0).to(tl.int32)
     hi = (packed >> 4) & 0x0F
     lo = packed & 0x0F
 
-    # Check high nibble (even element)
     hi_esc = (hi == 15) & mask
-    # Check low nibble (odd element)
-    lo_esc = (lo == 15) & mask
+    lo_pos = offs * 2 + 1
+    lo_esc = (lo == 15) & mask & (lo_pos < n)
 
-    # For each escape, atomically append to output
-    # Count escapes in this block first
-    n_hi = tl.sum(hi_esc.to(tl.int32))
-    n_lo = tl.sum(lo_esc.to(tl.int32))
+    hi_i = hi_esc.to(tl.int32)
+    lo_i = lo_esc.to(tl.int32)
+    n_hi = tl.sum(hi_i, axis=0)
+    n_lo = tl.sum(lo_i, axis=0)
     n_total = n_hi + n_lo
+    base_pos = tl.atomic_add(esc_count, n_total)
 
-    # Use atomic add to get output position
-    if n_total > 0:
-        base_pos = tl.atomic_add(esc_count, n_total)
+    hi_rank = tl.cumsum(hi_i, 0) - 1
+    lo_rank = n_hi + tl.cumsum(lo_i, 0) - 1
 
-        # Write escapes (sequential within block — OK because very few)
-        write_idx = base_pos
-        for i in range(BLOCK):
-            idx = pid * BLOCK + i
-            if idx < n_pairs:
-                p = tl.load(pk + idx)
-                hi_val = (p >> 4) & 0x0F
-                lo_val = p & 0x0F
+    hi_pos = offs * 2
+    hi_raw = tl.load(inp + hi_pos, mask=hi_esc, other=0).to(tl.int32)
+    lo_raw = tl.load(inp + lo_pos, mask=lo_esc, other=0).to(tl.int32)
+    hi_exp = (hi_raw >> 7) & 0xFF
+    lo_exp = (lo_raw >> 7) & 0xFF
 
-                if hi_val == 15:
-                    elem_idx = idx * 2
-                    if elem_idx < n:
-                        raw_v = tl.load(inp + elem_idx).to(tl.int16)
-                        raw_exp = ((raw_v >> 7) & 0xFF).to(tl.uint8)
-                        tl.store(esc_pos + write_idx, elem_idx)
-                        tl.store(esc_val + write_idx, raw_exp)
-                        write_idx += 1
-
-                if lo_val == 15:
-                    elem_idx = idx * 2 + 1
-                    if elem_idx < n:
-                        raw_v = tl.load(inp + elem_idx).to(tl.int16)
-                        raw_exp = ((raw_v >> 7) & 0xFF).to(tl.uint8)
-                        tl.store(esc_pos + write_idx, elem_idx)
-                        tl.store(esc_val + write_idx, raw_exp)
-                        write_idx += 1
+    tl.store(esc_pos + base_pos + hi_rank, hi_pos.to(tl.int32), mask=hi_esc)
+    tl.store(esc_val + base_pos + hi_rank, hi_exp.to(tl.uint8), mask=hi_esc)
+    tl.store(esc_pos + base_pos + lo_rank, lo_pos.to(tl.int32), mask=lo_esc)
+    tl.store(esc_val + base_pos + lo_rank, lo_exp.to(tl.uint8), mask=lo_esc)
 
 
 # ====== Kernel 3: 4-bit decode (same fast kernel) ======
@@ -169,33 +152,20 @@ class FastLosslessCodec:
         g = ((n_pairs + B*4 - 1) // (B*4),)
         _enc_4bit[g](int16, self.enc_lut, pk, sm, n, BLOCK=B)
 
-        # Kernel 2: Collect escapes via fast PyTorch ops
-        # Only examines packed nibbles (n/2 bytes), not full input
-        hi_esc = ((pk >> 4) & 0x0F) == 15
-        lo_esc = (pk & 0x0F) == 15
-        any_esc = hi_esc | lo_esc
-
-        if any_esc.any():
-            # Collect high-nibble escapes
-            hi_idx = hi_esc.nonzero(as_tuple=True)[0]
-            hi_pos = hi_idx * 2
-            hi_exp = ((int16[hi_pos] >> 7) & 0xFF).to(torch.uint8)
-
-            # Collect low-nibble escapes
-            lo_idx = lo_esc.nonzero(as_tuple=True)[0]
-            lo_pos = lo_idx * 2 + 1
-            lo_mask = lo_pos < n
-            lo_pos = lo_pos[lo_mask]
-            lo_exp = ((int16[lo_pos] >> 7) & 0xFF).to(torch.uint8)
-
-            esc_pos = torch.cat([hi_pos, lo_pos]).to(torch.int32)
-            esc_val = torch.cat([hi_exp, lo_exp])
-            n_esc = esc_pos.numel()
-        else:
-            esc_pos = torch.empty(0, dtype=torch.int32, device=self.device)
-            esc_val = torch.empty(0, dtype=torch.uint8, device=self.device)
-            n_esc = 0
-        return pk, sm, esc_pos[:n_esc], esc_val[:n_esc], n, n_esc
+        # Kernel 2: vectorized escape compaction from packed nibbles.
+        max_esc = max(n // 10, 1024)
+        esc_pos_buf = torch.empty(max_esc, dtype=torch.int32, device=self.device)
+        esc_val_buf = torch.empty(max_esc, dtype=torch.uint8, device=self.device)
+        esc_count = torch.zeros((), dtype=torch.int32, device=self.device)
+        C = 128
+        cg = ((n_pairs + C - 1) // C,)
+        _collect_escapes[cg](pk, int16, self.enc_lut,
+                             esc_pos_buf, esc_val_buf, esc_count,
+                             n_pairs, n, BLOCK=C)
+        n_esc = esc_count.item()
+        if n_esc > max_esc:
+            raise RuntimeError(f"escape buffer too small: {n_esc} > {max_esc}")
+        return pk, sm, esc_pos_buf[:n_esc], esc_val_buf[:n_esc], n, n_esc
 
     def decode(self, pk, sm, esc_pos, esc_val, n, n_esc):
         output = torch.empty(n, dtype=torch.int16, device=self.device)
