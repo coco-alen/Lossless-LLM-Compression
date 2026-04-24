@@ -1,0 +1,103 @@
+{
+  "representative_tensor": {
+    "activation_model": "Qwen/Qwen2.5-1.5B",
+    "shape": [
+      32768,
+      4096
+    ]
+  },
+  "fp8_results": [
+    {
+      "format": "e4m3",
+      "raw_fp8_bytes": 134217728,
+      "compressed_bytes": 126714396,
+      "ratio_vs_fp8": 1.0592145189249058,
+      "ratio_vs_bf16": 2.1184290378498116,
+      "coverage_top8": 0.9565402865409851,
+      "escapes": 5833064,
+      "escape_rate": 0.04345971345901489,
+      "encode_gbs": 136.0165078977309,
+      "decode_gbs": 289.47271161576646
+    },
+    {
+      "format": "e5m2",
+      "raw_fp8_bytes": 134217728,
+      "compressed_bytes": 110578394,
+      "ratio_vs_fp8": 1.2137789593869486,
+      "ratio_vs_bf16": 2.427557918773897,
+      "coverage_top8": 0.9569433927536011,
+      "escapes": 5778960,
+      "escape_rate": 0.043056607246398926,
+      "encode_gbs": 135.82767067302223,
+      "decode_gbs": 288.1321410998555
+    }
+  ],
+  "bf16_topk_ablation": {
+    "top8_3bit_exact": {
+      "coverage": 0.9561883807182312,
+      "escapes": 5880296,
+      "escape_rate": 0.0438116192817688,
+      "compressed_bytes": 196834256,
+      "ratio": 1.3637639171913247,
+      "encode_gbs": 270.13452680633264,
+      "decode_gbs": 493.77519850008616
+    },
+    "top16_4bit_exact": {
+      "coverage": 0.996038556098938,
+      "escapes": 531696,
+      "escape_rate": 0.003961443901062012,
+      "compressed_bytes": 203985072,
+      "ratio": 1.315956375474378,
+      "encode_gbs": 316.42385501913105,
+      "decode_gbs": 1263.7218568251951
+    },
+    "better_format": "top16_4bit_exact"
+  },
+  "cross_dataset_calibration": {
+    "model": "Qwen/Qwen2.5-1.5B",
+    "dataset_a": "wikitext-2-raw-v1",
+    "dataset_b": "openai_humaneval",
+    "calibrate_A_eval_A_top16": 0.9966619610786438,
+    "calibrate_A_eval_B_top16": 0.9965754747390747,
+    "calibrate_B_eval_B_top16": 0.9965754747390747
+  },
+  "calibration_granularity": {
+    "per_tensor": {
+      "coverage": 0.996038556098938,
+      "escapes": 531696,
+      "escape_rate": 0.003961443901062012,
+      "codebook_bytes": 16,
+      "projected_ratio": 1.322900711654174
+    },
+    "per_token": {
+      "coverage": 0.9973902404308319,
+      "escapes": 350276,
+      "escape_rate": 0.002609759569168091,
+      "codebook_bytes": 524288,
+      "projected_ratio": 1.3218490915605272
+    },
+    "per_channel": {
+      "coverage": 0.9998226761817932,
+      "escapes": 23800,
+      "escape_rate": 0.0001773238182067871,
+      "codebook_bytes": 65536,
+      "projected_ratio": 1.3291251645540658
+    }
+  },
+  "serving_compute": {
+    "model": "NousResearch/Meta-Llama-3-8B",
+    "seq_len": 32768,
+    "layer_index": 0,
+    "heads": 8,
+    "head_dim": 128,
+    "original_kv_compute_ms": 0.08730698900762945,
+    "decompress_then_compute_ms": 0.2044583496171981,
+    "projected_merged_kernel_ms": 0.13476561289280653,
+    "materialization_copy_ms": 0.06969273672439158,
+    "note": "Merged-kernel number is a projection: explicit decompress+compute minus one measured BF16 materialization copy, floored by original compute time."
+  },
+  "artifacts": {
+    "json": "/data02/home/yilian2/project/Lossless-LLM-Compression/experiments/splitzip/thesis_additional_experiments.json",
+    "markdown": "/data02/home/yilian2/project/Lossless-LLM-Compression/experiments/splitzip/thesis_additional_experiments.md"
+  }
+}

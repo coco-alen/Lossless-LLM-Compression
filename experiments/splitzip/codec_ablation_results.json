@@ -1,0 +1,217 @@
+{
+  "device": "cuda:0",
+  "activation_model": "Qwen/Qwen2.5-1.5B",
+  "shapes": [
+    {
+      "shape": [
+        1024,
+        512
+      ],
+      "seq_len": 1024,
+      "elements": 524288,
+      "raw_bytes": 1048576,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 0.9863997678233621,
+          "decode_s": 1.9796076230704784e-05,
+          "compressed_bytes": 770341,
+          "encode_gbs": 0.0010630335024447938,
+          "decode_gbs": 52.96888069028558,
+          "ratio": 1.361184202840041
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.08300860491969313,
+          "decode_s": 0.0005115943495184183,
+          "compressed_bytes": 811864,
+          "encode_gbs": 0.012632136162443006,
+          "decode_gbs": 2.0496238885106166,
+          "ratio": 1.2915660751061755
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 8.870772435329855e-05,
+          "decode_s": 3.1235173810273406e-05,
+          "compressed_bytes": 814127,
+          "escapes": 5539,
+          "calibrate_s": 0.12249303492717445,
+          "encode_gbs": 11.820571518933448,
+          "decode_gbs": 33.57035905640193,
+          "ratio": 1.2879759546115042
+        }
+      }
+    },
+    {
+      "shape": [
+        4096,
+        512
+      ],
+      "seq_len": 4096,
+      "elements": 2097152,
+      "raw_bytes": 4194304,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 1.7397416737221647,
+          "decode_s": 1.8646405078470706e-05,
+          "compressed_bytes": 3011179,
+          "encode_gbs": 0.002410877467242776,
+          "decode_gbs": 224.9390154482259,
+          "ratio": 1.392910883079352
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.16490915202302858,
+          "decode_s": 0.0011076523223891854,
+          "compressed_bytes": 3121464,
+          "encode_gbs": 0.02543402806057902,
+          "decode_gbs": 3.7866611347439463,
+          "ratio": 1.3436977008224347
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 9.877769043669105e-05,
+          "decode_s": 3.571439301595092e-05,
+          "compressed_bytes": 3230988,
+          "escapes": 17052,
+          "calibrate_s": 0.002258168999105692,
+          "encode_gbs": 42.46205779318386,
+          "decode_gbs": 117.4401591573101,
+          "ratio": 1.298149049145339
+        }
+      }
+    },
+    {
+      "shape": [
+        8192,
+        512
+      ],
+      "seq_len": 8192,
+      "elements": 4194304,
+      "raw_bytes": 8388608,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 2.6692828136147,
+          "decode_s": 2.8937100432813166e-05,
+          "compressed_bytes": 5945823,
+          "encode_gbs": 0.00314264489218371,
+          "decode_gbs": 289.8911043100834,
+          "ratio": 1.4108405177887064
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.2798515958711505,
+          "decode_s": 0.0018097816694838305,
+          "compressed_bytes": 6147576,
+          "encode_gbs": 0.029975201584565164,
+          "decode_gbs": 4.635149168237803,
+          "ratio": 1.364539128918455
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.00010607015574350953,
+          "decode_s": 4.4340500608086586e-05,
+          "compressed_bytes": 6420196,
+          "escapes": 25748,
+          "calibrate_s": 0.0024787539150565863,
+          "encode_gbs": 79.08546886915741,
+          "decode_gbs": 189.18613648827704,
+          "ratio": 1.306596870251313
+        }
+      }
+    },
+    {
+      "shape": [
+        16384,
+        512
+      ],
+      "seq_len": 16384,
+      "elements": 8388608,
+      "raw_bytes": 16777216,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 4.7732998710125685,
+          "decode_s": 4.359651356935501e-05,
+          "compressed_bytes": 11804509,
+          "encode_gbs": 0.0035148045279713423,
+          "decode_gbs": 384.8293046027673,
+          "ratio": 1.421254878114795
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.4295943756122142,
+          "decode_s": 0.004229087382555008,
+          "compressed_bytes": 12193272,
+          "encode_gbs": 0.03905362116552578,
+          "decode_gbs": 3.967100814517582,
+          "ratio": 1.3759404366604797
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.00014144161250442266,
+          "decode_s": 3.54505842551589e-05,
+          "compressed_bytes": 12766917,
+          "escapes": 36801,
+          "calibrate_s": 0.0019587038550525904,
+          "encode_gbs": 118.6158422753799,
+          "decode_gbs": 473.25640331466514,
+          "ratio": 1.3141164777682819
+        }
+      }
+    },
+    {
+      "shape": [
+        32768,
+        512
+      ],
+      "seq_len": 32768,
+      "elements": 16777216,
+      "raw_bytes": 33554432,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 9.137445962196216,
+          "decode_s": 8.041290566325187e-05,
+          "compressed_bytes": 23577784,
+          "encode_gbs": 0.003672189377515627,
+          "decode_gbs": 417.2767010872253,
+          "ratio": 1.4231376451663142
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.749374586576596,
+          "decode_s": 0.03917833961895667,
+          "compressed_bytes": 24436168,
+          "encode_gbs": 0.04477658116655427,
+          "decode_gbs": 0.856453650827114,
+          "ratio": 1.3731462314385792
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.0001620519906282425,
+          "decode_s": 3.226280678063631e-05,
+          "compressed_bytes": 25498134,
+          "escapes": 66462,
+          "calibrate_s": 0.0019912300631403923,
+          "encode_gbs": 207.05967183689825,
+          "decode_gbs": 1040.0344963209743,
+          "ratio": 1.315956375474378
+        }
+      }
+    }
+  ],
+  "methods": [
+    "dfloat11",
+    "zipserv",
+    "splitzip"
+  ],
+  "notes": {
+    "splitzip": "Encode/decode throughput excludes offline calibration. calibration_s is reported separately.",
+    "dfloat11": "Encode throughput includes codec construction and Huffman emission for the tensor.",
+    "zipserv": "Decode path uses the provided Python binding, which returns a CPU tensor after GPU decompression.",
+    "activations": "All tensors are assembled from real BF16 KV activation row blocks collected from 1024-token forwards of the activation_model."
+  }
+}

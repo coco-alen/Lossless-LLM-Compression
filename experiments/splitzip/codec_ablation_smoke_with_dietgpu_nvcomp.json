@@ -1,0 +1,79 @@
+{
+  "device": "cuda:0",
+  "activation_model": "Qwen/Qwen2.5-1.5B",
+  "shapes": [
+    {
+      "shape": [
+        1024,
+        4096
+      ],
+      "seq_len": 1024,
+      "elements": 4194304,
+      "raw_bytes": 8388608,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 2.0749174427473918,
+          "decode_s": 2.8151297010481356e-05,
+          "compressed_bytes": 5945823,
+          "encode_gbs": 0.00404286350250768,
+          "decode_gbs": 297.98300223526945,
+          "ratio": 1.4108405177887064
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.20416241601924412,
+          "decode_s": 0.0015756887538979452,
+          "compressed_bytes": 6147576,
+          "encode_gbs": 0.041087915021584084,
+          "decode_gbs": 5.3237722102466165,
+          "ratio": 1.364539128918455
+        },
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 9.196241929506262e-05,
+          "decode_s": 0.00012120374594815075,
+          "compressed_bytes": 5923728,
+          "encode_gbs": 91.21778291940147,
+          "decode_gbs": 69.2107981843113,
+          "ratio": 1.4161028325405893
+        },
+        "nvcomp_lz4": {
+          "ok": true,
+          "encode_s": 0.002302513748873025,
+          "decode_s": 0.0002842819376382977,
+          "compressed_bytes": 8408574,
+          "encode_gbs": 3.643239048672712,
+          "decode_gbs": 29.508058337048247,
+          "ratio": 0.9976255189048702
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.0001241159508936107,
+          "decode_s": 4.126300336793065e-05,
+          "compressed_bytes": 6420196,
+          "escapes": 25748,
+          "calibrate_s": 0.13877667603082955,
+          "encode_gbs": 67.58686485986414,
+          "decode_gbs": 203.29610826437258,
+          "ratio": 1.306596870251313
+        }
+      }
+    }
+  ],
+  "methods": [
+    "dfloat11",
+    "zipserv",
+    "dietgpu",
+    "nvcomp_lz4",
+    "splitzip"
+  ],
+  "notes": {
+    "splitzip": "Encode/decode throughput excludes offline calibration. calibration_s is reported separately.",
+    "dfloat11": "Encode throughput includes codec construction and Huffman emission for the tensor.",
+    "zipserv": "Decode path uses the provided Python binding, which returns a CPU tensor after GPU decompression.",
+    "dietgpu": "DietGPU is loaded from the local build tree and benchmarks its BF16 float codec via torch.ops.",
+    "nvcomp_lz4": "nvCOMP benchmarks the generic GPU LZ4 codec on raw BF16 byte streams resident on GPU.",
+    "activations": "All tensors are assembled as SEQ_LEN x 4096 BF16 matrices by concatenating eight real 512-wide KV activation row streams collected from 1024-token forwards of the activation_model."
+  }
+}

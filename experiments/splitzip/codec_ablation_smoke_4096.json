@@ -1,0 +1,57 @@
+{
+  "device": "cuda:0",
+  "activation_model": "Qwen/Qwen2.5-1.5B",
+  "shapes": [
+    {
+      "shape": [
+        1024,
+        4096
+      ],
+      "seq_len": 1024,
+      "elements": 4194304,
+      "raw_bytes": 8388608,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 3.124601663352223,
+          "decode_s": 2.80298525467515e-05,
+          "compressed_bytes": 6162832,
+          "encode_gbs": 0.0026846967721960106,
+          "decode_gbs": 299.27406810322987,
+          "ratio": 1.3611612323684956
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.26355126476846635,
+          "decode_s": 0.0017950668310125668,
+          "compressed_bytes": 6494616,
+          "encode_gbs": 0.031829132018658744,
+          "decode_gbs": 4.673145230625273,
+          "ratio": 1.2916249397962867
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.00011500609107315541,
+          "decode_s": 4.711954388767481e-05,
+          "compressed_bytes": 6514876,
+          "escapes": 44684,
+          "calibrate_s": 0.10693833115510643,
+          "encode_gbs": 72.94055403260342,
+          "decode_gbs": 178.02820884678027,
+          "ratio": 1.2876082369027437
+        }
+      }
+    }
+  ],
+  "methods": [
+    "dfloat11",
+    "zipserv",
+    "splitzip"
+  ],
+  "notes": {
+    "splitzip": "Encode/decode throughput excludes offline calibration. calibration_s is reported separately.",
+    "dfloat11": "Encode throughput includes codec construction and Huffman emission for the tensor.",
+    "zipserv": "Decode path uses the provided Python binding, which returns a CPU tensor after GPU decompression.",
+    "activations": "All tensors are assembled as SEQ_LEN x 4096 BF16 matrices by concatenating eight real 512-wide KV activation row streams collected from 1024-token forwards of the activation_model."
+  }
+}

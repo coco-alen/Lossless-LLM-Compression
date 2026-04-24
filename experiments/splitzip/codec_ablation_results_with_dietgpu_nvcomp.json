@@ -1,0 +1,311 @@
+{
+  "device": "cuda:0",
+  "activation_model": "Qwen/Qwen2.5-1.5B",
+  "shapes": [
+    {
+      "shape": [
+        1024,
+        4096
+      ],
+      "seq_len": 1024,
+      "elements": 4194304,
+      "raw_bytes": 8388608,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 2.3270318916183896,
+          "decode_s": 3.0832260381430385e-05,
+          "compressed_bytes": 5945823,
+          "encode_gbs": 0.0036048530448656393,
+          "decode_gbs": 272.07242985831425,
+          "ratio": 1.4108405177887064
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.20803397326380946,
+          "decode_s": 0.001589907663098226,
+          "compressed_bytes": 6147576,
+          "encode_gbs": 0.04032326003485182,
+          "decode_gbs": 5.276160493278749,
+          "ratio": 1.364539128918455
+        },
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 8.907075971364975e-05,
+          "decode_s": 0.00011357886251062155,
+          "compressed_bytes": 5923728,
+          "encode_gbs": 94.17914506363503,
+          "decode_gbs": 73.85712283582275,
+          "ratio": 1.4161028325405893
+        },
+        "nvcomp_lz4": {
+          "ok": true,
+          "encode_s": 0.0022944905795156956,
+          "decode_s": 0.000287152681266889,
+          "compressed_bytes": 8408574,
+          "encode_gbs": 3.655978400996794,
+          "decode_gbs": 29.21305823435219,
+          "ratio": 0.9976255189048702
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.00011329305125400424,
+          "decode_s": 4.4120242819190025e-05,
+          "compressed_bytes": 6420196,
+          "escapes": 25748,
+          "calibrate_s": 0.11643400997854769,
+          "encode_gbs": 74.04344668229167,
+          "decode_gbs": 190.1305945748646,
+          "ratio": 1.306596870251313
+        }
+      }
+    },
+    {
+      "shape": [
+        4096,
+        4096
+      ],
+      "seq_len": 4096,
+      "elements": 16777216,
+      "raw_bytes": 33554432,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 8.741629409370944,
+          "decode_s": 7.883789949119091e-05,
+          "compressed_bytes": 23579290,
+          "encode_gbs": 0.0038384642529034653,
+          "decode_gbs": 425.6129630108837,
+          "ratio": 1.4230467499233437
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 0.5312714491970837,
+          "decode_s": 0.032552924734773114,
+          "compressed_bytes": 24359112,
+          "encode_gbs": 0.06315873373340723,
+          "decode_gbs": 1.0307655079654663,
+          "ratio": 1.3774899511936232
+        },
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.00011756073217839003,
+          "decode_s": 0.00014488471206277608,
+          "compressed_bytes": 23485616,
+          "encode_gbs": 285.4221080307968,
+          "decode_gbs": 231.59401376634847,
+          "ratio": 1.4287226700802738
+        },
+        "nvcomp_lz4": {
+          "ok": true,
+          "encode_s": 0.003538747114362195,
+          "decode_s": 0.0004580372013151646,
+          "compressed_bytes": 33639859,
+          "encode_gbs": 9.48200900364356,
+          "decode_gbs": 73.25700162269568,
+          "ratio": 0.997460542269217
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.0002302448032423854,
+          "decode_s": 7.412489503622055e-05,
+          "compressed_bytes": 25454199,
+          "escapes": 57675,
+          "calibrate_s": 0.0022183971013873816,
+          "encode_gbs": 145.733721358637,
+          "decode_gbs": 452.67425989074104,
+          "ratio": 1.3182277705929777
+        }
+      }
+    },
+    {
+      "shape": [
+        8192,
+        4096
+      ],
+      "seq_len": 8192,
+      "elements": 33554432,
+      "raw_bytes": 67108864,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 13.243951864307746,
+          "decode_s": 0.00026164138689637183,
+          "compressed_bytes": 46993929,
+          "encode_gbs": 0.005067132883566075,
+          "decode_gbs": 256.49177599941316,
+          "ratio": 1.4280326294913541
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 1.5253545666734378,
+          "decode_s": 0.06279386980459094,
+          "compressed_bytes": 48552536,
+          "encode_gbs": 0.04399558336548206,
+          "decode_gbs": 1.0687168064149726,
+          "ratio": 1.3821907057542782
+        },
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.0001762744039297104,
+          "decode_s": 0.00016572015980879465,
+          "compressed_bytes": 46815712,
+          "encode_gbs": 380.7067986272115,
+          "decode_gbs": 404.9529283427506,
+          "ratio": 1.433468832002384
+        },
+        "nvcomp_lz4": {
+          "ok": true,
+          "encode_s": 0.005334645230323076,
+          "decode_s": 0.0006812339803824822,
+          "compressed_bytes": 67278371,
+          "encode_gbs": 12.579817607840392,
+          "decode_gbs": 98.51074070368803,
+          "ratio": 0.9974805127193106
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.0002800056245177984,
+          "decode_s": 7.412438280880451e-05,
+          "compressed_bytes": 50711753,
+          "escapes": 76021,
+          "calibrate_s": 0.0025837381836026907,
+          "encode_gbs": 239.66969990538263,
+          "decode_gbs": 905.3547760808984,
+          "ratio": 1.3233394633390014
+        }
+      }
+    },
+    {
+      "shape": [
+        16384,
+        4096
+      ],
+      "seq_len": 16384,
+      "elements": 67108864,
+      "raw_bytes": 134217728,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 34.77356733335182,
+          "decode_s": 0.0002862696070224047,
+          "compressed_bytes": 93557512,
+          "encode_gbs": 0.003859762983571429,
+          "decode_gbs": 468.8507781040673,
+          "ratio": 1.4346012963662393
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 3.1646221724028387,
+          "decode_s": 0.1311296781990677,
+          "compressed_bytes": 96870536,
+          "encode_gbs": 0.04241192808748192,
+          "decode_gbs": 1.023549587273785,
+          "ratio": 1.3855371668429708
+        },
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.0002821445930749178,
+          "decode_s": 0.0002482648318012555,
+          "compressed_bytes": 93243488,
+          "encode_gbs": 475.7054761788796,
+          "decode_gbs": 540.6232007417219,
+          "ratio": 1.43943272478181
+        },
+        "nvcomp_lz4": {
+          "ok": true,
+          "encode_s": 0.008698678761720657,
+          "decode_s": 0.0011791094827155273,
+          "compressed_bytes": 134541998,
+          "encode_gbs": 15.42966830671315,
+          "decode_gbs": 113.82974182422163,
+          "ratio": 0.9975898232163908
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.00046721897087991237,
+          "decode_s": 0.00010644621215760708,
+          "compressed_bytes": 101197211,
+          "escapes": 106783,
+          "calibrate_s": 0.003192828968167305,
+          "encode_gbs": 287.26943117748,
+          "decode_gbs": 1260.8971731307233,
+          "ratio": 1.3262986862355328
+        }
+      }
+    },
+    {
+      "shape": [
+        32768,
+        4096
+      ],
+      "seq_len": 32768,
+      "elements": 134217728,
+      "raw_bytes": 268435456,
+      "results": {
+        "dfloat11": {
+          "ok": true,
+          "encode_s": 64.09903302431728,
+          "decode_s": 0.0005733876023441553,
+          "compressed_bytes": 188621267,
+          "encode_gbs": 0.0041878237991228905,
+          "decode_gbs": 468.15706321965655,
+          "ratio": 1.423145227839022
+        },
+        "zipserv": {
+          "ok": true,
+          "encode_s": 5.8713324430088205,
+          "decode_s": 0.20969532239250838,
+          "compressed_bytes": 195489288,
+          "encode_gbs": 0.04571968264539926,
+          "decode_gbs": 1.2801213347884874,
+          "ratio": 1.3731466247910218
+        },
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.0005060217808932066,
+          "decode_s": 0.0004255253200729688,
+          "compressed_bytes": 187834064,
+          "encode_gbs": 530.482019027264,
+          "decode_gbs": 630.8330981431819,
+          "ratio": 1.4291095570396646
+        },
+        "nvcomp_lz4": {
+          "ok": true,
+          "encode_s": 0.02003456400707364,
+          "decode_s": 0.001957828179001808,
+          "compressed_bytes": 263499477,
+          "encode_gbs": 13.398617304834934,
+          "decode_gbs": 137.10879171064994,
+          "ratio": 1.0187324053018898
+        },
+        "splitzip": {
+          "ok": true,
+          "encode_s": 0.0008073091972619295,
+          "decode_s": 0.00021786401048302652,
+          "compressed_bytes": 203985072,
+          "escapes": 531696,
+          "calibrate_s": 0.0038954291958361864,
+          "encode_gbs": 332.5063766279709,
+          "decode_gbs": 1232.1239079591505,
+          "ratio": 1.315956375474378
+        }
+      }
+    }
+  ],
+  "methods": [
+    "dfloat11",
+    "zipserv",
+    "dietgpu",
+    "nvcomp_lz4",
+    "splitzip"
+  ],
+  "notes": {
+    "splitzip": "Encode/decode throughput excludes offline calibration. calibration_s is reported separately.",
+    "dfloat11": "Encode throughput includes codec construction and Huffman emission for the tensor.",
+    "zipserv": "Decode path uses the provided Python binding, which returns a CPU tensor after GPU decompression.",
+    "dietgpu": "DietGPU is loaded from the local build tree and benchmarked with an explicit scratch buffer sized to avoid fallback cudaMallocs on large tensors.",
+    "nvcomp_lz4": "nvCOMP benchmarks the generic GPU LZ4 codec on raw BF16 byte streams resident on GPU.",
+    "activations": "All tensors are assembled as SEQ_LEN x 4096 BF16 matrices by concatenating eight real 512-wide KV activation row streams collected from 1024-token forwards of the activation_model."
+  }
+}

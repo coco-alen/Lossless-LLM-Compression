@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{BF16 lossless compression throughput on representative real-activation tensors of shape $32768 \times 4096$. Ratios for DFloat11, ZipServ, and \splitzip come from our H200 measurements on the same tensor. The ZipNN row uses the reported compressed-size fraction of 66\%, equivalent to $1.515\times$ size reduction.}
+\label{tab:throughput-comparison}
+\begin{tabular}{lccc}
+\toprule
+Method & Ratio & Enc Throughput & Dec Throughput \\
+\midrule
+DFloat11 & 1.423$\times$ & 0.003~GB/s & 463.97~GB/s \\
+ZipServ & 1.373$\times$ & 0.053~GB/s & 0.87~GB/s \\
+ZipNN & 1.515$\times$ & 1.15~GB/s & 1.65~GB/s \\
+\splitzip & 1.316$\times$ & 269.92~GB/s & 1214.01~GB/s \\
+\bottomrule
+\end{tabular}
+\end{table}

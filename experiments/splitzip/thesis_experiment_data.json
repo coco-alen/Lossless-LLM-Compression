@@ -1,0 +1,640 @@
+{
+  "baseline": {
+    "shape": [
+      32768,
+      4096
+    ],
+    "activation_model": "Qwen/Qwen2.5-1.5B",
+    "rows": [
+      {
+        "method": "dietgpu",
+        "ratio": 1.4291095570396646,
+        "encode_gbs": 530.482019027264,
+        "decode_gbs": 630.8330981431819,
+        "source": "measured"
+      },
+      {
+        "method": "nvcomp_lz4",
+        "ratio": 1.0187324053018898,
+        "encode_gbs": 13.398617304834934,
+        "decode_gbs": 137.10879171064994,
+        "source": "measured"
+      },
+      {
+        "method": "dfloat11",
+        "ratio": 1.423145227839022,
+        "encode_gbs": 0.0041878237991228905,
+        "decode_gbs": 468.15706321965655,
+        "source": "measured"
+      },
+      {
+        "method": "zipserv",
+        "ratio": 1.3731466247910218,
+        "encode_gbs": 0.04571968264539926,
+        "decode_gbs": 1.2801213347884874,
+        "source": "measured"
+      },
+      {
+        "method": "splitzip",
+        "ratio": 1.315956375474378,
+        "encode_gbs": 332.5063766279709,
+        "decode_gbs": 1232.1239079591505,
+        "source": "measured"
+      },
+      {
+        "method": "zipnn",
+        "ratio": 1.5151515151515151,
+        "encode_gbs": 1.15,
+        "decode_gbs": 1.65,
+        "source": "reported",
+        "note": "User-provided ZipNN numbers; compressed-size fraction 66%."
+      }
+    ],
+    "notes": {
+      "splitzip": "Encode/decode throughput excludes offline calibration. calibration_s is reported separately.",
+      "dfloat11": "Encode throughput includes codec construction and Huffman emission for the tensor.",
+      "zipserv": "Decode path uses the provided Python binding, which returns a CPU tensor after GPU decompression.",
+      "dietgpu": "DietGPU is loaded from the local build tree and benchmarked with an explicit scratch buffer sized to avoid fallback cudaMallocs on large tensors.",
+      "nvcomp_lz4": "nvCOMP benchmarks the generic GPU LZ4 codec on raw BF16 byte streams resident on GPU.",
+      "activations": "All tensors are assembled as SEQ_LEN x 4096 BF16 matrices by concatenating eight real 512-wide KV activation row streams collected from 1024-token forwards of the activation_model."
+    }
+  },
+  "transfer": {
+    "Llama-3-8B": {
+      "model_meta": {
+        "num_hidden_layers": 32,
+        "num_attention_heads": 32,
+        "num_key_value_heads": 8,
+        "head_dim": 128,
+        "hidden_size": 4096,
+        "model_type": "llama",
+        "prompt_tokens": 1024,
+        "block_rows_total": 32768,
+        "block_width": 2048,
+        "calibration_s": 0.12005480495281518
+      },
+      "modes": {
+        "CPU-RDMA": [
+          {
+            "seq_len": 512,
+            "native_ms": 1.9715897331095567,
+            "splitzip_ms": 3.3508672614071604,
+            "speedup": 0.5883819260216261,
+            "ratio": 1.3019287262758226,
+            "encode_gbs": 20.540987957188012,
+            "decode_gbs": 51.21254501296249,
+            "raw_bytes_per_layer": 2097152,
+            "compressed_bytes_per_layer": 1610804
+          },
+          {
+            "seq_len": 1024,
+            "native_ms": 3.374137313144707,
+            "splitzip_ms": 4.352123948319105,
+            "speedup": 0.7752852063066541,
+            "ratio": 1.3018802332164603,
+            "encode_gbs": 31.923214163597716,
+            "decode_gbs": 87.84483320943993,
+            "raw_bytes_per_layer": 4194304,
+            "compressed_bytes_per_layer": 3221728
+          },
+          {
+            "seq_len": 2048,
+            "native_ms": 6.058305159413508,
+            "splitzip_ms": 4.730892435946014,
+            "speedup": 1.2805840000465065,
+            "ratio": 1.3130401830359302,
+            "encode_gbs": 68.17048997599979,
+            "decode_gbs": 178.74722449143962,
+            "raw_bytes_per_layer": 8388608,
+            "compressed_bytes_per_layer": 6388691
+          },
+          {
+            "seq_len": 4096,
+            "native_ms": 12.067481714239849,
+            "splitzip_ms": 9.149612342102353,
+            "speedup": 1.3189063386555504,
+            "ratio": 1.320229052896381,
+            "encode_gbs": 118.92383463023948,
+            "decode_gbs": 343.14232762973313,
+            "raw_bytes_per_layer": 16777216,
+            "compressed_bytes_per_layer": 12707807
+          },
+          {
+            "seq_len": 8192,
+            "native_ms": 24.098522173118855,
+            "splitzip_ms": 19.54974105743289,
+            "speedup": 1.2326773077107587,
+            "ratio": 1.3241297098459304,
+            "encode_gbs": 208.34322421558488,
+            "decode_gbs": 767.269823916455,
+            "raw_bytes_per_layer": 33554432,
+            "compressed_bytes_per_layer": 25340744
+          },
+          {
+            "seq_len": 16384,
+            "native_ms": 48.15507629675621,
+            "splitzip_ms": 36.32946225384377,
+            "speedup": 1.325510296857236,
+            "ratio": 1.325902542280875,
+            "encode_gbs": 273.57135597052286,
+            "decode_gbs": 1204.1871221194124,
+            "raw_bytes_per_layer": 67108864,
+            "compressed_bytes_per_layer": 50613723
+          },
+          {
+            "seq_len": 32768,
+            "native_ms": 96.34212554942475,
+            "splitzip_ms": 72.63428085439698,
+            "speedup": 1.3264002123536218,
+            "ratio": 1.326224378928501,
+            "encode_gbs": 303.02196404547595,
+            "decode_gbs": 1270.8327566568175,
+            "raw_bytes_per_layer": 134217728,
+            "compressed_bytes_per_layer": 101202881
+          }
+        ],
+        "RoCE 4x200G": [
+          {
+            "seq_len": 512,
+            "native_ms": 1.9510746731927069,
+            "splitzip_ms": 3.3351098243809925,
+            "speedup": 0.5850106221179187,
+            "ratio": 1.3019287262758226,
+            "encode_gbs": 20.540987957188012,
+            "decode_gbs": 51.21254501296249,
+            "raw_bytes_per_layer": 2097152,
+            "compressed_bytes_per_layer": 1610804
+          },
+          {
+            "seq_len": 1024,
+            "native_ms": 3.3331071933110072,
+            "splitzip_ms": 4.3206079003856255,
+            "speedup": 0.7714440352278944,
+            "ratio": 1.3018802332164603,
+            "encode_gbs": 31.923214163597716,
+            "decode_gbs": 87.84483320943993,
+            "raw_bytes_per_layer": 4194304,
+            "compressed_bytes_per_layer": 3221728
+          },
+          {
+            "seq_len": 2048,
+            "native_ms": 5.884573545462045,
+            "splitzip_ms": 4.668396070086391,
+            "speedup": 1.260512916452941,
+            "ratio": 1.3130401830359302,
+            "encode_gbs": 68.17048997599979,
+            "decode_gbs": 178.74722449143962,
+            "raw_bytes_per_layer": 8388608,
+            "compressed_bytes_per_layer": 6388691
+          },
+          {
+            "seq_len": 4096,
+            "native_ms": 10.843906343759155,
+            "splitzip_ms": 8.358569484423182,
+            "speedup": 1.297339977129769,
+            "ratio": 1.320229052896381,
+            "encode_gbs": 118.92383463023948,
+            "decode_gbs": 343.14232762973313,
+            "raw_bytes_per_layer": 16777216,
+            "compressed_bytes_per_layer": 12707807
+          },
+          {
+            "seq_len": 8192,
+            "native_ms": 21.063310487583514,
+            "splitzip_ms": 19.30184921101567,
+            "speedup": 1.091258679793362,
+            "ratio": 1.3241297098459304,
+            "encode_gbs": 208.34322421558488,
+            "decode_gbs": 767.269823916455,
+            "raw_bytes_per_layer": 33554432,
+            "compressed_bytes_per_layer": 25340744
+          },
+          {
+            "seq_len": 16384,
+            "native_ms": 41.44535371552455,
+            "splitzip_ms": 31.446222656566505,
+            "speedup": 1.3179755854355388,
+            "ratio": 1.325902542280875,
+            "encode_gbs": 273.57135597052286,
+            "decode_gbs": 1204.1871221194124,
+            "raw_bytes_per_layer": 67108864,
+            "compressed_bytes_per_layer": 50613723
+          },
+          {
+            "seq_len": 32768,
+            "native_ms": 83.77848539004569,
+            "splitzip_ms": 63.0508506494124,
+            "speedup": 1.3287447279004547,
+            "ratio": 1.326224378928501,
+            "encode_gbs": 303.02196404547595,
+            "decode_gbs": 1270.8327566568175,
+            "raw_bytes_per_layer": 134217728,
+            "compressed_bytes_per_layer": 101202881
+          }
+        ]
+      }
+    },
+    "Qwen3-30B-A3B": {
+      "model_meta": {
+        "num_hidden_layers": 48,
+        "num_attention_heads": 32,
+        "num_key_value_heads": 4,
+        "head_dim": 128,
+        "hidden_size": 2048,
+        "model_type": "qwen3_moe",
+        "prompt_tokens": 1024,
+        "block_rows_total": 49152,
+        "block_width": 1024,
+        "calibration_s": 0.00439961114898324
+      },
+      "modes": {
+        "CPU-RDMA": [
+          {
+            "seq_len": 512,
+            "native_ms": 1.9517820546560587,
+            "splitzip_ms": 4.2358342344211035,
+            "speedup": 0.46077866758702424,
+            "ratio": 1.1762760576462499,
+            "encode_gbs": 12.050376193988319,
+            "decode_gbs": 26.150568357243504,
+            "raw_bytes_per_layer": 1048576,
+            "compressed_bytes_per_layer": 891437
+          },
+          {
+            "seq_len": 1024,
+            "native_ms": 2.9060129599727027,
+            "splitzip_ms": 5.218592377987591,
+            "speedup": 0.5568576254835462,
+            "ratio": 1.176252966360033,
+            "encode_gbs": 19.626968565312016,
+            "decode_gbs": 41.58675606965751,
+            "raw_bytes_per_layer": 2097152,
+            "compressed_bytes_per_layer": 1782909
+          },
+          {
+            "seq_len": 2048,
+            "native_ms": 4.967943302395248,
+            "splitzip_ms": 5.600324874762311,
+            "speedup": 0.8870812700140182,
+            "ratio": 1.222327394468976,
+            "encode_gbs": 36.977701539612795,
+            "decode_gbs": 82.94979842955102,
+            "raw_bytes_per_layer": 4194304,
+            "compressed_bytes_per_layer": 3431408
+          },
+          {
+            "seq_len": 4096,
+            "native_ms": 8.914001499839042,
+            "splitzip_ms": 7.119805515211644,
+            "speedup": 1.2520007015351826,
+            "ratio": 1.2529312852548085,
+            "encode_gbs": 62.92860799931574,
+            "decode_gbs": 210.17387331723918,
+            "raw_bytes_per_layer": 8388608,
+            "compressed_bytes_per_layer": 6695186
+          },
+          {
+            "seq_len": 8192,
+            "native_ms": 17.778874395090916,
+            "splitzip_ms": 13.942543571506828,
+            "speedup": 1.2751528660397422,
+            "ratio": 1.2764161174047295,
+            "encode_gbs": 112.53424007880149,
+            "decode_gbs": 394.9497473954312,
+            "raw_bytes_per_layer": 16777216,
+            "compressed_bytes_per_layer": 13144002
+          },
+          {
+            "seq_len": 16384,
+            "native_ms": 35.52130753482099,
+            "splitzip_ms": 27.501205979798165,
+            "speedup": 1.2916272675792557,
+            "ratio": 1.2923738943526253,
+            "encode_gbs": 199.4399222195087,
+            "decode_gbs": 853.3790557097922,
+            "raw_bytes_per_layer": 33554432,
+            "compressed_bytes_per_layer": 25963409
+          },
+          {
+            "seq_len": 32768,
+            "native_ms": 71.00064702016046,
+            "splitzip_ms": 54.49230498288085,
+            "speedup": 1.3029481326302093,
+            "ratio": 1.3035992672292227,
+            "encode_gbs": 260.8972890375867,
+            "decode_gbs": 1043.8073156290295,
+            "raw_bytes_per_layer": 67108864,
+            "compressed_bytes_per_layer": 51479673
+          }
+        ],
+        "RoCE 4x200G": [
+          {
+            "seq_len": 512,
+            "native_ms": 1.9415245246976338,
+            "splitzip_ms": 4.227113892039102,
+            "speedup": 0.4593026292369588,
+            "ratio": 1.1762760576462499,
+            "encode_gbs": 12.050376193988319,
+            "decode_gbs": 26.150568357243504,
+            "raw_bytes_per_layer": 1048576,
+            "compressed_bytes_per_layer": 891437
+          },
+          {
+            "seq_len": 1024,
+            "native_ms": 2.8854979000558525,
+            "splitzip_ms": 5.201151350841591,
+            "speedup": 0.5547806063342022,
+            "ratio": 1.176252966360033,
+            "encode_gbs": 19.626968565312016,
+            "decode_gbs": 41.58675606965751,
+            "raw_bytes_per_layer": 2097152,
+            "compressed_bytes_per_layer": 1782909
+          },
+          {
+            "seq_len": 2048,
+            "native_ms": 4.926913182561548,
+            "splitzip_ms": 5.566757665175615,
+            "speedup": 0.8850597563071965,
+            "ratio": 1.222327394468976,
+            "encode_gbs": 36.977701539612795,
+            "decode_gbs": 82.94979842955102,
+            "raw_bytes_per_layer": 4194304,
+            "compressed_bytes_per_layer": 3431408
+          },
+          {
+            "seq_len": 4096,
+            "native_ms": 8.692955628192577,
+            "splitzip_ms": 7.000407068844685,
+            "speedup": 1.24177859125944,
+            "ratio": 1.2529312852548085,
+            "encode_gbs": 62.92860799931574,
+            "decode_gbs": 210.17387331723918,
+            "raw_bytes_per_layer": 8388608,
+            "compressed_bytes_per_layer": 6695186
+          },
+          {
+            "seq_len": 8192,
+            "native_ms": 16.008483596922016,
+            "splitzip_ms": 12.87514477328215,
+            "speedup": 1.2433633857183504,
+            "ratio": 1.2764161174047295,
+            "encode_gbs": 112.53424007880149,
+            "decode_gbs": 394.9497473954312,
+            "raw_bytes_per_layer": 16777216,
+            "compressed_bytes_per_layer": 13144002
+          },
+          {
+            "seq_len": 16384,
+            "native_ms": 31.088949667677518,
+            "splitzip_ms": 24.443016845215542,
+            "speedup": 1.2718949491606166,
+            "ratio": 1.2923738943526253,
+            "encode_gbs": 199.4399222195087,
+            "decode_gbs": 853.3790557097922,
+            "raw_bytes_per_layer": 33554432,
+            "compressed_bytes_per_layer": 25963409
+          },
+          {
+            "seq_len": 32768,
+            "native_ms": 61.16667119304883,
+            "splitzip_ms": 47.5999754102702,
+            "speedup": 1.2850147645213168,
+            "ratio": 1.3035992672292227,
+            "encode_gbs": 260.8972890375867,
+            "decode_gbs": 1043.8073156290295,
+            "raw_bytes_per_layer": 67108864,
+            "compressed_bytes_per_layer": 51479673
+          }
+        ]
+      }
+    },
+    "Qwen3-32B": {
+      "model_meta": {
+        "num_hidden_layers": 64,
+        "num_attention_heads": 64,
+        "num_key_value_heads": 8,
+        "head_dim": 128,
+        "hidden_size": 5120,
+        "model_type": "qwen3",
+        "prompt_tokens": 1024,
+        "block_rows_total": 65536,
+        "block_width": 2048,
+        "calibration_s": 0.002847579075023532
+      },
+      "modes": {
+        "CPU-RDMA": [
+          {
+            "seq_len": 512,
+            "native_ms": 3.840436186835849,
+            "splitzip_ms": 69.86271208482893,
+            "speedup": 0.05497118666353379,
+            "ratio": 1.302357238581757,
+            "encode_gbs": 22.900371362586426,
+            "decode_gbs": 54.17517709488451,
+            "raw_bytes_per_layer": 2097152,
+            "compressed_bytes_per_layer": 1610274
+          },
+          {
+            "seq_len": 1024,
+            "native_ms": 6.561749291645787,
+            "splitzip_ms": 10.266605052131496,
+            "speedup": 0.6391352602273791,
+            "ratio": 1.3022076314889108,
+            "encode_gbs": 36.78037454856424,
+            "decode_gbs": 81.8780469944412,
+            "raw_bytes_per_layer": 4194304,
+            "compressed_bytes_per_layer": 3220918
+          },
+          {
+            "seq_len": 2048,
+            "native_ms": 11.769697840264572,
+            "splitzip_ms": 9.009505963617224,
+            "speedup": 1.306364398646689,
+            "ratio": 1.308860804129634,
+            "encode_gbs": 84.99894391195038,
+            "decode_gbs": 215.92649635204467,
+            "raw_bytes_per_layer": 8388608,
+            "compressed_bytes_per_layer": 6409091
+          },
+          {
+            "seq_len": 4096,
+            "native_ms": 23.490267075941976,
+            "splitzip_ms": 17.87460233780919,
+            "speedup": 1.3141700515627288,
+            "ratio": 1.3148384231954042,
+            "encode_gbs": 119.69122178039028,
+            "decode_gbs": 329.47260350426313,
+            "raw_bytes_per_layer": 16777216,
+            "compressed_bytes_per_layer": 12759907
+          },
+          {
+            "seq_len": 8192,
+            "native_ms": 46.94409289652311,
+            "splitzip_ms": 35.603772474083485,
+            "speedup": 1.3185145740017976,
+            "ratio": 1.3187919857436783,
+            "encode_gbs": 215.48255109963335,
+            "decode_gbs": 848.2353624241075,
+            "raw_bytes_per_layer": 33554432,
+            "compressed_bytes_per_layer": 25443309
+          },
+          {
+            "seq_len": 16384,
+            "native_ms": 93.84621774356471,
+            "splitzip_ms": 71.06893694510211,
+            "speedup": 1.3204955888964138,
+            "ratio": 1.3206812642300108,
+            "encode_gbs": 277.1057710008432,
+            "decode_gbs": 1150.4563068325663,
+            "raw_bytes_per_layer": 67108864,
+            "compressed_bytes_per_layer": 50813823
+          },
+          {
+            "seq_len": 32768,
+            "native_ms": 187.72440844304177,
+            "splitzip_ms": 141.71496018698488,
+            "speedup": 1.3246619001645983,
+            "ratio": 1.3246038141814078,
+            "encode_gbs": 295.36756412944465,
+            "decode_gbs": 1241.9190819085206,
+            "raw_bytes_per_layer": 134217728,
+            "compressed_bytes_per_layer": 101326696
+          }
+        ],
+        "RoCE 4x200G": [
+          {
+            "seq_len": 512,
+            "native_ms": 3.8199211269189988,
+            "splitzip_ms": 69.84695983244448,
+            "speedup": 0.05468986962471363,
+            "ratio": 1.302357238581757,
+            "encode_gbs": 22.900371362586426,
+            "decode_gbs": 54.17517709488451,
+            "raw_bytes_per_layer": 2097152,
+            "compressed_bytes_per_layer": 1610274
+          },
+          {
+            "seq_len": 1024,
+            "native_ms": 6.520719171812089,
+            "splitzip_ms": 10.235096927895741,
+            "speedup": 0.6370940322059753,
+            "ratio": 1.3022076314889108,
+            "encode_gbs": 36.78037454856424,
+            "decode_gbs": 81.8780469944412,
+            "raw_bytes_per_layer": 4194304,
+            "compressed_bytes_per_layer": 3220918
+          },
+          {
+            "seq_len": 2048,
+            "native_ms": 11.501337710923107,
+            "splitzip_ms": 8.946810037963028,
+            "speedup": 1.2855238528727815,
+            "ratio": 1.308860804129634,
+            "encode_gbs": 84.99894391195038,
+            "decode_gbs": 215.92649635204467,
+            "raw_bytes_per_layer": 8388608,
+            "compressed_bytes_per_layer": 6409091
+          },
+          {
+            "seq_len": 4096,
+            "native_ms": 21.173060850084873,
+            "splitzip_ms": 16.388913993857507,
+            "speedup": 1.2919135983031238,
+            "ratio": 1.3148384231954042,
+            "encode_gbs": 119.69122178039028,
+            "decode_gbs": 329.47260350426313,
+            "raw_bytes_per_layer": 16777216,
+            "compressed_bytes_per_layer": 12759907
+          },
+          {
+            "seq_len": 8192,
+            "native_ms": 41.11458884777152,
+            "splitzip_ms": 31.43699685696936,
+            "speedup": 1.307840854991106,
+            "ratio": 1.3187919857436783,
+            "encode_gbs": 215.48255109963335,
+            "decode_gbs": 848.2353624241075,
+            "raw_bytes_per_layer": 33554432,
+            "compressed_bytes_per_layer": 25443309
+          },
+          {
+            "seq_len": 16384,
+            "native_ms": 80.8879886705731,
+            "splitzip_ms": 61.57870233698474,
+            "speedup": 1.3135708548699152,
+            "ratio": 1.3206812642300108,
+            "encode_gbs": 277.1057710008432,
+            "decode_gbs": 1150.4563068325663,
+            "raw_bytes_per_layer": 67108864,
+            "compressed_bytes_per_layer": 50813823
+          },
+          {
+            "seq_len": 32768,
+            "native_ms": 163.54716691622974,
+            "splitzip_ms": 122.70626180195553,
+            "speedup": 1.3328347267247884,
+            "ratio": 1.3246038141814078,
+            "encode_gbs": 295.36756412944465,
+            "decode_gbs": 1241.9190819085206,
+            "raw_bytes_per_layer": 134217728,
+            "compressed_bytes_per_layer": 101326696
+          }
+        ]
+      }
+    }
+  },
+  "breakdown": {
+    "model": "Qwen3-32B",
+    "transport_mode": "RoCE 4x200G",
+    "rows": [
+      {
+        "seq_len": 2048,
+        "native_transfer_ms": 28.37332865098495,
+        "splitzip_encode_ms": 6.316206852595012,
+        "splitzip_transfer_ms": 22.127051898475337,
+        "splitzip_decode_ms": 2.4863595763842263,
+        "splitzip_total_ms": 30.929618327454577,
+        "encode_pct": 20.42122468413537,
+        "transfer_pct": 71.54000952813028,
+        "decode_pct": 8.038765787734333
+      },
+      {
+        "seq_len": 8192,
+        "native_transfer_ms": 104.87261287368848,
+        "splitzip_encode_ms": 9.96592827141285,
+        "splitzip_transfer_ms": 80.00104330686017,
+        "splitzip_decode_ms": 2.531707286834717,
+        "splitzip_total_ms": 92.49867886510773,
+        "encode_pct": 10.77413039157707,
+        "transfer_pct": 86.4888496661957,
+        "decode_pct": 2.7370199422272234
+      },
+      {
+        "seq_len": 16384,
+        "native_transfer_ms": 207.05927058056025,
+        "splitzip_encode_ms": 15.499378740787506,
+        "splitzip_transfer_ms": 157.42163088125278,
+        "splitzip_decode_ms": 3.7332728505134583,
+        "splitzip_total_ms": 176.65428247255372,
+        "encode_pct": 8.773848289353303,
+        "transfer_pct": 89.11283025686679,
+        "decode_pct": 2.11332145377992
+      },
+      {
+        "seq_len": 32768,
+        "native_transfer_ms": 416.164810339511,
+        "splitzip_encode_ms": 29.08218652009964,
+        "splitzip_transfer_ms": 313.7828685911452,
+        "splitzip_decode_ms": 6.916662057240804,
+        "splitzip_total_ms": 349.7817171684856,
+        "encode_pct": 8.31438153929901,
+        "transfer_pct": 89.70819605188221,
+        "decode_pct": 1.9774224088187926
+      }
+    ]
+  },
+  "artifacts": {
+    "json": "/data02/home/yilian2/project/Lossless-LLM-Compression/experiments/splitzip/thesis_experiment_data.json",
+    "markdown": "/data02/home/yilian2/project/Lossless-LLM-Compression/experiments/splitzip/thesis_experiment_data.md"
+  }
+}

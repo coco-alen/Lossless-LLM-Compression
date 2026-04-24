@@ -1,0 +1,97 @@
+{
+  "device": "cuda:0",
+  "activation_model": "Qwen/Qwen2.5-1.5B",
+  "method": "dietgpu",
+  "shapes": [
+    {
+      "shape": [
+        1024,
+        4096
+      ],
+      "seq_len": 1024,
+      "results": {
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 8.907075971364975e-05,
+          "decode_s": 0.00011357886251062155,
+          "compressed_bytes": 5923728,
+          "encode_gbs": 94.17914506363503,
+          "decode_gbs": 73.85712283582275,
+          "ratio": 1.4161028325405893
+        }
+      }
+    },
+    {
+      "shape": [
+        4096,
+        4096
+      ],
+      "seq_len": 4096,
+      "results": {
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.00011756073217839003,
+          "decode_s": 0.00014488471206277608,
+          "compressed_bytes": 23485616,
+          "encode_gbs": 285.4221080307968,
+          "decode_gbs": 231.59401376634847,
+          "ratio": 1.4287226700802738
+        }
+      }
+    },
+    {
+      "shape": [
+        8192,
+        4096
+      ],
+      "seq_len": 8192,
+      "results": {
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.0001762744039297104,
+          "decode_s": 0.00016572015980879465,
+          "compressed_bytes": 46815712,
+          "encode_gbs": 380.7067986272115,
+          "decode_gbs": 404.9529283427506,
+          "ratio": 1.433468832002384
+        }
+      }
+    },
+    {
+      "shape": [
+        16384,
+        4096
+      ],
+      "seq_len": 16384,
+      "results": {
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.0002821445930749178,
+          "decode_s": 0.0002482648318012555,
+          "compressed_bytes": 93243488,
+          "encode_gbs": 475.7054761788796,
+          "decode_gbs": 540.6232007417219,
+          "ratio": 1.43943272478181
+        }
+      }
+    },
+    {
+      "shape": [
+        32768,
+        4096
+      ],
+      "seq_len": 32768,
+      "results": {
+        "dietgpu": {
+          "ok": true,
+          "encode_s": 0.0005060217808932066,
+          "decode_s": 0.0004255253200729688,
+          "compressed_bytes": 187834064,
+          "encode_gbs": 530.482019027264,
+          "decode_gbs": 630.8330981431819,
+          "ratio": 1.4291095570396646
+        }
+      }
+    }
+  ]
+}
