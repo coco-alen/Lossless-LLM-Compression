@@ -12,12 +12,11 @@
 
 | Method | Ratio (x) | Encode GB/s | Decode GB/s | Source |
 | --- | ---: | ---: | ---: | --- |
-| DietGPU | 1.429 | 530.482 | 630.833 | measured |
 | nvCOMP LZ4 | 1.019 | 13.399 | 137.109 | measured |
+| ZipNN | 1.515 | 1.150 | 1.650 | reported |
 | DFloat11 | 1.423 | 0.004 | 468.157 | measured |
 | ZipServ | 1.373 | 0.046 | 1.280 | measured |
 | SplitZip | 1.316 | 332.506 | 1232.124 | measured |
-| ZipNN | 1.515 | 1.150 | 1.650 | reported |
 
 ## 2. Transfer Time vs Sequence Length
 
