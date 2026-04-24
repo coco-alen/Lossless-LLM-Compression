@@ -16,8 +16,8 @@ BASELINE_JSON = ROOT / "experiments" / "splitzip" / "codec_ablation_results_with
 DEFAULT_JSON_OUT = ROOT / "experiments" / "splitzip" / "thesis_experiment_data.json"
 DEFAULT_MD_OUT = ROOT / "experiments" / "splitzip" / "thesis_experiment_data.md"
 
-SEQ_LENS = [512, 1024, 2048, 4096, 8192, 16384, 32768]
-BREAKDOWN_SEQ_LENS = [2048, 8192, 16384, 32768]
+SEQ_LENS = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+BREAKDOWN_SEQ_LENS = [2048, 8192, 16384, 32768, 65536]
 TRANSPORT_MODES = [
     {"name": "CPU-RDMA", "bandwidth_gbs": 47.0},
     {"name": "RoCE 4x200G", "bandwidth_gbs": 87.0},

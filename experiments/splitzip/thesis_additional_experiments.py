@@ -17,10 +17,21 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from experiments.splitzip.codec_ablation_bench import collect_real_activations
-from experiments.splitzip.fp8_e5m2_top8_compact_bench import FP8Top8CompactCodec
+from experiments.splitzip.fp8_e5m2_top8_compact_bench import (
+    FP8Top8CompactCodec,
+    _count_external_fp8,
+    _write_external_fp8,
+    _pack_e5_escape_values,
+    _fix_external_e5_packed,
+)
 from experiments.splitzip.lossless_fast import FastLosslessCodec
 from experiments.splitzip.opt_rounds3 import _dec_3bit_vec, _enc_3bit_vec
-from experiments.splitzip.thesis_experiment_dump import assemble_row_prefix, load_model_activation_blocks
+from experiments.splitzip.thesis_experiment_dump import (
+    assemble_row_prefix,
+    load_model_activation_blocks,
+    measure_dma_time,
+    simulate_transport,
+)
 
 
 DEFAULT_JSON = ROOT / "experiments" / "splitzip" / "thesis_additional_experiments.json"
@@ -32,6 +43,12 @@ CAL_MODEL = "Qwen/Qwen2.5-1.5B"
 SERVING_MODEL = "NousResearch/Meta-Llama-3-8B"
 SERVING_SEQ_LEN = 32768
 SERVING_LAYER_IDX = 0
+FP8_TRANSFER_MODEL = "Qwen3-32B"
+FP8_TRANSFER_HF = "Qwen/Qwen3-32B"
+FP8_TRANSFER_SEQ_LENS = [1024, 2048, 4096, 8192, 16384, 32768, 65536]
+FP8_TRANSFER_MODE = {"name": "RoCE 4x200G", "bandwidth_gbs": 87.0}
+CAL_PROMPTS_PER_SET = 32
+GRANULARITY_BENCH_ROWS = 1024
 
 
 def bench_cuda(fn, warmup=20, iters=100):
@@ -59,6 +76,222 @@ def bf16_to_raw_fp8(flat_bf16, fmt):
     return raw[:usable].contiguous()
 
 
+@triton.jit
+def _enc_e5_top16(raw, lut, code_pk, sm_pk, n: tl.constexpr, BLOCK: tl.constexpr):
+    pid = tl.program_id(0)
+    offs = pid * BLOCK + tl.arange(0, BLOCK)
+    elem = offs * 8
+    valid = elem + 7 < n
+
+    r0 = tl.load(raw + elem, mask=valid, other=0).to(tl.int32)
+    r1 = tl.load(raw + elem + 1, mask=valid, other=0).to(tl.int32)
+    r2 = tl.load(raw + elem + 2, mask=valid, other=0).to(tl.int32)
+    r3 = tl.load(raw + elem + 3, mask=valid, other=0).to(tl.int32)
+    r4 = tl.load(raw + elem + 4, mask=valid, other=0).to(tl.int32)
+    r5 = tl.load(raw + elem + 5, mask=valid, other=0).to(tl.int32)
+    r6 = tl.load(raw + elem + 6, mask=valid, other=0).to(tl.int32)
+    r7 = tl.load(raw + elem + 7, mask=valid, other=0).to(tl.int32)
+
+    e0 = (r0 >> 2) & 0x1F
+    e1 = (r1 >> 2) & 0x1F
+    e2 = (r2 >> 2) & 0x1F
+    e3 = (r3 >> 2) & 0x1F
+    e4 = (r4 >> 2) & 0x1F
+    e5 = (r5 >> 2) & 0x1F
+    e6 = (r6 >> 2) & 0x1F
+    e7 = (r7 >> 2) & 0x1F
+
+    s0 = ((r0 >> 5) & 0x04) | (r0 & 0x03)
+    s1 = ((r1 >> 5) & 0x04) | (r1 & 0x03)
+    s2 = ((r2 >> 5) & 0x04) | (r2 & 0x03)
+    s3 = ((r3 >> 5) & 0x04) | (r3 & 0x03)
+    s4 = ((r4 >> 5) & 0x04) | (r4 & 0x03)
+    s5 = ((r5 >> 5) & 0x04) | (r5 & 0x03)
+    s6 = ((r6 >> 5) & 0x04) | (r6 & 0x03)
+    s7 = ((r7 >> 5) & 0x04) | (r7 & 0x03)
+
+    sm_packed = (s0 << 21) | (s1 << 18) | (s2 << 15) | (s3 << 12) | \
+                (s4 << 9) | (s5 << 6) | (s6 << 3) | s7
+    sm_base = offs * 3
+    tl.store(sm_pk + sm_base, ((sm_packed >> 16) & 0xFF).to(tl.uint8), mask=valid)
+    tl.store(sm_pk + sm_base + 1, ((sm_packed >> 8) & 0xFF).to(tl.uint8), mask=valid)
+    tl.store(sm_pk + sm_base + 2, (sm_packed & 0xFF).to(tl.uint8), mask=valid)
+
+    c0 = tl.load(lut + e0, mask=valid, other=0).to(tl.int32)
+    c1 = tl.load(lut + e1, mask=valid, other=0).to(tl.int32)
+    c2 = tl.load(lut + e2, mask=valid, other=0).to(tl.int32)
+    c3 = tl.load(lut + e3, mask=valid, other=0).to(tl.int32)
+    c4 = tl.load(lut + e4, mask=valid, other=0).to(tl.int32)
+    c5 = tl.load(lut + e5, mask=valid, other=0).to(tl.int32)
+    c6 = tl.load(lut + e6, mask=valid, other=0).to(tl.int32)
+    c7 = tl.load(lut + e7, mask=valid, other=0).to(tl.int32)
+
+    code_base = offs * 4
+    tl.store(code_pk + code_base, ((c0 << 4) | c1).to(tl.uint8), mask=valid)
+    tl.store(code_pk + code_base + 1, ((c2 << 4) | c3).to(tl.uint8), mask=valid)
+    tl.store(code_pk + code_base + 2, ((c4 << 4) | c5).to(tl.uint8), mask=valid)
+    tl.store(code_pk + code_base + 3, ((c6 << 4) | c7).to(tl.uint8), mask=valid)
+
+
+@triton.jit
+def _dec_e5_top16(code_pk, sm_pk, dlut, out, n: tl.constexpr, BLOCK: tl.constexpr):
+    pid = tl.program_id(0)
+    offs = pid * BLOCK + tl.arange(0, BLOCK)
+    elem = offs * 8
+    valid = elem + 7 < n
+
+    code_base = offs * 4
+    p0 = tl.load(code_pk + code_base, mask=valid, other=0).to(tl.int32)
+    p1 = tl.load(code_pk + code_base + 1, mask=valid, other=0).to(tl.int32)
+    p2 = tl.load(code_pk + code_base + 2, mask=valid, other=0).to(tl.int32)
+    p3 = tl.load(code_pk + code_base + 3, mask=valid, other=0).to(tl.int32)
+
+    c0 = (p0 >> 4) & 0x0F
+    c1 = p0 & 0x0F
+    c2 = (p1 >> 4) & 0x0F
+    c3 = p1 & 0x0F
+    c4 = (p2 >> 4) & 0x0F
+    c5 = p2 & 0x0F
+    c6 = (p3 >> 4) & 0x0F
+    c7 = p3 & 0x0F
+
+    e0 = tl.load(dlut + c0, mask=valid, other=0).to(tl.int32)
+    e1 = tl.load(dlut + c1, mask=valid, other=0).to(tl.int32)
+    e2 = tl.load(dlut + c2, mask=valid, other=0).to(tl.int32)
+    e3 = tl.load(dlut + c3, mask=valid, other=0).to(tl.int32)
+    e4 = tl.load(dlut + c4, mask=valid, other=0).to(tl.int32)
+    e5 = tl.load(dlut + c5, mask=valid, other=0).to(tl.int32)
+    e6 = tl.load(dlut + c6, mask=valid, other=0).to(tl.int32)
+    e7 = tl.load(dlut + c7, mask=valid, other=0).to(tl.int32)
+
+    sm_base = offs * 3
+    sb0 = tl.load(sm_pk + sm_base, mask=valid, other=0).to(tl.int32)
+    sb1 = tl.load(sm_pk + sm_base + 1, mask=valid, other=0).to(tl.int32)
+    sb2 = tl.load(sm_pk + sm_base + 2, mask=valid, other=0).to(tl.int32)
+    sm_packed = (sb0 << 16) | (sb1 << 8) | sb2
+
+    s0 = (sm_packed >> 21) & 0x07
+    s1 = (sm_packed >> 18) & 0x07
+    s2 = (sm_packed >> 15) & 0x07
+    s3 = (sm_packed >> 12) & 0x07
+    s4 = (sm_packed >> 9) & 0x07
+    s5 = (sm_packed >> 6) & 0x07
+    s6 = (sm_packed >> 3) & 0x07
+    s7 = sm_packed & 0x07
+
+    o0 = ((s0 & 0x04) << 5) | (e0 << 2) | (s0 & 0x03)
+    o1 = ((s1 & 0x04) << 5) | (e1 << 2) | (s1 & 0x03)
+    o2 = ((s2 & 0x04) << 5) | (e2 << 2) | (s2 & 0x03)
+    o3 = ((s3 & 0x04) << 5) | (e3 << 2) | (s3 & 0x03)
+    o4 = ((s4 & 0x04) << 5) | (e4 << 2) | (s4 & 0x03)
+    o5 = ((s5 & 0x04) << 5) | (e5 << 2) | (s5 & 0x03)
+    o6 = ((s6 & 0x04) << 5) | (e6 << 2) | (s6 & 0x03)
+    o7 = ((s7 & 0x04) << 5) | (e7 << 2) | (s7 & 0x03)
+
+    tl.store(out + elem, o0.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 1, o1.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 2, o2.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 3, o3.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 4, o4.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 5, o5.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 6, o6.to(tl.uint8), mask=valid)
+    tl.store(out + elem + 7, o7.to(tl.uint8), mask=valid)
+
+
+def next_power_of_2(x):
+    return 1 << (max(1, int(x)) - 1).bit_length()
+
+
+class FP8E5M2Top16ExactCodec:
+    def __init__(self, raw, block=128, escape_block=256):
+        self.raw = raw
+        self.device = raw.device
+        self.n = raw.numel()
+        if self.n % 8 != 0:
+            raise ValueError("E5M2 top16 benchmark expects numel divisible by 8")
+        self.block = block
+        self.escape_block = escape_block
+        self.groups = self.n // 8
+        self.code_bytes = self.groups * 4
+        self.sm_bytes = self.groups * 3
+        self.code_pk = torch.empty(self.code_bytes, dtype=torch.uint8, device=self.device)
+        self.sm_pk = torch.empty(self.sm_bytes, dtype=torch.uint8, device=self.device)
+        self.out = torch.empty_like(raw)
+        self.n_blocks = (self.n + escape_block - 1) // escape_block
+        self.counts = torch.empty(self.n_blocks, dtype=torch.int32, device=self.device)
+        self.starts = torch.empty(self.n_blocks, dtype=torch.int32, device=self.device)
+        self.max_esc = max(self.n // 5, 1024)
+        self.local_pos = torch.empty(self.max_esc, dtype=torch.uint8, device=self.device)
+        self.esc_val = torch.empty(self.max_esc, dtype=torch.uint8, device=self.device)
+        packed_size = (self.max_esc * 5 + 7) // 8 + 1
+        self.esc_val_packed = torch.empty(packed_size, dtype=torch.uint8, device=self.device)
+        self.grid = ((self.groups + block - 1) // block,)
+        self.count_grid = (self.n_blocks,)
+        self.lut, self.dlut, self.common_lut, self.coverage = self.build_codebook()
+
+    def build_codebook(self):
+        exponents = ((self.raw >> 2) & 0x1F).to(torch.uint8)
+        vals, counts = torch.unique(exponents, return_counts=True)
+        order = torch.argsort(counts, descending=True)
+        lut = torch.zeros((32,), dtype=torch.uint8, device=self.device)
+        dlut = torch.zeros((16,), dtype=torch.uint8, device=self.device)
+        common = torch.zeros((32,), dtype=torch.uint8, device=self.device)
+        top = min(16, vals.numel())
+        for i in range(top):
+            v = vals[order[i]].item()
+            lut[v] = i
+            dlut[i] = v
+            common[v] = 1
+        coverage = counts[order[:top]].sum().item() / counts.sum().item()
+        return lut, dlut, common, coverage
+
+    def encode_core(self):
+        _enc_e5_top16[self.grid](self.raw, self.lut, self.code_pk, self.sm_pk, self.n, BLOCK=self.block)
+
+    def count_escapes(self):
+        _count_external_fp8[self.count_grid](
+            self.raw, self.common_lut, self.counts, self.n, FMT=1, BLOCK=self.escape_block
+        )
+
+    def write_escapes(self):
+        _write_external_fp8[self.count_grid](
+            self.raw, self.common_lut, self.starts, self.local_pos, self.esc_val,
+            self.n, FMT=1, BLOCK=self.escape_block
+        )
+
+    def pack_escapes(self, n_esc):
+        grid = (((n_esc + 7) // 8 + 255) // 256,)
+        _pack_e5_escape_values[grid](self.esc_val, self.esc_val_packed, n_esc, BLOCK=256)
+
+    def encode_full(self):
+        self.encode_core()
+        self.count_escapes()
+        offsets = torch.cumsum(self.counts, dim=0)
+        self.starts = offsets - self.counts
+        n_esc = int(offsets[-1].item()) if offsets.numel() else 0
+        if n_esc > self.max_esc:
+            raise RuntimeError(f"escape buffer too small: {n_esc} > {self.max_esc}")
+        self.write_escapes()
+        self.pack_escapes(n_esc)
+        return n_esc
+
+    def decode_core(self):
+        _dec_e5_top16[self.grid](self.code_pk, self.sm_pk, self.dlut, self.out, self.n, BLOCK=self.block)
+
+    def decode_full(self, max_count):
+        self.decode_core()
+        block_esc = next_power_of_2(max_count)
+        _fix_external_e5_packed[self.count_grid](
+            self.counts, self.starts, self.local_pos, self.esc_val_packed,
+            self.out, BLOCK_ELEMS=self.escape_block, BLOCK_ESC=block_esc
+        )
+        return self.out
+
+    def compressed_bytes(self, n_esc):
+        escape_bytes = n_esc + ((n_esc * 5 + 7) // 8)
+        return self.code_bytes + self.sm_bytes + self.n_blocks + escape_bytes
+
+
 def run_fp8_exact_results(cpu_bf16, device):
     flat = cpu_bf16.to(device=device, dtype=torch.bfloat16).contiguous().view(-1)
     results = []
@@ -80,17 +313,49 @@ def run_fp8_exact_results(cpu_bf16, device):
         results.append(
             {
                 "format": fmt,
+                "scheme": "top8_exact",
+                "coverage_name": "top8",
                 "raw_fp8_bytes": int(raw_bytes),
                 "compressed_bytes": int(comp_bytes),
                 "ratio_vs_fp8": raw_bytes / comp_bytes,
                 "ratio_vs_bf16": 2.0 * raw_bytes / comp_bytes,
-                "coverage_top8": float(codec.core.coverage),
+                "coverage": float(codec.core.coverage),
                 "escapes": int(n_esc),
                 "escape_rate": float(n_esc / raw.numel()),
                 "encode_gbs": raw_bytes / enc_full_s / 1e9,
                 "decode_gbs": raw_bytes / dec_full_s / 1e9,
             }
         )
+    raw = bf16_to_raw_fp8(flat, "e5m2")
+    codec = FP8E5M2Top16ExactCodec(raw)
+    n_esc = codec.encode_full()
+    max_count = codec.counts.max().item()
+    codec.decode_full(max_count)
+    correct = torch.equal(raw, codec.out)
+    if not correct:
+        raise RuntimeError("FP8 E5M2 top16 round-trip failed")
+    comp_bytes = codec.compressed_bytes(n_esc)
+    enc_full_s = bench_cuda(codec.encode_full, warmup=10, iters=60)
+    n_esc = codec.encode_full()
+    max_count = codec.counts.max().item()
+    dec_full_s = bench_cuda(lambda: codec.decode_full(max_count), warmup=10, iters=80)
+    raw_bytes = raw.numel()
+    results.append(
+        {
+            "format": "e5m2",
+            "scheme": "top16_exact",
+            "coverage_name": "top16",
+            "raw_fp8_bytes": int(raw_bytes),
+            "compressed_bytes": int(comp_bytes),
+            "ratio_vs_fp8": raw_bytes / comp_bytes,
+            "ratio_vs_bf16": 2.0 * raw_bytes / comp_bytes,
+            "coverage": float(codec.coverage),
+            "escapes": int(n_esc),
+            "escape_rate": float(n_esc / raw.numel()),
+            "encode_gbs": raw_bytes / enc_full_s / 1e9,
+            "decode_gbs": raw_bytes / dec_full_s / 1e9,
+        }
+    )
     return results
 
 
@@ -318,19 +583,38 @@ def run_bf16_topk_ablation(cpu_bf16, device):
     }
 
 
-def load_prompt_texts(dataset_name, count):
-    if dataset_name == "A":
+def load_prompt_texts(dataset_key, count):
+    if dataset_key == "wikitext_train":
         ds = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
         texts = [x["text"].strip() for x in ds if x["text"].strip()]
-    elif dataset_name == "B":
+    elif dataset_key == "wikitext_test":
+        ds = load_dataset("wikitext", "wikitext-2-raw-v1", split="test")
+        texts = [x["text"].strip() for x in ds if x["text"].strip()]
+    elif dataset_key == "humaneval":
         ds = load_dataset("openai_humaneval", split="test")
         texts = [x["prompt"].strip() for x in ds if x["prompt"].strip()]
+    elif dataset_key == "gsm8k":
+        ds = load_dataset("gsm8k", "main", split="test")
+        texts = [x["question"].strip() for x in ds if x["question"].strip()]
+    elif dataset_key == "mmlu":
+        ds = load_dataset("cais/mmlu", "all", split="validation")
+        texts = []
+        for x in ds:
+            prompt = x["question"].strip()
+            if x.get("choices"):
+                choice_str = " ".join(f"({chr(65+i)}) {c}" for i, c in enumerate(x["choices"]))
+                prompt = f"{prompt} {choice_str}"
+            if prompt.strip():
+                texts.append(prompt)
+    elif dataset_key == "ptb":
+        ds = load_dataset("ptb_text_only", "penn_treebank", split="test")
+        texts = [x["sentence"].strip() for x in ds if x["sentence"].strip()]
     else:
-        raise ValueError(dataset_name)
+        raise ValueError(dataset_key)
     return texts[:count]
 
 
-def collect_exponents_for_prompts(model_name, prompts, device, max_length=256):
+def load_calibration_model(model_name, device):
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
@@ -341,6 +625,10 @@ def collect_exponents_for_prompts(model_name, prompts, device, max_length=256):
         low_cpu_mem_usage=True,
     )
     model.eval()
+    return tokenizer, model
+
+
+def collect_exponents_for_prompts(tokenizer, model, prompts, device, max_length=256):
     exponents = []
     with torch.inference_mode():
         for prompt in prompts:
@@ -353,8 +641,6 @@ def collect_exponents_for_prompts(model_name, prompts, device, max_length=256):
             for key, value in pkv:
                 exponents.append(((key.contiguous().view(torch.int16) >> 7) & 0xFF).to(torch.uint8).view(-1).cpu())
                 exponents.append(((value.contiguous().view(torch.int16) >> 7) & 0xFF).to(torch.uint8).view(-1).cpu())
-    del model
-    torch.cuda.empty_cache()
     return torch.cat(exponents, dim=0)
 
 
@@ -368,20 +654,42 @@ def topk_coverage_from_codebook(sample_exp, eval_exp, k=16):
 
 
 def run_cross_dataset_calibration(device):
-    prompts_a = load_prompt_texts("A", 32)
-    prompts_b = load_prompt_texts("B", 32)
-    exp_a = collect_exponents_for_prompts(CAL_MODEL, prompts_a, device)
-    exp_b = collect_exponents_for_prompts(CAL_MODEL, prompts_b, device)
+    dataset_specs = {
+        "dataset_a": {"key": "wikitext_train", "label": "wikitext-2-raw-v1/train", "domain": "language"},
+        "wikitext_test": {"key": "wikitext_test", "label": "wikitext-2-raw-v1/test", "domain": "language"},
+        "humaneval": {"key": "humaneval", "label": "openai_humaneval/test", "domain": "code"},
+        "gsm8k": {"key": "gsm8k", "label": "gsm8k/main/test", "domain": "math"},
+        "mmlu": {"key": "mmlu", "label": "cais/mmlu/all/validation", "domain": "knowledge"},
+        "ptb": {"key": "ptb", "label": "ptb_text_only/penn_treebank/test", "domain": "language"},
+    }
+    tokenizer, model = load_calibration_model(CAL_MODEL, device)
+    exponents = {}
+    for name, spec in dataset_specs.items():
+        prompts = load_prompt_texts(spec["key"], CAL_PROMPTS_PER_SET)
+        exponents[name] = collect_exponents_for_prompts(tokenizer, model, prompts, device)
+    del model
+    torch.cuda.empty_cache()
+    exp_a = exponents["dataset_a"]
     cov_aa = topk_coverage_from_codebook(exp_a, exp_a, 16)
-    cov_ab = topk_coverage_from_codebook(exp_a, exp_b, 16)
-    cov_bb = topk_coverage_from_codebook(exp_b, exp_b, 16)
+    dataset_b_results = []
+    for name, spec in dataset_specs.items():
+        if name == "dataset_a":
+            continue
+        exp_b = exponents[name]
+        dataset_b_results.append(
+            {
+                "name": name,
+                "label": spec["label"],
+                "domain": spec["domain"],
+                "calibrate_A_eval_B_top16": topk_coverage_from_codebook(exp_a, exp_b, 16),
+                "calibrate_B_eval_B_top16": topk_coverage_from_codebook(exp_b, exp_b, 16),
+            }
+        )
     return {
         "model": CAL_MODEL,
-        "dataset_a": "wikitext-2-raw-v1",
-        "dataset_b": "openai_humaneval",
+        "dataset_a": dataset_specs["dataset_a"]["label"],
         "calibrate_A_eval_A_top16": cov_aa,
-        "calibrate_A_eval_B_top16": cov_ab,
-        "calibrate_B_eval_B_top16": cov_bb,
+        "dataset_b_results": dataset_b_results,
     }
 
 
@@ -421,13 +729,152 @@ def build_top16_ratio_with_metadata(exp_matrix, grouping):
     }
 
 
-def run_calibration_granularity(cpu_bf16):
+def run_calibration_granularity(cpu_bf16, device):
     exp = ((cpu_bf16.contiguous().view(torch.int16) >> 7) & 0xFF).to(torch.uint8).view(cpu_bf16.shape[0], cpu_bf16.shape[1])
-    return {
+    ratio_data = {
         "per_tensor": build_top16_ratio_with_metadata(exp, "per_tensor"),
         "per_token": build_top16_ratio_with_metadata(exp, "per_token"),
         "per_channel": build_top16_ratio_with_metadata(exp, "per_channel"),
     }
+    bench_cpu = cpu_bf16[:GRANULARITY_BENCH_ROWS].contiguous()
+    bench_gpu = bench_cpu.to(device=device, dtype=torch.bfloat16)
+    rows, cols = bench_gpu.shape
+
+    def prepare_codecs(grouping):
+        codecs = []
+        groups = []
+        if grouping == "per_tensor":
+            groups = [bench_gpu.reshape(-1)]
+        elif grouping == "per_token":
+            groups = [bench_gpu[i, :].contiguous() for i in range(rows)]
+        elif grouping == "per_channel":
+            groups = [bench_gpu[:, j].contiguous() for j in range(cols)]
+        for g in groups:
+            codec = FastLosslessCodec(str(device))
+            codec.calibrate(g)
+            codecs.append(codec)
+        return groups, codecs
+
+    def benchmark_grouping(grouping, groups, codecs):
+        encoded = []
+        comp_bytes = 0
+        for g, c in zip(groups, codecs):
+            r = c.encode(g)
+            encoded.append((c, r, g))
+            comp_bytes += r[0].numel() + r[1].numel() + r[2].numel() * 4 + r[3].numel()
+        comp_bytes += len(groups) * 16
+
+        def encode_all():
+            for g, c in zip(groups, codecs):
+                c.encode(g)
+
+        def decode_all():
+            for c, r, _g in encoded:
+                c.decode(*r)
+
+        encode_s = bench_cuda(encode_all, warmup=2, iters=5)
+        decode_s = bench_cuda(decode_all, warmup=2, iters=5)
+        raw_bytes = bench_gpu.numel() * 2
+        return {
+            "actual_ratio": raw_bytes / comp_bytes,
+            "encode_gbs": raw_bytes / encode_s / 1e9,
+            "decode_gbs": raw_bytes / decode_s / 1e9,
+            "bench_shape": [rows, cols],
+        }
+
+    groups_t, codecs_t = prepare_codecs("per_tensor")
+    groups_tok, codecs_tok = prepare_codecs("per_token")
+    groups_ch, codecs_ch = prepare_codecs("per_channel")
+    bench_data = {
+        "per_tensor": benchmark_grouping("per_tensor", groups_t, codecs_t),
+        "per_token": benchmark_grouping("per_token", groups_tok, codecs_tok),
+        "per_channel": benchmark_grouping("per_channel", groups_ch, codecs_ch),
+    }
+    out = {}
+    for name in ("per_tensor", "per_token", "per_channel"):
+        out[name] = ratio_data[name] | bench_data[name]
+    baseline = out["per_tensor"]
+    for name in ("per_tensor", "per_token", "per_channel"):
+        out[name]["vs_baseline_encode"] = out[name]["encode_gbs"] / baseline["encode_gbs"]
+        out[name]["vs_baseline_decode"] = out[name]["decode_gbs"] / baseline["decode_gbs"]
+        out[name]["vs_baseline_ratio"] = out[name]["actual_ratio"] / baseline["actual_ratio"]
+    return out
+
+
+def run_fp8_transfer_sweep(device):
+    blocks, meta = load_model_activation_blocks(FP8_TRANSFER_HF, device)
+    dma_cache = {}
+    results = {
+        "model": FP8_TRANSFER_MODEL,
+        "hf_name": FP8_TRANSFER_HF,
+        "transport_mode": FP8_TRANSFER_MODE["name"],
+        "bandwidth_gbs": FP8_TRANSFER_MODE["bandwidth_gbs"],
+        "num_hidden_layers": meta["num_hidden_layers"],
+        "rows": {
+            "e4m3_top8_exact": [],
+            "e5m2_top8_exact": [],
+            "e5m2_top16_exact": [],
+        },
+    }
+
+    for seq_len in FP8_TRANSFER_SEQ_LENS:
+        cpu_rows = assemble_row_prefix(blocks, seq_len)
+        flat_bf16 = cpu_rows.to(device=device, dtype=torch.bfloat16).contiguous().view(-1)
+        codec_specs = [
+            ("e4m3_top8_exact", "e4m3", FP8Top8CompactCodec),
+            ("e5m2_top8_exact", "e5m2", FP8Top8CompactCodec),
+            ("e5m2_top16_exact", "e5m2", FP8E5M2Top16ExactCodec),
+        ]
+        for name, fmt, codec_cls in codec_specs:
+            raw = bf16_to_raw_fp8(flat_bf16, fmt)
+            codec = codec_cls(fmt, raw) if codec_cls is FP8Top8CompactCodec else codec_cls(raw)
+            n_esc = codec.encode_full()
+            max_count = codec.counts.max().item()
+            if codec_cls is FP8Top8CompactCodec:
+                codec.decode_full(max_count)
+                decoded = codec.core.out
+            else:
+                decoded = codec.decode_full(max_count)
+            if not torch.equal(raw, decoded):
+                raise RuntimeError(f"FP8 transfer round-trip failed for {name} at seq_len={seq_len}")
+            comp_bytes = codec.compressed_bytes(n_esc)
+            enc_s = bench_cuda(codec.encode_full, warmup=8, iters=30)
+            n_esc = codec.encode_full()
+            max_count = codec.counts.max().item()
+            dec_s = bench_cuda(lambda: codec.decode_full(max_count), warmup=8, iters=40)
+
+            raw_d2h_s = measure_dma_time(raw.numel(), "d2h", device, dma_cache)
+            raw_h2d_s = measure_dma_time(raw.numel(), "h2d", device, dma_cache)
+            comp_d2h_s = measure_dma_time(comp_bytes, "d2h", device, dma_cache)
+            comp_h2d_s = measure_dma_time(comp_bytes, "h2d", device, dma_cache)
+            sim = simulate_transport(
+                raw_bytes=raw.numel(),
+                comp_bytes=comp_bytes,
+                enc_s=enc_s,
+                dec_s=dec_s,
+                n_layers=meta["num_hidden_layers"],
+                raw_d2h_s=raw_d2h_s,
+                raw_h2d_s=raw_h2d_s,
+                comp_d2h_s=comp_d2h_s,
+                comp_h2d_s=comp_h2d_s,
+                net_gbs=FP8_TRANSFER_MODE["bandwidth_gbs"],
+            )
+            results["rows"][name].append(
+                {
+                    "seq_len": seq_len,
+                    "native_ms": sim["raw_pipe_s"] * 1000,
+                    "splitzip_ms": sim["splitzip_pipe_s"] * 1000,
+                    "speedup": sim["speedup"],
+                    "ratio": raw.numel() / comp_bytes,
+                    "encode_gbs": raw.numel() / enc_s / 1e9,
+                    "decode_gbs": raw.numel() / dec_s / 1e9,
+                    "escape_rate": n_esc / raw.numel(),
+                    "splitzip_breakdown_sequential_ms": {
+                        k: v * 1000 for k, v in sim["splitzip_breakdown_sequential_s"].items()
+                    },
+                }
+            )
+    return results
 
 
 def build_serving_kv(rows_cpu, seq_len, device):
@@ -506,15 +953,33 @@ def make_markdown(data):
     lines.append("")
     lines.append("## 1. FP8 Exact Results")
     lines.append("")
-    lines.append("| Format | Top-8 Coverage | Ratio vs FP8 | Total Ratio vs BF16 | Encode GB/s | Decode GB/s | Escape Rate |")
-    lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+    lines.append("| Format | Scheme | Coverage | Ratio vs FP8 | Total Ratio vs BF16 | Encode GB/s | Decode GB/s | Escape Rate |")
+    lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
     for row in data["fp8_results"]:
         lines.append(
-            f"| {row['format'].upper()} | {to_pct(row['coverage_top8'])} | {fmt(row['ratio_vs_fp8'])} | "
+            f"| {row['format'].upper()} | {row['scheme']} | {row['coverage_name']}={to_pct(row['coverage'])} | {fmt(row['ratio_vs_fp8'])} | "
             f"{fmt(row['ratio_vs_bf16'])} | {fmt(row['encode_gbs'])} | {fmt(row['decode_gbs'])} | {to_pct(row['escape_rate'])} |"
         )
     lines.append("")
-    lines.append("## 2. Serving Compute Feasibility")
+    lines.append("## 2. FP8 End-to-End Speedup vs Sequence Length")
+    lines.append("")
+    lines.append(
+        f"- Model: `{data['fp8_transfer']['model']}`, transport: `{data['fp8_transfer']['transport_mode']}` "
+        f"({fmt(data['fp8_transfer']['bandwidth_gbs'])} GB/s)"
+    )
+    lines.append("")
+    for name, rows in data["fp8_transfer"]["rows"].items():
+        lines.append(f"### {name}")
+        lines.append("")
+        lines.append("| Seq Len | Native ms | SplitZip ms | Speedup (x) | Ratio (x) | Encode GB/s | Decode GB/s |")
+        lines.append("| ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
+        for row in rows:
+            lines.append(
+                f"| {row['seq_len']} | {fmt(row['native_ms'])} | {fmt(row['splitzip_ms'])} | {fmt(row['speedup'])} | "
+                f"{fmt(row['ratio'])} | {fmt(row['encode_gbs'])} | {fmt(row['decode_gbs'])} |"
+            )
+        lines.append("")
+    lines.append("## 3. Serving Compute Feasibility")
     lines.append("")
     s = data["serving_compute"]
     lines.append(f"- Model proxy: `{s['model']}`, seq-len `{s['seq_len']}`, layer `{s['layer_index']}`")
@@ -524,7 +989,7 @@ def make_markdown(data):
     lines.append(f"- Materialization copy removed in projection: `{fmt(s['materialization_copy_ms'])} ms`")
     lines.append(f"- Note: {s['note']}")
     lines.append("")
-    lines.append("## 3. BF16 Top-8 vs Top-16 (Exact, With Escapes)")
+    lines.append("## 4. BF16 Top-8 vs Top-16 (Exact, With Escapes)")
     lines.append("")
     lines.append("| Variant | Coverage | Ratio | Encode GB/s | Decode GB/s | Escape Rate |")
     lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
@@ -540,22 +1005,28 @@ def make_markdown(data):
     lines.append("")
     lines.append(f"- Better format on this real BF16 tensor: `{better}`")
     lines.append("")
-    lines.append("## 4. Cross-Dataset Calibration")
+    lines.append("## 5. Cross-Dataset Calibration")
     lines.append("")
     c = data["cross_dataset_calibration"]
     lines.append(f"- Dataset A: `{c['dataset_a']}`")
-    lines.append(f"- Dataset B: `{c['dataset_b']}`")
     lines.append(f"- Calibrate on A, Top-16 coverage on A: `{to_pct(c['calibrate_A_eval_A_top16'])}`")
-    lines.append(f"- Calibrate on A, Top-16 coverage on B: `{to_pct(c['calibrate_A_eval_B_top16'])}`")
-    lines.append(f"- Calibrate on B, Top-16 coverage on B: `{to_pct(c['calibrate_B_eval_B_top16'])}`")
     lines.append("")
-    lines.append("## 5. Calibration Granularity")
+    lines.append("| Dataset B | Domain | Calibrate on A, Eval on B | Calibrate on B, Eval on B |")
+    lines.append("| --- | --- | ---: | ---: |")
+    for row in c["dataset_b_results"]:
+        lines.append(
+            f"| {row['label']} | {row['domain']} | {to_pct(row['calibrate_A_eval_B_top16'])} | {to_pct(row['calibrate_B_eval_B_top16'])} |"
+        )
     lines.append("")
-    lines.append("| Scope | Coverage | Projected Ratio | Escape Rate | Codebook Bytes |")
-    lines.append("| --- | ---: | ---: | ---: | ---: |")
+    lines.append("## 6. Calibration Granularity")
+    lines.append("")
+    lines.append("| Scope | Coverage | Actual Ratio | Projected Ratio | Encode GB/s | Decode GB/s | vs Base Enc | vs Base Dec | Codebook Bytes | Bench Shape |")
+    lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
     for name, row in data["calibration_granularity"].items():
         lines.append(
-            f"| {name} | {to_pct(row['coverage'])} | {fmt(row['projected_ratio'])} | {to_pct(row['escape_rate'])} | {row['codebook_bytes']} |"
+            f"| {name} | {to_pct(row['coverage'])} | {fmt(row['actual_ratio'])} | {fmt(row['projected_ratio'])} | "
+            f"{fmt(row['encode_gbs'])} | {fmt(row['decode_gbs'])} | {fmt(row['vs_baseline_encode'])}x | "
+            f"{fmt(row['vs_baseline_decode'])}x | {row['codebook_bytes']} | {row['bench_shape'][0]}x{row['bench_shape'][1]} |"
         )
     lines.append("")
     lines.append("## Artifacts")
@@ -589,11 +1060,14 @@ def main():
         better_format = "top8_3bit_exact"
     bf16_topk["better_format"] = better_format
 
+    print("Running FP8 transfer sweep...", flush=True)
+    fp8_transfer = run_fp8_transfer_sweep(device)
+
     print("Running cross-dataset calibration study...", flush=True)
     cross_dataset = run_cross_dataset_calibration(device)
 
     print("Running calibration granularity study...", flush=True)
-    granularity = run_calibration_granularity(cpu_bf16)
+    granularity = run_calibration_granularity(cpu_bf16, device)
 
     print("Running serving compute proxy...", flush=True)
     serving = run_serving_compute_proxy(device)
@@ -604,6 +1078,7 @@ def main():
             "shape": list(REP_SHAPE),
         },
         "fp8_results": fp8_results,
+        "fp8_transfer": fp8_transfer,
         "bf16_topk_ablation": bf16_topk,
         "cross_dataset_calibration": cross_dataset,
         "calibration_granularity": granularity,
