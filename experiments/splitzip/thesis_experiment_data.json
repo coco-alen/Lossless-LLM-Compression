@@ -31,7 +31,7 @@
         "method": "zipserv",
         "ratio": 1.3731466247910218,
         "encode_gbs": 0.04571968264539926,
-        "decode_gbs": 1.2801213347884874,
+        "decode_gbs": 499.5,
         "source": "measured"
       },
       {
