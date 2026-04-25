@@ -51,7 +51,7 @@ def annotate_bars(ax, bars, values, fmt, offset_ratio=0.015):
             fmt(value),
             ha="center",
             va="bottom",
-            fontsize=11,
+            fontsize=14,
             fontweight="bold",
         )
 
