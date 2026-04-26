@@ -11,12 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "experiments" / "splitzip" / "thesis_additional_experiments.json"
 DEFAULT_OUTPUT = ROOT / "draw" / "fp8_e2e_speedup_vs_seq_len"
 
-AXIS_LABEL_FONT_SIZE = 40
-TICK_LABEL_FONT_SIZE = 40
+AXIS_LABEL_FONT_SIZE = 45
+TICK_LABEL_FONT_SIZE = 45
 TITLE_FONT_SIZE = 35
-LEGEND_FONT_SIZE = 45
-LINE_WIDTH = 10
-MARKER_SIZE = 28
+LEGEND_FONT_SIZE = 50
+LINE_WIDTH = 18
+MARKER_SIZE = 40
 
 SCHEME_ORDER = ["e4m3_top8_exact", "e5m2_top8_exact", "e5m2_top16_exact"]
 SCHEME_LABELS = {
@@ -50,7 +50,7 @@ def draw_fp8_speedup(fp8_transfer, output_prefix):
         "e5m2_top16_exact": palette[4],
     }
 
-    fig, ax = plt.subplots(1, 1, figsize=(20, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(30, 24))
     fig.subplots_adjust(left=0.12, right=0.985, top=0.72, bottom=0.28)
 
     all_speedups = []
@@ -90,12 +90,6 @@ def draw_fp8_speedup(fp8_transfer, output_prefix):
     )
     ax.set_xlabel("Seq Len", fontsize=AXIS_LABEL_FONT_SIZE, fontweight="bold")
     ax.set_ylabel("E2E Speedup (x)", fontsize=AXIS_LABEL_FONT_SIZE, fontweight="bold")
-    ax.set_title(
-        f"{fp8_transfer['model']} / {fp8_transfer['transport_mode']}",
-        fontsize=TITLE_FONT_SIZE,
-        fontweight="bold",
-        pad=14,
-    )
 
     y_min = min(all_speedups + [1.0])
     y_max = max(all_speedups + [1.0])
@@ -114,7 +108,7 @@ def draw_fp8_speedup(fp8_transfer, output_prefix):
         *ax.get_legend_handles_labels(),
         loc="lower center",
         ncol=4,
-        bbox_to_anchor=(0.5, 0.78),
+        bbox_to_anchor=(0.5, 0.70),
         prop={"size": LEGEND_FONT_SIZE},
         frameon=False,
         handlelength=2.0,

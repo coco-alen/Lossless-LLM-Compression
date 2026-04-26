@@ -14,13 +14,28 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "experiments" / "splitzip" / "thesis_experiment_data.json"
 DEFAULT_OUTPUT = ROOT / "draw" / "baseline_comparison"
 
-METHOD_ORDER = ["nvcomp_lz4", "dfloat11", "zipserv", "zipnn", "splitzip"]
+METHOD_ORDER = ["zipnn", "nvcomp_lz4", "dfloat11", "splitzip"]
 METHOD_LABELS = {
     "nvcomp_lz4": "nvCOMP LZ4",
     "dfloat11": "DFloat11",
-    "zipserv": "ZipServ",
     "splitzip": "SplitZip",
     "zipnn": "ZipNN",
+}
+ENCODE_SEM = {
+    "nvcomp_lz4": 0.423643,
+    "dfloat11": 4.95034e-05,
+    "splitzip": 4.89711,
+}
+DECODE_SEM = {
+    "nvcomp_lz4": 8.7959,
+    "dfloat11": 2.49858,
+    "splitzip": 3.99132,
+}
+ERRORBAR_STYLE = {
+    "ecolor": "black",
+    "elinewidth": 2.5,
+    "capsize": 8,
+    "capthick": 2.5,
 }
 PANEL_TITLES = [
     "(a) Compression Ratio",
@@ -54,12 +69,13 @@ def add_panel_title_below(fig, ax, title, y=0.08):
     )
 
 
-def annotate_bars(ax, bars, values, fmt, offset_ratio=0.015, stagger_small=False):
+def annotate_bars(ax, bars, values, fmt, errors=None, offset_ratio=0.015, stagger_small=False):
     ymin, ymax = ax.get_ylim()
     span = ymax - ymin
+    errors = errors or [0.0] * len(values)
     small_label_count = 0
-    for bar, value in zip(bars, values):
-        y_pos = max(bar.get_height() + span * offset_ratio, ymin + span * 0.03)
+    for bar, value, error in zip(bars, values, errors):
+        y_pos = max(bar.get_height() + error + span * offset_ratio, ymin + span * 0.03)
         if stagger_small and value < ymax * 0.05:
             y_pos = ymin + span * (0.035 + 0.065 * (small_label_count % 3))
             small_label_count += 1
@@ -79,13 +95,14 @@ def draw_baseline_comparison(rows, output_prefix):
     ratio = [row["ratio"] for row in rows]
     encode = [row["encode_gbs"] for row in rows]
     decode = [row["decode_gbs"] for row in rows]
+    encode_errors = [ENCODE_SEM.get(row["method"], 0.0) for row in rows]
+    decode_errors = [DECODE_SEM.get(row["method"], 0.0) for row in rows]
 
     x = np.arange(len(rows))
     palette = sns.color_palette()
     style_map = {
         "nvcomp_lz4": {"color": palette[1], "hatch": "/"},
         "dfloat11": {"color": palette[0], "hatch": "\\"},
-        "zipserv": {"color": palette[3], "hatch": "-"},
         "zipnn": {"color": palette[4], "hatch": "+"},
         "splitzip": {"color": palette[2], "hatch": "x"},
     }
@@ -100,6 +117,7 @@ def draw_baseline_comparison(rows, output_prefix):
             "ylabel": "Compression Ratio (x)",
             "formatter": lambda v: f"{v:.2f}",
             "ylim_pad": 0.10,
+            "errors": None,
         },
         {
             "ax": axes[1],
@@ -107,6 +125,7 @@ def draw_baseline_comparison(rows, output_prefix):
             "ylabel": "Throughput (GB/s)",
             "formatter": lambda v: f"{v:.2g}" if v < 1 else f"{v:.1f}",
             "ylim_pad": 0.12,
+            "errors": encode_errors,
         },
         {
             "ax": axes[2],
@@ -114,24 +133,29 @@ def draw_baseline_comparison(rows, output_prefix):
             "ylabel": "Throughput (GB/s)",
             "formatter": lambda v: f"{v:.2g}" if v < 1 else f"{v:.1f}",
             "ylim_pad": 0.12,
+            "errors": decode_errors,
         },
     ]
 
     for idx, panel in enumerate(panels):
         ax = panel["ax"]
         values = panel["values"]
+        errors = panel["errors"]
         bars = []
         for i, (row, value) in enumerate(zip(rows, values)):
             style = style_map[row["method"]]
+            bar_kwargs = ERRORBAR_STYLE if errors is not None else {}
             bars.append(
                 ax.bar(
                     x[i],
                     value,
+                    yerr=None if errors is None else errors[i],
                     width=0.72,
                     color=style["color"],
                     edgecolor="white",
                     hatch=style["hatch"],
                     linewidth=1.0,
+                    error_kw=bar_kwargs,
                 )[0]
             )
 
@@ -148,7 +172,8 @@ def draw_baseline_comparison(rows, output_prefix):
         ax.grid(axis="y", linestyle="-", linewidth=0.5)
         ax.set_axisbelow(True)
 
-        ymax = max(values)
+        error_values = errors or [0.0] * len(values)
+        ymax = max(value + error for value, error in zip(values, error_values))
         ax.set_ylim(0, ymax * (1 + panel["ylim_pad"]))
         if idx == 0:
             ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.2f"))
@@ -169,6 +194,7 @@ def draw_baseline_comparison(rows, output_prefix):
             bars,
             values,
             panel["formatter"],
+            errors=errors,
             offset_ratio=0.02 if idx == 0 else 0.015,
             stagger_small=idx == 1,
         )
