@@ -16,7 +16,7 @@ DEFAULT_OUTPUT = ROOT / "draw" / "baseline_comparison"
 
 METHOD_ORDER = ["nvcomp_lz4", "dfloat11", "zipserv", "zipnn", "splitzip"]
 METHOD_LABELS = {
-    "nvcomp_lz4": "nvCOMP\nLZ4",
+    "nvcomp_lz4": "nvCOMP LZ4",
     "dfloat11": "DFloat11",
     "zipserv": "ZipServ",
     "splitzip": "SplitZip",
@@ -27,6 +27,11 @@ PANEL_TITLES = [
     "(b) Compression Throughput",
     "(c) Decompression Throughput",
 ]
+AXIS_LABEL_FONT_SIZE = 36
+METHOD_LABEL_FONT_SIZE = 30
+Y_TICK_LABEL_FONT_SIZE = 30
+PANEL_TITLE_FONT_SIZE = 32
+BAR_LABEL_FONT_SIZE = 30
 
 
 def load_rows(path):
@@ -38,20 +43,33 @@ def load_rows(path):
 def add_panel_title_below(fig, ax, title, y=0.08):
     bbox = ax.get_position()
     x_center = 0.5 * (bbox.x0 + bbox.x1)
-    fig.text(x_center, y, title, ha="center", va="top", fontsize=16, fontweight="bold")
+    fig.text(
+        x_center,
+        y,
+        title,
+        ha="center",
+        va="top",
+        fontsize=PANEL_TITLE_FONT_SIZE,
+        fontweight="bold",
+    )
 
 
-def annotate_bars(ax, bars, values, fmt, offset_ratio=0.015):
+def annotate_bars(ax, bars, values, fmt, offset_ratio=0.015, stagger_small=False):
     ymin, ymax = ax.get_ylim()
     span = ymax - ymin
+    small_label_count = 0
     for bar, value in zip(bars, values):
+        y_pos = max(bar.get_height() + span * offset_ratio, ymin + span * 0.03)
+        if stagger_small and value < ymax * 0.05:
+            y_pos = ymin + span * (0.035 + 0.065 * (small_label_count % 3))
+            small_label_count += 1
         ax.text(
             bar.get_x() + bar.get_width() / 2,
-            max(bar.get_height() + span * offset_ratio, ymin + span * 0.03),
+            y_pos,
             fmt(value),
             ha="center",
             va="bottom",
-            fontsize=14,
+            fontsize=BAR_LABEL_FONT_SIZE,
             fontweight="bold",
         )
 
@@ -72,29 +90,29 @@ def draw_baseline_comparison(rows, output_prefix):
         "splitzip": {"color": palette[2], "hatch": "x"},
     }
 
-    fig, axes = plt.subplots(1, 3, figsize=(21, 4))
-    fig.subplots_adjust(left=0.055, right=0.99, top=0.92, bottom=0.18, wspace=0.25)
+    fig, axes = plt.subplots(1, 3, figsize=(30, 11))
+    fig.subplots_adjust(left=0.09, right=0.99, top=0.92, bottom=0.36, wspace=0.32)
 
     panels = [
         {
             "ax": axes[0],
             "values": ratio,
             "ylabel": "Compression Ratio (x)",
-            "formatter": lambda v: f"{v:.3f}",
+            "formatter": lambda v: f"{v:.2f}",
             "ylim_pad": 0.10,
         },
         {
             "ax": axes[1],
             "values": encode,
             "ylabel": "Throughput (GB/s)",
-            "formatter": lambda v: f"{v:.3g}" if v < 1 else f"{v:.1f}",
+            "formatter": lambda v: f"{v:.2g}" if v < 1 else f"{v:.1f}",
             "ylim_pad": 0.12,
         },
         {
             "ax": axes[2],
             "values": decode,
             "ylabel": "Throughput (GB/s)",
-            "formatter": lambda v: f"{v:.3g}" if v < 1 else f"{v:.1f}",
+            "formatter": lambda v: f"{v:.2g}" if v < 1 else f"{v:.1f}",
             "ylim_pad": 0.12,
         },
     ]
@@ -117,9 +135,16 @@ def draw_baseline_comparison(rows, output_prefix):
                 )[0]
             )
 
-        ax.set_xticks(x, labels, fontsize=14)
-        ax.tick_params(axis="y", labelsize=13, width=0)
-        ax.set_ylabel(panel["ylabel"], fontsize=15, fontweight="bold")
+        ax.set_xticks(x)
+        ax.set_xticklabels(
+            labels,
+            rotation=45,
+            ha="right",
+            rotation_mode="anchor",
+            fontsize=METHOD_LABEL_FONT_SIZE,
+        )
+        ax.tick_params(axis="y", labelsize=Y_TICK_LABEL_FONT_SIZE, width=0)
+        ax.set_ylabel(panel["ylabel"], fontsize=AXIS_LABEL_FONT_SIZE, fontweight="bold")
         ax.grid(axis="y", linestyle="-", linewidth=0.5)
         ax.set_axisbelow(True)
 
@@ -145,8 +170,9 @@ def draw_baseline_comparison(rows, output_prefix):
             values,
             panel["formatter"],
             offset_ratio=0.02 if idx == 0 else 0.015,
+            stagger_small=idx == 1,
         )
-        add_panel_title_below(fig, ax, PANEL_TITLES[idx], y=0.042)
+        add_panel_title_below(fig, ax, PANEL_TITLES[idx], y=0.16)
 
     output_prefix = Path(output_prefix)
     fig.savefig(output_prefix.with_suffix(".pdf"), bbox_inches="tight")

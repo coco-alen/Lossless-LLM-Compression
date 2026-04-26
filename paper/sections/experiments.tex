@@ -5,14 +5,14 @@ We evaluate \splitzip around five questions. (RQ1) Does it reduce transfer time 
 
 \subsection{Setup}
 
-\textbf{Hardware and system.}
-Microbenchmarks use NVIDIA H200 GPUs. Serving-path measurements use Mooncake Transfer Engine v0.3.10 with TCP transport and etcd metadata. We report both controlled tensor microbenchmarks and real-KV measurements because the escape stream depends on the actual exponent distribution.
+\textbf{Platform and timing protocol.}
+All codec experiments are conducted on NVIDIA H200 GPUs. We report compression and decompression throughput in GB/s, where the byte count is the uncompressed native tensor size. Each codec benchmark first verifies bitwise round-trip correctness and then times repeated GPU executions after warm-up. For the baseline comparison, all methods operate on the same real-activation BF16 tensor of shape $32768 \times 4096$. For transfer studies, we compose measured \splitzip encode/decode time, measured GPU host-device DMA time, and a staged layer-pipeline transfer model. The modeled transport modes are CPU-RDMA at 47~GB/s and RoCE 4$\times$200G at 87~GB/s effective payload bandwidth. Therefore, the sequence-length transfer curves are projections from measured codec/DMA components, not direct multi-node RoCE measurements. The Qwen3-32B breakdown uses additive sequential accounting, so encode, transfer, and decode components sum exactly in the stacked-bar visualization.
 
-\textbf{Models and workloads.}
-The model sweep covers Qwen2.5-\{1.5B, 3B, 7B\}, TinyLlama-1.1B-Chat, Phi-2, and Qwen3-30B-A3B. Quality validation uses 140 prompts across Qwen and TinyLlama families, with context lengths from 128 to 2840 tokens. The real-KV serving-path evaluation uses Qwen3-30B-A3B BF16 KV caches collected from semantic prompts and transferred through Mooncake.
+\textbf{Datasets and workloads.}
+Transfer workloads use authentic BF16 KV blocks extracted from one 1024-token forward pass per model and then assembled to target sequence lengths. We evaluate Llama-3-8B and Qwen3-30B-A3B from 512 to 65,536 tokens under both transport modes. For Qwen3-32B, we measure the transmission breakdown at sequence lengths 2,048, 8,192, 16,384, 32,768, and 65,536, and plot the 2,048, 16,384, and 65,536 cases. FP8 experiments also use Qwen3-32B and evaluate exact compression of native E4M3 and E5M2 tensors from 1,024 to 65,536 tokens. Calibration-transfer experiments calibrate the BF16 top-16 codebook on WikiText-2 train and evaluate coverage on WikiText-2 test, HumanEval, GSM8K, MMLU, and Penn Treebank.
 
-\textbf{Baselines.}
-We compare against raw BF16 transfer, native FP8 E4M3/E5M2, CPU LZ4, CPU zstd level~1, and representative lossless neural-network compression methods where the target differs from PD KV transfer.
+\textbf{Baselines and ablations.}
+For BF16 codec comparison, we compare nvCOMP LZ4, DFloat11, ZipServ, ZipNN, and \splitzip. nvCOMP, DFloat11, ZipServ, and \splitzip are measured locally on the same $32768 \times 4096$ tensor; ZipNN uses the reported 66\% compressed-size fraction and reported 1.15/1.65~GB/s compression/decompression throughput. For transfer-time studies, the native baseline moves raw BF16 or FP8 cache bytes, while \splitzip performs encode, compressed transfer, and decode. We further ablate BF16 top-8 3-bit coding versus top-16 4-bit coding, explicit escape-position storage versus sentinel-only escape discovery, pre-calibrated versus dynamic top-16 codebooks, and per-tensor, per-token, and per-channel calibration granularity.
 
 \subsection{Real BF16 KV transfer through Mooncake}
 \label{sec:real-bf16}

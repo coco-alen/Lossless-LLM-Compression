@@ -11,6 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "experiments" / "splitzip" / "thesis_experiment_data.json"
 DEFAULT_OUTPUT = ROOT / "draw" / "transfer_time_vs_seq_len"
 THEORETICAL_RATIO = 1.316
+AXIS_LABEL_FONT_SIZE = 40
+TICK_LABEL_FONT_SIZE = 40
+TITLE_FONT_SIZE = 35
+LEGEND_FONT_SIZE = 45
+LINE_WIDTH = 10
+MARKER_SIZE = 28
 
 PANEL_ORDER = [
     ("Llama-3-8B", "CPU-RDMA"),
@@ -37,8 +43,8 @@ def draw_transfer_time(transfer, output_prefix):
     splitzip_color = palette[2]
     theory_color = palette[3]
 
-    fig, axes = plt.subplots(1, 4, figsize=(21, 4), sharex=True)
-    fig.subplots_adjust(left=0.045, right=0.995, top=0.76, bottom=0.25, wspace=0.22)
+    fig, axes = plt.subplots(1, 4, figsize=(36, 10), sharex=True)
+    fig.subplots_adjust(left=0.055, right=0.995, top=0.74, bottom=0.30, wspace=0.28)
 
     panel_series = []
     common_ymax = 0.0
@@ -60,9 +66,9 @@ def draw_transfer_time(transfer, output_prefix):
             color=native_color,
             alpha=1,
             linestyle="-",
-            linewidth=3,
+            linewidth=LINE_WIDTH,
             marker="o",
-            markersize=9,
+            markersize=MARKER_SIZE,
             label="Native (ms)",
         )
         ax.plot(
@@ -71,9 +77,9 @@ def draw_transfer_time(transfer, output_prefix):
             color=splitzip_color,
             alpha=1,
             linestyle="-",
-            linewidth=3,
+            linewidth=LINE_WIDTH,
             marker="v",
-            markersize=9,
+            markersize=MARKER_SIZE,
             label="SplitZip (ms)",
         )
         ax.plot(
@@ -82,19 +88,28 @@ def draw_transfer_time(transfer, output_prefix):
             color=theory_color,
             alpha=1,
             linestyle="--",
-            linewidth=3,
+            linewidth=LINE_WIDTH,
             label="Theoretical Optimum",
         )
 
         ax.set_xscale("log", base=2)
         ax.set_xticks(seq_len)
-        ax.set_xticklabels([format_seq_len(x) for x in seq_len], rotation=30, fontsize=12)
-        ax.set_xlabel("Seq Len", fontsize=15, fontweight="bold")
-        ax.set_ylabel("Time (ms)", fontsize=15, fontweight="bold")
-        ax.set_title(f"{model_name} / {mode_name}", fontsize=13, fontweight="bold", pad=8)
+        ax.set_xticklabels(
+            [format_seq_len(x) for x in seq_len],
+            rotation=30,
+            fontsize=TICK_LABEL_FONT_SIZE,
+        )
+        ax.set_xlabel("Seq Len", fontsize=AXIS_LABEL_FONT_SIZE, fontweight="bold")
+        ax.set_ylabel("Time (ms)", fontsize=AXIS_LABEL_FONT_SIZE, fontweight="bold")
+        ax.set_title(
+            f"{model_name} / {mode_name}",
+            fontsize=TITLE_FONT_SIZE,
+            fontweight="bold",
+            pad=14,
+        )
         ax.set_ylim(0, common_ymax)
         ax.grid(True, linewidth=0.5)
-        ax.tick_params(axis="y", labelsize=12, width=0)
+        ax.tick_params(axis="y", labelsize=TICK_LABEL_FONT_SIZE, width=0)
         ax.tick_params(axis="x", width=0)
 
         ax.spines["right"].set_visible(False)
@@ -106,14 +121,14 @@ def draw_transfer_time(transfer, output_prefix):
     legend = fig.legend(
         handles,
         labels,
-        loc="upper center",
+        loc="lower center",
         ncol=3,
-        bbox_to_anchor=(0.5, 1.0),
-        prop={"size": 14},
+        bbox_to_anchor=(0.5, 0.8),
+        prop={"size": LEGEND_FONT_SIZE},
         frameon=False,
-        handlelength=2.8,
-        columnspacing=1.8,
-        markerscale=1.25,
+        handlelength=2.0,
+        columnspacing=1.2,
+        markerscale=1.0,
     )
     for text in legend.get_texts():
         text.set_fontweight("bold" if text.get_text() == "SplitZip (ms)" else "normal")

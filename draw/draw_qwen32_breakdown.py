@@ -13,6 +13,11 @@ SEQ_LENS = [2048, 16384, 65536]
 BAR_HEIGHT = 0.42
 Y_NATIVE = 0.62
 Y_OURS = 0.16
+AXIS_LABEL_FONT_SIZE = 35
+TICK_LABEL_FONT_SIZE = 35
+TITLE_FONT_SIZE = 30
+LEGEND_FONT_SIZE = 35
+TOTAL_LABEL_FONT_SIZE = 30
 
 
 def load_breakdown_rows(path):
@@ -34,7 +39,7 @@ def annotate_total(ax, value, y_pos, x_pad):
         f"{value:.1f}",
         va="center",
         ha="left",
-        fontsize=12,
+        fontsize=TOTAL_LABEL_FONT_SIZE,
         fontweight="bold",
     )
 
@@ -49,8 +54,8 @@ def draw_qwen32_breakdown(rows, output_prefix):
         "decode": palette[3],
     }
 
-    fig, axes = plt.subplots(1, 3, figsize=(21, 3))
-    fig.subplots_adjust(left=0.045, right=0.995, top=0.78, bottom=0.24, wspace=0.24)
+    fig, axes = plt.subplots(1, 3, figsize=(30, 6))
+    fig.subplots_adjust(left=0.075, right=0.995, top=0.74, bottom=0.29, wspace=0.30)
 
     legend_handles = None
     legend_labels = None
@@ -106,14 +111,24 @@ def draw_qwen32_breakdown(rows, output_prefix):
         annotate_total(ax, native, Y_NATIVE, x_pad)
         annotate_total(ax, ours_total, Y_OURS, x_pad)
 
-        ax.set_yticks([Y_NATIVE, Y_OURS], ["Native", "Ours"], fontsize=13, fontweight="bold")
-        ax.set_xlabel("Time (ms)", fontsize=14, fontweight="bold")
-        ax.set_title(f"Seq Len = {format_seq_len(row['seq_len'])}", fontsize=15, fontweight="bold", pad=8)
+        ax.set_yticks(
+            [Y_NATIVE, Y_OURS],
+            ["Native", "Ours"],
+            fontsize=TICK_LABEL_FONT_SIZE,
+            fontweight="bold",
+        )
+        ax.set_xlabel("Time (ms)", fontsize=AXIS_LABEL_FONT_SIZE, fontweight="bold")
+        ax.set_title(
+            f"Seq Len = {format_seq_len(row['seq_len'])}",
+            fontsize=TITLE_FONT_SIZE,
+            fontweight="bold",
+            pad=14,
+        )
         ax.set_xlim(0, x_max)
         ax.set_ylim(-0.12, 0.9)
         ax.grid(axis="x", linestyle="-", linewidth=0.5)
         ax.set_axisbelow(True)
-        ax.tick_params(axis="x", labelsize=12, width=0)
+        ax.tick_params(axis="x", labelsize=TICK_LABEL_FONT_SIZE, width=0)
         ax.tick_params(axis="y", width=0)
 
         ax.spines["right"].set_visible(False)
@@ -128,12 +143,12 @@ def draw_qwen32_breakdown(rows, output_prefix):
     fig.legend(
         legend_handles,
         legend_labels,
-        loc="upper center",
+        loc="lower center",
         ncol=4,
-        bbox_to_anchor=(0.5, 1.02),
-        prop={"size": 12},
+        bbox_to_anchor=(0.5, 0.84),
+        prop={"size": LEGEND_FONT_SIZE},
         frameon=False,
-        columnspacing=1.6,
+        columnspacing=1.2,
     )
 
     output_prefix = Path(output_prefix)
