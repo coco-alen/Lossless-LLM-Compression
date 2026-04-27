@@ -1,0 +1,38 @@
+{
+  "numel": 4096,
+  "chunk_size": 256,
+  "coverage": 1.0,
+  "ratio": 1.3161953727506426,
+  "raw_bytes": 8192,
+  "compressed_bytes": 6224,
+  "n_chunks": 16,
+  "n_escapes": 0,
+  "summary_s": {
+    "chunk_escape_compaction": {
+      "mean": 0.0005532809300348163,
+      "std": 0.00010490070712945632,
+      "stderr": 7.417600136250257e-05
+    },
+    "decode_dense": {
+      "mean": 0.007880471996031702,
+      "std": 0.0031743832442819907,
+      "stderr": 0.0022446279181167483
+    },
+    "extract_fields": {
+      "mean": 0.00021972693502902985,
+      "std": 0.00018141386542555555,
+      "stderr": 0.0001282789744436741
+    },
+    "fix_escapes": {
+      "mean": 0.0001443049404770136,
+      "std": 0.00011909810354092876,
+      "stderr": 8.421507664024829e-05
+    },
+    "lookup_and_pack": {
+      "mean": 0.016523298574611545,
+      "std": 0.0005751500534865816,
+      "stderr": 0.0004066925030201673
+    }
+  },
+  "paper_paragraph": "SplitZip v2 stores escape metadata in fixed-size chunks.  The encoder first runs a per-chunk counting kernel that computes the number of uncommon exponents in each chunk.  A prefix sum over these counts gives a disjoint output range for every chunk.  A second per-chunk scatter kernel then writes uint16 local offsets and raw exponent values into the assigned range.  Because each chunk owns a non-overlapping segment, the implementation avoids global atomic append operations and the associated contention; decode mirrors this layout by launching independent chunk-local fix-up programs."
+}

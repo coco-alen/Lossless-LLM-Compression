@@ -1,0 +1,614 @@
+{
+  "model": {
+    "display_name": "Qwen3-32B",
+    "hf_name": "Qwen/Qwen3-32B"
+  },
+  "note": "This plan launches native and SplitZip PD-disaggregated SGLang runs. The SplitZip mode expects the SGLang-side hook to read SPLITZIP_SGLANG_ENABLE=1.",
+  "servers": [
+    {
+      "mode": "native",
+      "env": {
+        "PYTHONPATH": "/data02/home/yilian2/project/Lossless-LLM-Compression:/data02/home/yilian2/project/sglang-dev/python",
+        "SGLANG_TEST_PD_DISAGG_BACKEND": "mooncake"
+      },
+      "commands": {
+        "prefill": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode prefill --base-gpu-id 0 --port 30100 --disaggregation-transfer-backend mooncake",
+        "decode": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode decode --base-gpu-id 1 --port 30200 --disaggregation-transfer-backend mooncake",
+        "router": "python -m sglang_router.launch_router --pd-disaggregation --mini-lb --prefill http://127.0.0.1:30100 --decode http://127.0.0.1:30200 --host 127.0.0.1 --port 30000"
+      }
+    },
+    {
+      "mode": "splitzip",
+      "env": {
+        "PYTHONPATH": "/data02/home/yilian2/project/Lossless-LLM-Compression:/data02/home/yilian2/project/sglang-dev/python",
+        "SGLANG_TEST_PD_DISAGG_BACKEND": "mooncake",
+        "SPLITZIP_SGLANG_ENABLE": "1",
+        "SPLITZIP_SGLANG_CODEC": "chunklocal_top16",
+        "SPLITZIP_SGLANG_CHUNK_SIZE": "1024"
+      },
+      "commands": {
+        "prefill": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode prefill --base-gpu-id 0 --port 30100 --disaggregation-transfer-backend mooncake",
+        "decode": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode decode --base-gpu-id 1 --port 30200 --disaggregation-transfer-backend mooncake",
+        "router": "python -m sglang_router.launch_router --pd-disaggregation --mini-lb --prefill http://127.0.0.1:30100 --decode http://127.0.0.1:30200 --host 127.0.0.1 --port 30000"
+      }
+    }
+  ],
+  "benchmarks": [
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 512,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq512.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 512 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq512.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq1024.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 2048,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq2048.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 2048 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq2048.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 4096,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq4096.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 4096 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq4096.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 8192,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq8192.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 8192 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq8192.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 16384,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq16384.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 16384 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq16384.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq32768.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 65536,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq65536.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 65536 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq65536.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 131072,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq131072.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 131072 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs1_seq_bs1_seq131072.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 128,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq128.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 128 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq128.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 256,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq256.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 256 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq256.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 512,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq512.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 512 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq512.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq1024.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 2048,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq2048.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 2048 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq2048.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 4096,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq4096.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 4096 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq4096.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 8192,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq8192.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 8192 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq8192.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 16384,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq16384.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 16384 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq16384.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq32768.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 65536,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq65536.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 65536 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/bs16_seq_bs16_seq65536.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 1,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs1_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs1_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 2,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs2_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 2 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs2_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 4,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs4_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 4 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs4_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 8,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs8_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 8 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs8_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 16,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs16_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs16_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 32,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs32_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 32 --max-concurrency 32 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs32_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 64,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs64_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 64 --max-concurrency 64 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs64_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 128,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs128_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 128 --max-concurrency 128 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs128_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 256,
+      "seq_len": 1024,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs256_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 256 --max-concurrency 256 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq1024_bs_bs256_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 1,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs1_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs1_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 2,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs2_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 2 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs2_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 4,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs4_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 4 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs4_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 8,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs8_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 8 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs8_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 16,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs16_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs16_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 32,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs32_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 32 --max-concurrency 32 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs32_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 64,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs64_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 64 --max-concurrency 64 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs64_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 128,
+      "seq_len": 32768,
+      "mode": "native",
+      "output_file": "experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs128_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 128 --max-concurrency 128 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/native/seq32768_bs_bs128_seq32768.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 512,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq512.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 512 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq512.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq1024.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 2048,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq2048.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 2048 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq2048.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 4096,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq4096.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 4096 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq4096.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 8192,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq8192.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 8192 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq8192.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 16384,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq16384.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 16384 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq16384.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq32768.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 65536,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq65536.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 65536 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq65536.jsonl"
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 131072,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq131072.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 131072 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs1_seq_bs1_seq131072.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 128,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq128.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 128 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq128.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 256,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq256.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 256 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq256.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 512,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq512.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 512 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq512.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq1024.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 2048,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq2048.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 2048 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq2048.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 4096,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq4096.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 4096 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq4096.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 8192,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq8192.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 8192 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq8192.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 16384,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq16384.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 16384 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq16384.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq32768.jsonl"
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 65536,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq65536.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 65536 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/bs16_seq_bs16_seq65536.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 1,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs1_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs1_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 2,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs2_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 2 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs2_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 4,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs4_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 4 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs4_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 8,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs8_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 8 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs8_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 16,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs16_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs16_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 32,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs32_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 32 --max-concurrency 32 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs32_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 64,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs64_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 64 --max-concurrency 64 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs64_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 128,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs128_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 128 --max-concurrency 128 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs128_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 256,
+      "seq_len": 1024,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs256_seq1024.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 256 --max-concurrency 256 --random-input-len 1024 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq1024_bs_bs256_seq1024.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 1,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs1_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 1 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs1_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 2,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs2_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 2 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs2_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 4,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs4_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 4 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs4_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 8,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs8_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 8 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs8_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 16,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs16_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 16 --max-concurrency 16 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs16_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 32,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs32_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 32 --max-concurrency 32 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs32_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 64,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs64_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 64 --max-concurrency 64 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs64_seq32768.jsonl"
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 128,
+      "seq_len": 32768,
+      "mode": "splitzip",
+      "output_file": "experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs128_seq32768.jsonl",
+      "command": "python -m sglang.bench_serving --backend sglang --base-url http://127.0.0.1:30000 --dataset-name random --model Qwen/Qwen3-32B --tokenize-prompt --num-prompts 128 --max-concurrency 128 --random-input-len 32768 --random-output-len 1 --random-range-ratio 0.0 --disable-ignore-eos --warmup-requests 2 --output-file experiments/splitzip_v2/results/sglang/splitzip/seq32768_bs_bs128_seq32768.jsonl"
+    }
+  ]
+}

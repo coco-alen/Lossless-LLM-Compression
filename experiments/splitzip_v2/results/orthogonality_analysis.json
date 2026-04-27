@@ -1,0 +1,55 @@
+{
+  "assumption_only": true,
+  "overlap_model": true,
+  "rows": [
+    {
+      "name": "FlowKV",
+      "mechanism": "transfer consolidation / fewer KV movements",
+      "optimized_transfer_fraction": 0.6,
+      "native_ms": 3.0,
+      "software_only_ms": 1.7999999999999998,
+      "splitzip_only_ms": 2.2796352583586623,
+      "combined_ms": 1.3677811550151975,
+      "software_speedup": 1.6666666666666667,
+      "splitzip_speedup": 1.3160000000000003,
+      "combined_speedup_vs_native": 2.1933333333333334,
+      "combined_speedup_vs_software": 1.316,
+      "encode_ms": 0.8947848533333334,
+      "decode_ms": 0.536870912,
+      "compressed_bytes": 203978310.03039512
+    },
+    {
+      "name": "HybridServe",
+      "mechanism": "hybrid placement and scheduling",
+      "optimized_transfer_fraction": 0.7,
+      "native_ms": 3.0,
+      "software_only_ms": 2.0999999999999996,
+      "splitzip_only_ms": 2.2796352583586623,
+      "combined_ms": 1.5957446808510636,
+      "software_speedup": 1.4285714285714288,
+      "splitzip_speedup": 1.3160000000000003,
+      "combined_speedup_vs_native": 1.8800000000000003,
+      "combined_speedup_vs_software": 1.316,
+      "encode_ms": 0.8947848533333334,
+      "decode_ms": 0.536870912,
+      "compressed_bytes": 203978310.03039512
+    },
+    {
+      "name": "KVPR",
+      "mechanism": "reuse / placement-aware KV routing",
+      "optimized_transfer_fraction": 0.65,
+      "native_ms": 3.0,
+      "software_only_ms": 1.9500000000000002,
+      "splitzip_only_ms": 2.2796352583586623,
+      "combined_ms": 1.4817629179331309,
+      "software_speedup": 1.5384615384615383,
+      "splitzip_speedup": 1.3160000000000003,
+      "combined_speedup_vs_native": 2.0246153846153843,
+      "combined_speedup_vs_software": 1.316,
+      "encode_ms": 0.8947848533333334,
+      "decode_ms": 0.536870912,
+      "compressed_bytes": 203978310.03039512
+    }
+  ],
+  "interpretation": "FlowKV/HybridServe/KVPR reduce when or how often KV is moved; SplitZip reduces bytes per move. Under this model their gains multiply until codec time or another non-transfer stage dominates."
+}

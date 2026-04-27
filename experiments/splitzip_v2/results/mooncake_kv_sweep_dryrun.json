@@ -1,0 +1,197 @@
+{
+  "models": [
+    {
+      "display_name": "Llama-3-8B",
+      "hf_name": "NousResearch/Meta-Llama-3-8B",
+      "family": "Llama"
+    },
+    {
+      "display_name": "Qwen3-30B-A3B",
+      "hf_name": "Qwen/Qwen3-30B-A3B",
+      "family": "Qwen-MoE"
+    }
+  ],
+  "grid": [
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 512
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 2048
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 4096
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 8192
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 16384
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 65536
+    },
+    {
+      "sweep": "bs1_seq",
+      "batch_size": 1,
+      "seq_len": 131072
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 128
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 256
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 512
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 2048
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 4096
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 8192
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 16384
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "bs16_seq",
+      "batch_size": 16,
+      "seq_len": 65536
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 1,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 2,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 4,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 8,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 16,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 32,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 64,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 128,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq1024_bs",
+      "batch_size": 256,
+      "seq_len": 1024
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 1,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 2,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 4,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 8,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 16,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 32,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 64,
+      "seq_len": 32768
+    },
+    {
+      "sweep": "seq32768_bs",
+      "batch_size": 128,
+      "seq_len": 32768
+    }
+  ],
+  "note": "Dry run only; no model loading or Mooncake transfer executed."
+}
