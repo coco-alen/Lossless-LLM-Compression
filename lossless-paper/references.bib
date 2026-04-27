@@ -1,0 +1,207 @@
+// ====================== Intro ===================
+
+@article{qin2024mooncake,
+  title={Mooncake: A kvcache-centric disaggregated architecture for llm serving},
+  author={Qin, Ruoyu and Li, Zheming and He, Weiran and Cui, Jialei and Tang, Heyi and Ren, Feng and Ma, Teng and Cai, Shangming and Zhang, Yineng and Zhang, Mingxing and others},
+  journal={ACM Transactions on Storage},
+  year={2024},
+  publisher={ACM New York, NY}
+}
+
+@misc{vllm2025,
+  author       = {vLLM Team},
+  title        = {vLLM},
+  howpublished = {\url{https://github.com/vllm-project/vllm}},
+  year         = {2026},
+}
+
+@misc{sglang2025,
+  author       = {LMSYS Corp.},
+  title        = {SGLang},
+  howpublished = {\url{https://github.com/sgl-project/sglang}},
+  year         = {2026},
+}
+
+@misc{dynamo2025,
+  author       = {NVIDIA},
+  title        = {Dynamo},
+  howpublished = {\url{https://github.com/ai-dynamo/dynamo}},
+  year         = {2026},
+}
+
+// ====================== Experiment ===================
+
+
+@misc{merity2016wikitext2,
+      title={Pointer Sentinel Mixture Models}, 
+      author={Stephen Merity and Caiming Xiong and James Bradbury and Richard Socher},
+      year={2016},
+      eprint={1609.07843},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/1609.07843}, 
+}
+
+@misc{chen2021humaneval,
+      title={Evaluating Large Language Models Trained on Code}, 
+      author={Mark Chen and Jerry Tworek and Heewoo Jun and Qiming Yuan and Henrique Ponde de Oliveira Pinto and Jared Kaplan and Harri Edwards and Yuri Burda and Nicholas Joseph and Greg Brockman and Alex Ray and Raul Puri and Gretchen Krueger and Michael Petrov and Heidy Khlaaf and Girish Sastry and Pamela Mishkin and Brooke Chan and Scott Gray and Nick Ryder and Mikhail Pavlov and Alethea Power and Lukasz Kaiser and Mohammad Bavarian and Clemens Winter and Philippe Tillet and Felipe Petroski Such and Dave Cummings and Matthias Plappert and Fotios Chantzis and Elizabeth Barnes and Ariel Herbert-Voss and William Hebgen Guss and Alex Nichol and Alex Paino and Nikolas Tezak and Jie Tang and Igor Babuschkin and Suchir Balaji and Shantanu Jain and William Saunders and Christopher Hesse and Andrew N. Carr and Jan Leike and Josh Achiam and Vedant Misra and Evan Morikawa and Alec Radford and Matthew Knight and Miles Brundage and Mira Murati and Katie Mayer and Peter Welinder and Bob McGrew and Dario Amodei and Sam McCandlish and Ilya Sutskever and Wojciech Zaremba},
+      year={2021},
+      eprint={2107.03374},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2107.03374}, 
+}
+
+
+@misc{cobbe2021gsm8k,
+      title={Training Verifiers to Solve Math Word Problems}, 
+      author={Karl Cobbe and Vineet Kosaraju and Mohammad Bavarian and Mark Chen and Heewoo Jun and Lukasz Kaiser and Matthias Plappert and Jerry Tworek and Jacob Hilton and Reiichiro Nakano and Christopher Hesse and John Schulman},
+      year={2021},
+      eprint={2110.14168},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2110.14168}, 
+}
+
+@misc{hendrycks2021mmlu,
+      title={Measuring Massive Multitask Language Understanding}, 
+      author={Dan Hendrycks and Collin Burns and Steven Basart and Andy Zou and Mantas Mazeika and Dawn Song and Jacob Steinhardt},
+      year={2021},
+      eprint={2009.03300},
+      archivePrefix={arXiv},
+      primaryClass={cs.CY},
+      url={https://arxiv.org/abs/2009.03300}, 
+}
+
+@misc{zhou2020ptb,
+      title={Head-Driven Phrase Structure Grammar Parsing on Penn Treebank}, 
+      author={Junru Zhou and Hai Zhao},
+      year={2020},
+      eprint={1907.02684},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/1907.02684}, 
+}
+
+@misc{nvidia2026nvcomp,
+  author       = {NVIDIA},
+  title        = {NVComp},
+  howpublished = {\url{https://github.com/NVIDIA/nvcomp}},
+  year         = {2026},
+}
+
+
+// ====================== Related Work ===================
+
+@inproceedings{splitwise,
+  title={Splitwise: Efficient Generative {LLM} Inference Using Phase Splitting},
+  author={Patel, Pratyush and Choukse, Esha and Zhang, Chaojie and Shah, Aashaka and Goiri, Inigo and Maleki, Saeed and Bianchini, Ricardo},
+  booktitle={ISCA},
+  year={2024}
+}
+
+
+@inproceedings{dfloat11,
+  title={{DFloat11}: Lossless Compression for Efficient {GPU} Inference via Dynamic-Length Float},
+  author={Zhang, Tianyi and Hariri, Mohsen and Zhong, Shaochen and Chaudhary, Vipin and Sui, Yang and Hu, Xia and Shrivastava, Anshumali},
+  booktitle={NeurIPS},
+  year={2025}
+}
+
+@article{zipnn,
+  title={Lossless Compression of Neural Network Components: Weights, Checkpoints, and {K/V} Caches in Low-Precision Formats},
+  author={Heilper, Anat and Singer, Doron},
+  journal={arXiv:2508.19263},
+  year={2025}
+}
+
+@article{kivi,
+  title={{KIVI}: A Tuning-Free Asymmetric 2bit Quantization for {KV} Cache},
+  author={Liu, Zirui and others},
+  journal={arXiv:2402.02750},
+  year={2024}
+}
+
+@article{hack,
+  title={{HACK}: Homomorphic Acceleration of {KV} Cache for Disaggregated {LLM} Inference},
+  author={various},
+  journal={SIGCOMM},
+  year={2025}
+}
+
+@article{megascalemoe,
+  title={{MegaScale-MoE}: Large-Scale Communication-Efficient Training of Mixture-of-Experts Models in Production},
+  author={Jin, Chao and others},
+  journal={EuroSys},
+  year={2026}
+}
+
+@article{flashcomm,
+  title={Flash Communication: Reducing Tensor Parallelization Bottleneck for Fast Large Language Model Inference},
+  author={various},
+  journal={arXiv:2412.04964},
+  year={2024}
+}
+
+@article{flowkv,
+  title={{FlowKV}: High-Performance {KV} Cache Transfer for Disaggregated {LLM} Serving},
+  author={various},
+  journal={arXiv:2504.03775},
+  year={2025}
+}
+
+@misc{zipllm,
+  title        = {ZipLLM: Efficient LLM Storage via Model-Aware Synergistic Data Deduplication and Compression},
+  author       = {Wang, Zirui and Lan, Tingfeng and Su, Zhaoyuan and Yang, Juncheng and Cheng, Yue},
+  year         = {2025},
+  eprint       = {2505.06252},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.DB}
+}
+
+@inproceedings{zhong2024distserve,
+  title={$\{$DistServe$\}$: Disaggregating prefill and decoding for goodput-optimized large language model serving},
+  author={Zhong, Yinmin and Liu, Shengyu and Chen, Junda and Hu, Jianbo and Zhu, Yibo and Liu, Xuanzhe and Jin, Xin and Zhang, Hao},
+  booktitle={18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)},
+  pages={193--210},
+  year={2024}
+}
+
+@misc{jia2025disaggregated,
+  author       = {Jia, Hongyi and Zhang, Jinghui and Fang, Lu and Chen, Stephen and Cui, Yan and Qi, Ye (Charlotte) and Liu, Zijing},
+  title        = {Disaggregated Inference at Scale with PyTorch \& vLLM},
+  year         = {2025},
+  month        = {September},
+  howpublished = {\url{https://pytorch.org/blog/disaggregated-inference-at-scale-with-pytorch-vllm/}},
+  note         = {PyTorch Blog. Accessed: April 26, 2026}
+}
+
+@misc{yubeaton2025huffllm,
+      title={Huff-LLM: End-to-End Lossless Compression for Efficient LLM Inference}, 
+      author={Patrick Yubeaton and Tareq Mahmoud and Shehab Naga and Pooria Taheri and Tianhua Xia and Arun George and Yasmein Khalil and Sai Qian Zhang and Siddharth Joshi and Chinmay Hegde and Siddharth Garg},
+      year={2025},
+      eprint={2502.00922},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2502.00922}, 
+}
+
+@misc{agrawal202sshuffman,
+      title={Single-Stage Huffman Encoder for ML Compression}, 
+      author={Aditya Agrawal and Albert Magyar and Hiteshwar Eswaraiah and Patrick Sheridan and Pradeep Janedula and Ravi Krishnan Venkatesan and Krishna Nair and Ravi Iyer},
+      year={2026},
+      eprint={2601.10673},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2601.10673}, 
+}
+
+@misc{agrawal2026quadlength,
+      title={Quad Length Codes for Lossless Compression of e4m3}, 
+      author={Aditya Agrawal and Albert Magyar and Hiteshwar Eswaraiah and Patrick Sheridan and Pradeep Janedula and Ravi Krishnan Venkatesan and Krishna Nair and Ravi Iyer},
+      year={2026},
+      eprint={2602.17849},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2602.17849}, 
+}

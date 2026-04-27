@@ -1,0 +1,23 @@
+\section{Introduction}
+\label{sec:intro}
+Prefill-decode (PD) disaggregation has become a widely adopted systems design pattern~\cite{zhong2024distserve,jia2025disaggregated} for large-scale LLM serving because it enables specialization during two fundamentally different phases of inference: prefill is primarily compute-intensive, whereas decode is primarily memory-bandwidth-intensive. This system direction has influenced the larger serving ecosystem through collaboration with open frameworks such as vLLM~\cite{vllm2025}, SGLang~\cite{sglang2025}, and Dynamo~\cite{dynamo2025}.
+
+However, although PD disaggregation improves resource utilization and scheduling flexibility, its efficiency, critically, depends on KVCache transfer between the prefill and decode stages. When prefill and decode are deployed on different nodes or different clusters, the KVCache generated during prefill must be transmitted quickly enough to keep decode continuously fed. In tightly coupled deployments, this transfer can often be sustained by a high-bandwidth RDMA fabric. In more realistic production settings, however, prefill and decode are frequently separated across deployment boundaries for reasons such as resource isolation, cluster management, elasticity, distinct accelerator architectures, or independent scaling. In such settings, KVCache transfer must traverse slower and more constrained inter-node or inter-cluster links, making communication overhead a growing bottleneck.
+
+This bottleneck is especially pronounced for long-input workloads, such as document-level question answering, codebase understanding, and multi-document summarization, where prefill produces a large KV cache that must be transferred to the decode workers. As context lengths continue to grow, the cost of KV transfer increase. Therefore, accelerating KVCache transfer is not merely a systems optimization; it is a key requirement for making PD disaggregation efficient in standard large-scale serving deployments.
+
+Target this practical bottleneck directly. Rather than relying on specialized hardware assumptions or changing the serving paradigm itself, we propose a lossless compression approach for KVCache transfer in conventional PD-disaggregated deployments called \textbf{\splitzip}. Our goal is to reduce communication volume while preserving exact model semantics, thereby improving transfer efficiency without sacrificing generation quality or requiring changes to model behavior. 
+
+Prior work has shown that, in BF16 model weights, redundancy is concentrated in the exponent field, while the mantissa is nearly incompressible\cite{dfloat11}. We find that the same pattern also holds for activations, including KV tensors in PD-disaggregated serving. Across common LLMs, the exponent entropy is typically only 3 to 4 bits, indicating 4 bit room for lossless compression.
+
+Most prior work exploits this redundancy with Huffman coding\cite{yubeaton2025huffllm,dfloat11,agrawal202sshuffman}. Although it's theoretically optimal, Huffman-based schemes often suffer from limited runtime efficiency because their variable-length bitstreams are difficult to decode efficiently in parallel. Some methods improve throughput by blockwise processing of bitstreams\cite{yubeaton2025huffllm} or variable-length coding\cite{agrawal2026quadlength}. Our approach instead uses fixed 4-bit codes for the most frequent exponent values, and stores the rare uncovered cases as escapes with their positions and original values. In practice, 4-bit coding covers about 99\% of cases, as shown in Tab. \ref{tab:exponent}, so escape overhead is very small. At the same time, the fixed-length design maps naturally to GPU parallelism, enabling much higher encoding and decoding throughput while remaining fully lossless. Our contributions can be summarized as follows:
+
+\begin{itemize}
+    \item We propose a new lossless compression method for LLM KV cache.
+    \item We develop a GPU-friendly implementation that enables extremely high encoding and decoding throughput.
+    \item Our method is simple and lightweight: with only around 180 lines of code, it provides a plug-and-play acceleration solution that can be easily integrated into different serving frameworks.
+\end{itemize}
+
+\input{tables/exponent_statistics}
+
+

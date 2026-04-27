@@ -1,0 +1,61 @@
+\begin{figure*}[t]
+    \centering
+
+    \begin{minipage}[t]{0.4\textwidth}
+        \vspace{0pt}
+        \centering
+        \captionof{table}{FP8 codec results.}
+        \label{tab:fp8_exact_results}
+        \footnotesize
+        \setlength{\tabcolsep}{2.5pt}
+        \renewcommand{\arraystretch}{1.12}
+        \begin{tabular}{@{}lccc@{}}
+            \toprule
+            \textbf{Metric}
+            & \textbf{E4M3}
+            & \textbf{E5M2}
+            & \textbf{E5M2} \\
+            & \textbf{Top-8}
+            & \textbf{Top-8}
+            & \textbf{Top-16} \\
+            \midrule
+            Coverage
+            & 95.65\%
+            & 95.69\%
+            & 99.56\% \\
+            Ratio vs. FP8
+            & $1.059\times$
+            & $1.214\times$
+            & $1.129\times$ \\
+            Ratio vs. BF16
+            & $2.118\times$
+            & $2.428\times$
+            & $2.257\times$ \\
+            Encode(GB/s)
+            & 134.5±2.5 
+            & 138.9±2.9 
+            & 140.3±3.3  \\
+            Decode(GB/s)
+            & 288.4±1.4 
+            & 287.2±1.2  
+            & 289.2±1.2  \\
+            Escape rate
+            & 4.35\%
+            & 4.31\%
+            & 0.44\% \\
+            \bottomrule
+        \end{tabular}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.5\textwidth}
+        \vspace{0pt}
+        \centering
+        \includegraphics[width=\linewidth]{lossless-paper/figure/fp8_e2e_speedup_vs_seq_len.pdf}
+        \vspace{-1.5em}
+        \captionof{figure}{
+        FP8 end-to-end transfer time on Qwen3-32B under RoCE $4\times200$G.
+        }
+        \label{fig:fp8_transfer_time}
+    \end{minipage}
+\vspace{-2em}
+\end{figure*}

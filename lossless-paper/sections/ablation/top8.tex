@@ -1,0 +1,35 @@
+\subsubsection{Ablation on Top-$k$ Exponent Coding}
+\label{sec:ablation_topk}
+
+\begin{wraptable}{r}{0.35\linewidth}
+    \vspace{-1.2em}
+    \centering
+    \caption{Top-$k$ exponent coding.}
+    \label{tab:ablation_topk}
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.08}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Metric} & \textbf{Top-8} & \textbf{Top-16} \\
+        \midrule
+        Code width & 3-bit & 4-bit \\
+        Coverage & 95.62\% & 99.67\% \\
+        Ratio & $1.364\times$ & $1.316\times$ \\
+        Encode(GB/s) & 272.6 & 329.9 \\
+        Decode(GB/s) & 492.2 & 1263.3 \\
+        Escape rate & 4.38\% & 0.33\% \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-1.7em}
+\end{wraptable}
+
+Table~\ref{tab:ablation_topk} compares Top-8 3-bit coding with Top-16 4-bit coding.
+Top-8 slightly improves the compression ratio from $1.316\times$ to $1.364\times$, but substantially reduces throughput.
+Top-16 is $1.21\times$ faster in encoding and $2.57\times$ faster in decoding.
+
+The slowdown of Top-8 comes from both higher escape overhead and less GPU-friendly packing.
+Reducing the codebook from 16 to 8 entries lowers coverage from 99.67\% to 95.62\%, increasing the escape rate from 0.33\% to 4.38\%.
+This nearly $13\times$ higher escape rate increases memory-intensive escape collection and sparse overwrite costs.
+In addition, 3-bit codes do not align naturally with byte-oriented GPU operations, unlike 4-bit codes where two exponents form one byte.
+The FP8 results in Table~\ref{tab:fp8_exact_results} show the same trend: lower-bit exponent coding does not necessarily improve end-to-end performance.

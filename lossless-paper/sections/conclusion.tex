@@ -1,0 +1,11 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presents SplitZip, a GPU-friendly lossless compression scheme for KV-cache transfer in PD disaggregated LLM serving.
+SplitZip encodes frequent exponent values with fixed-length codes, and correcting rare values through an explicit escape stream, SplitZip provides a simple and highly parallel codec for the latency-critical communication path.
+Our experiments show that SplitZip achieves substantially higher compression and decompression throughput than prior lossless neural-network compressors, and translates this throughput into end-to-end KV-transfer speedups for long-context BF16 and FP8 workloads.
+
+SplitZip is most effective when KV-cache communication is a major bottleneck; for short contexts or compute-bound regimes, codec overhead may outweigh the reduced transfer volume.
+Its compression ratio is also bounded by the redundancy in floating-point exponent values, making it complementary to more aggressive lossy or model-aware compression methods.
+From a societal perspective, SplitZip can reduce the cost, latency, and energy footprint of long-context LLM serving without changing model outputs.
+However, improved serving efficiency may also increase total LLM usage or make powerful long-context models easier to deploy for harmful applications, so it should be used together with appropriate governance and safety mechanisms.

@@ -1,0 +1,77 @@
+# This file is used to record which experiments we need to complete.
+
+1. Baseline Comparison， /tables/baseline_comparison.tex
+
+Diet GPU, nvCOMP, Dfloat11, ZipNN, ZipServe.
+
+Compare compression ratios and encode/decode throughput.
+
+Currently, the plan is to present the results using three side-by-side bar charts.
+
+2. Line Chart of Transfer Speeds at Different KV Sizes
+
+These results illustrate the performance of running Llama-3-8B, Qwen-3-30B-A3B; the x-axis represents the sequence length, while the y-axis represents the transmission time. Each chart features two line graphs—labeled "Native" and "SplitZip"—demonstrating the transmission acceleration achieved.
+
+If possible, run two transmission modes on each model; this will result in *[number of models] × [number of transmission modes]* smaller tables, which together form one large table.
+
+seq-len from 512 to 32768
+
+3. Data Transmission Breakdown
+
+Based on Qwen3-32B, this project records the respective time proportions for encoding, decoding, and transmission using SplitZip across sequence lengths of 2048, 8192, 16384, and 32768. It compares these figures against the transmission time required without compression, and visualizes the results as a stacked bar chart.
+
+The chart is plotted horizontally.
+
+
+4. FP8 result.
+
+E5M2, E4M3.
+
+5. Tell SplitZip is workable for KV cache compression during serving.
+- tell the original kv computing time.
+- tell the kv computing time with our decompression.
+- tell the kv computing time with our method as a merged kernel.
+
+
+
+## ablation
+
+6. bf16 top8(3bit) compare with top16 (4bit)
+still keep escape value
+and say which format is better.
+compression ratio and throughput.
+
+top 16 / 15,  top 8 / 7
+
+7. about callibration.
+if callibrated on dataset A and run on dataset B.
+
+callibrate on A, top16 cover rate on A
+callibrate on A, top16 cover rate on B
+callibrate on B, top16 cover rate on B.
+
+
+8. per column callibrate
+
+per tensor.
+per token.
+per channel.
+
+9. throughtput on Different GPU.
+
+On H200, A100, A6000, 5090.
+
+10. escape position vs mask.
+
+11. speed with/without calibration
+
+## Picture.
+
+1. main.
+
+2. top16 / top8
+
+rather than top15 / top7
+
+
+

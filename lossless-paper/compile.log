@@ -1,0 +1,78 @@
+note: Running TeX ...
+warning: lineno.sty:296: Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
+warning: algorithm.sty:11: 
+Invalid UTF-8 byte or sequence at line 11 replaced by U+FFFD.
+note: downloading SHA256SUM
+note: downloading tikz.sty
+note: downloading pgf.sty
+note: downloading pgfrcs.sty
+note: downloading pgfutil-common.tex
+note: downloading pgfutil-common-lists.tex
+note: downloading pgfutil-latex.def
+note: downloading pgfrcs.code.tex
+note: downloading pgf.revision.tex
+note: downloading pgfcore.sty
+note: downloading pgfsys.sty
+note: downloading pgfsys.code.tex
+note: downloading pgfkeys.code.tex
+note: downloading pgfkeysfiltered.code.tex
+note: downloading pgf.cfg
+note: downloading pgfsys-xetex.def
+note: downloading pgfsys-dvipdfmx.def
+note: downloading pgfsys-common-pdf.def
+note: downloading pgfsyssoftpath.code.tex
+note: downloading pgfsysprotocol.code.tex
+note: downloading pgfcore.code.tex
+note: downloading pgfmath.code.tex
+note: downloading pgfmathcalc.code.tex
+note: downloading pgfmathutil.code.tex
+note: downloading pgfmathparser.code.tex
+note: downloading pgfmathfunctions.code.tex
+note: downloading pgfmathfunctions.basic.code.tex
+note: downloading pgfmathfunctions.trigonometric.code.tex
+note: downloading pgfmathfunctions.random.code.tex
+note: downloading pgfmathfunctions.comparison.code.tex
+note: downloading pgfmathfunctions.base.code.tex
+note: downloading pgfmathfunctions.round.code.tex
+note: downloading pgfmathfunctions.misc.code.tex
+note: downloading pgfmathfunctions.integerarithmetics.code.tex
+note: downloading pgfmathfloat.code.tex
+note: downloading pgfint.code.tex
+note: downloading pgfcorepoints.code.tex
+note: downloading pgfcorepathconstruct.code.tex
+note: downloading pgfcorepathusage.code.tex
+note: downloading pgfcorescopes.code.tex
+note: downloading pgfcoregraphicstate.code.tex
+note: downloading pgfcoretransformations.code.tex
+note: downloading pgfcorequick.code.tex
+note: downloading pgfcoreobjects.code.tex
+note: downloading pgfcorepathprocessing.code.tex
+note: downloading pgfcorearrows.code.tex
+note: downloading pgfcoreshade.code.tex
+note: downloading pgfcoreimage.code.tex
+note: downloading pgfcoreexternal.code.tex
+note: downloading pgfcorelayers.code.tex
+note: downloading pgfcoretransparency.code.tex
+note: downloading pgfcorepatterns.code.tex
+note: downloading pgfcorerdf.code.tex
+note: downloading pgfmoduleshapes.code.tex
+note: downloading pgfmoduleplot.code.tex
+note: downloading pgfcomp-version-0-65.sty
+note: downloading pgfcomp-version-1-18.sty
+note: downloading pgffor.sty
+note: downloading pgfkeys.sty
+note: downloading pgfmath.sty
+note: downloading pgffor.code.tex
+note: downloading tikz.code.tex
+note: downloading pgflibraryplothandlers.code.tex
+note: downloading pgfmodulematrix.code.tex
+note: downloading tikzlibrarytopaths.code.tex
+note: downloading wrapfig.sty
+note: downloading floatrow.sty
+error: floatrow.sty:33: Package floatrow Error: Do not use float package with floatrow.
+(floatrow)                The latter will be skipped.
+
+See the floatrow package documentation for explanation.
+Type  H <return>  for immediate help
+note: Writing `main.log` (20.25 KiB)
+error: halted on potentially-recoverable error as specified

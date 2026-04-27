@@ -1,0 +1,32 @@
+\subsubsection{Ablation on Calibration Granularity}
+\label{sec:ablation_granularity}
+
+\begin{wraptable}[6]{r}{0.40\linewidth}
+    \vspace{-1.6em}
+    \centering
+    \caption{Calibration granularity ablation.}
+    \label{tab:ablation_granularity}
+    \scriptsize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.02}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Metric} & \textbf{Tensor} & \textbf{Token} & \textbf{Channel} \\
+        \midrule
+        Coverage & 99.60\% & 99.74\% & 99.98\% \\
+        Compression & $1.323\times$ & $1.322\times$ & $1.329\times$ \\
+        Encode(GB/s) & 93.9 & 0.082 & 0.020 \\
+        Decode(GB/s) & 222.2 & 0.173 & 0.060 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-1.0em}
+\end{wraptable}
+
+Some prior compression designs use finer-grained codebooks to improve locality, compression ratio, or parallelism.
+We evaluate this idea on per-tensor, per-token and per-channel codebooks.
+
+Table~\ref{tab:ablation_granularity} shows that finer-grained calibration increases top-16 coverage, reaching 99.98\% with per-channel codebooks.
+However, the projected compression ratio improves only marginally, from $1.323\times$ to $1.329\times$.
+In contrast, throughput drops by several orders of magnitude: per-token and per-channel calibration both fall from hundreds of GB/s to sub-GB/s performance.
+This is because fine-grained calibration requires many small codebooks, introducing extra storage, irregular lookup patterns, and more complex GPU execution.
+Therefore, SplitZip uses a single global codebook, which preserves nearly the same compression ratio while maintaining a simple and high-throughput dense path.

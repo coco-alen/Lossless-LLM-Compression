@@ -1,0 +1,27 @@
+\subsubsection{Ablation on Pre-Calibration}
+\label{sec:ablation_precalibration}
+
+\begin{wraptable}[8]{r}{0.40\linewidth}
+    \vspace{-1.2em}
+    \centering
+    \caption{Pre-calibration ablation.}
+    \label{tab:ablation_precalibration}
+    \scriptsize
+    \setlength{\tabcolsep}{8pt}
+    \renewcommand{\arraystretch}{1.08}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Metric} & \textbf{Pre-calib.} & \textbf{Dynamic} \\
+        \midrule
+        Ratio & $1.316\times$ & $1.316\times$ \\
+        Escape rate & 0.33\% & 0.33\% \\
+        Encode(GB/s) & 317.9 & 63.4 \\
+        Decode(GB/s) & 1257.3 & 1260.0 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-1.5em}
+\end{wraptable}
+
+We compare SplitZip's offline pre-calibrated codebook with a dynamic Top-16 variant that rebuilds the exponent codebook for each input.
+As shown in Table~\ref{tab:ablation_precalibration}, dynamic calibration achieves the same compression ratio and escape rate as the pre-calibrated design, and decode throughput is almost unchanged.
+However, it substantially slows down online compression: encode throughput drops from 317.9~GB/s to 63.4~GB/s, $5\times$ slower, and the dynamic variant additionally requires an online calibration pass.

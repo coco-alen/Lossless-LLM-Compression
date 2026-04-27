@@ -1,4 +1,0 @@
-\section{Conclusion}
-\label{sec:conclusion}
-
-We presented \splitzip, a format-aware KV-cache codec for disaggregated LLM serving. The key observation is simple: BF16 and FP8 KV tensors have high-entropy sign and mantissa bits but concentrated exponent fields. By coding only the exponent stream and preserving the remaining bits verbatim, \splitzip provides a lossless BF16 transfer path with predictable GPU execution and a natural extension to native FP8 caches. The Mooncake integration and real-Qwen3 measurements show that the approach reduces serving-path transfer time while preserving exact reconstruction. More broadly, \splitzip suggests that communication in disaggregated inference can benefit from numerical-format-aware compression rather than treating KV caches as opaque byte streams.
