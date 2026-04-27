@@ -10,7 +10,7 @@ import seaborn as sns
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "experiments" / "splitzip" / "thesis_experiment_data.json"
 DEFAULT_OUTPUT = ROOT / "draw" / "transfer_time_vs_seq_len"
-THEORETICAL_RATIO = 1.316
+THEORETICAL_RATIO = 1.39
 AXIS_LABEL_FONT_SIZE = 40
 TICK_LABEL_FONT_SIZE = 40
 TITLE_FONT_SIZE = 35
