@@ -13,9 +13,11 @@ def _quote_cmd(cmd: list[str]) -> str:
 
 
 def server_commands(args, mode: str) -> dict[str, object]:
+    router_python = args.sglang_root / "sgl-model-gateway" / "bindings" / "python" / "src"
     env = {
-        "PYTHONPATH": f"{args.repo_root}:{args.sglang_root / 'python'}",
+        "PYTHONPATH": f"{args.repo_root}:{args.sglang_root / 'python'}:{router_python}",
         "SGLANG_TEST_PD_DISAGG_BACKEND": args.transfer_backend,
+        "SGLANG_FORCE_STREAM_INTERVAL": "1",
     }
     if args.ib_device:
         env["SGLANG_TEST_PD_DISAGG_DEVICES"] = args.ib_device
@@ -47,6 +49,8 @@ def server_commands(args, mode: str) -> dict[str, object]:
         str(args.prefill_base_gpu),
         "--port",
         str(args.prefill_port),
+        "--disaggregation-bootstrap-port",
+        str(args.prefill_bootstrap_port),
     ] + transfer
     decode = common + [
         "--disaggregation-mode",
@@ -64,6 +68,7 @@ def server_commands(args, mode: str) -> dict[str, object]:
         "--mini-lb",
         "--prefill",
         f"http://{args.host}:{args.prefill_port}",
+        str(args.prefill_bootstrap_port),
         "--decode",
         f"http://{args.host}:{args.decode_port}",
         "--host",
@@ -135,14 +140,15 @@ def build_plan(args) -> dict[str, object]:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default=SGLANG_MODEL.hf_name)
-    parser.add_argument("--sglang-root", type=Path, default=Path("/data02/home/yilian2/project/sglang-dev"))
+    parser.add_argument("--sglang-root", type=Path, default=Path("/data02/home/yilian2/project/sglang"))
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--router-port", type=int, default=30000)
     parser.add_argument("--prefill-port", type=int, default=30100)
     parser.add_argument("--decode-port", type=int, default=30200)
-    parser.add_argument("--prefill-base-gpu", type=int, default=0)
-    parser.add_argument("--decode-base-gpu", type=int, default=1)
+    parser.add_argument("--prefill-bootstrap-port", type=int, default=8998)
+    parser.add_argument("--prefill-base-gpu", type=int, default=1)
+    parser.add_argument("--decode-base-gpu", type=int, default=2)
     parser.add_argument("--tp", type=int, default=1)
     parser.add_argument("--transfer-backend", default="mooncake")
     parser.add_argument("--ib-device", default="")

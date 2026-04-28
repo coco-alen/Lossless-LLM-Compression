@@ -8,28 +8,30 @@
     {
       "mode": "native",
       "env": {
-        "PYTHONPATH": "/data02/home/yilian2/project/Lossless-LLM-Compression:/data02/home/yilian2/project/sglang-dev/python",
-        "SGLANG_TEST_PD_DISAGG_BACKEND": "mooncake"
+        "PYTHONPATH": "/data02/home/yilian2/project/Lossless-LLM-Compression:/data02/home/yilian2/project/sglang/python:/data02/home/yilian2/project/sglang/sgl-model-gateway/bindings/python/src",
+        "SGLANG_TEST_PD_DISAGG_BACKEND": "mooncake",
+        "SGLANG_FORCE_STREAM_INTERVAL": "1"
       },
       "commands": {
-        "prefill": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode prefill --base-gpu-id 0 --port 30100 --disaggregation-transfer-backend mooncake",
-        "decode": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode decode --base-gpu-id 1 --port 30200 --disaggregation-transfer-backend mooncake",
-        "router": "python -m sglang_router.launch_router --pd-disaggregation --mini-lb --prefill http://127.0.0.1:30100 --decode http://127.0.0.1:30200 --host 127.0.0.1 --port 30000"
+        "prefill": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode prefill --base-gpu-id 1 --port 30100 --disaggregation-bootstrap-port 8998 --disaggregation-transfer-backend mooncake",
+        "decode": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode decode --base-gpu-id 2 --port 30200 --disaggregation-transfer-backend mooncake",
+        "router": "python -m sglang_router.launch_router --pd-disaggregation --mini-lb --prefill http://127.0.0.1:30100 8998 --decode http://127.0.0.1:30200 --host 127.0.0.1 --port 30000"
       }
     },
     {
       "mode": "splitzip",
       "env": {
-        "PYTHONPATH": "/data02/home/yilian2/project/Lossless-LLM-Compression:/data02/home/yilian2/project/sglang-dev/python",
+        "PYTHONPATH": "/data02/home/yilian2/project/Lossless-LLM-Compression:/data02/home/yilian2/project/sglang/python:/data02/home/yilian2/project/sglang/sgl-model-gateway/bindings/python/src",
         "SGLANG_TEST_PD_DISAGG_BACKEND": "mooncake",
+        "SGLANG_FORCE_STREAM_INTERVAL": "1",
         "SPLITZIP_SGLANG_ENABLE": "1",
         "SPLITZIP_SGLANG_CODEC": "chunklocal_top16",
         "SPLITZIP_SGLANG_CHUNK_SIZE": "1024"
       },
       "commands": {
-        "prefill": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode prefill --base-gpu-id 0 --port 30100 --disaggregation-transfer-backend mooncake",
-        "decode": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode decode --base-gpu-id 1 --port 30200 --disaggregation-transfer-backend mooncake",
-        "router": "python -m sglang_router.launch_router --pd-disaggregation --mini-lb --prefill http://127.0.0.1:30100 --decode http://127.0.0.1:30200 --host 127.0.0.1 --port 30000"
+        "prefill": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode prefill --base-gpu-id 1 --port 30100 --disaggregation-bootstrap-port 8998 --disaggregation-transfer-backend mooncake",
+        "decode": "python -m sglang.launch_server --model-path Qwen/Qwen3-32B --trust-remote-code --tp 1 --kv-cache-dtype bfloat16 --disaggregation-mode decode --base-gpu-id 2 --port 30200 --disaggregation-transfer-backend mooncake",
+        "router": "python -m sglang_router.launch_router --pd-disaggregation --mini-lb --prefill http://127.0.0.1:30100 8998 --decode http://127.0.0.1:30200 --host 127.0.0.1 --port 30000"
       }
     }
   ],
