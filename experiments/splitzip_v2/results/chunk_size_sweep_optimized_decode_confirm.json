@@ -1,0 +1,240 @@
+{
+  "numel": 268435456,
+  "device": "cuda:0",
+  "warmup": 30,
+  "iters": 200,
+  "decode_vector": "quad64",
+  "decode_block": 512,
+  "decode_num_warps": 4,
+  "fix_block": 128,
+  "fix_num_warps": 4,
+  "rows": [
+    {
+      "chunk_size": 1024,
+      "decode_vector": "quad64",
+      "decode_block": 512,
+      "decode_num_warps": 4,
+      "fix_block": 128,
+      "fix_num_warps": 4,
+      "n_chunks": 262144,
+      "n_escapes": 26168,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 472.3358808409411,
+      "decode_gbs": 2169.0975673680173,
+      "stage_gbs": {
+        "dense_encode": 1619.1641255969823,
+        "count_escapes": 2487.5840463930563,
+        "prefix_sum": 22247.377474199766,
+        "scatter_escapes": 950.0381715826358,
+        "dense_decode": 2364.847248735635,
+        "fix_escapes": 26204.8161641503
+      }
+    },
+    {
+      "chunk_size": 2048,
+      "decode_vector": "quad64",
+      "decode_block": 512,
+      "decode_num_warps": 4,
+      "fix_block": 128,
+      "fix_num_warps": 4,
+      "n_chunks": 131072,
+      "n_escapes": 26168,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 449.71483626423714,
+      "decode_gbs": 2119.585990578988,
+      "stage_gbs": {
+        "dense_encode": 1613.3844411359528,
+        "count_escapes": 3041.823587395017,
+        "prefix_sum": 23721.23215618248,
+        "scatter_escapes": 811.0893656208582,
+        "dense_decode": 2352.8439613395235,
+        "fix_escapes": 21379.99864361927
+      }
+    },
+    {
+      "chunk_size": 4096,
+      "decode_vector": "quad64",
+      "decode_block": 512,
+      "decode_num_warps": 4,
+      "fix_block": 128,
+      "fix_num_warps": 4,
+      "n_chunks": 65536,
+      "n_escapes": 26168,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 393.41923067125344,
+      "decode_gbs": 2158.8405708923847,
+      "stage_gbs": {
+        "dense_encode": 1612.1539860896064,
+        "count_escapes": 3111.127878063351,
+        "prefix_sum": 27323.072649764796,
+        "scatter_escapes": 639.5891460073079,
+        "dense_decode": 2359.643747936617,
+        "fix_escapes": 25368.59591009371
+      }
+    }
+  ],
+  "best_encode": {
+    "chunk_size": 1024,
+    "decode_vector": "quad64",
+    "decode_block": 512,
+    "decode_num_warps": 4,
+    "fix_block": 128,
+    "fix_num_warps": 4,
+    "n_chunks": 262144,
+    "n_escapes": 26168,
+    "ratio": 1.3327270457910005,
+    "encode_gbs": 472.3358808409411,
+    "decode_gbs": 2169.0975673680173,
+    "stage_gbs": {
+      "dense_encode": 1619.1641255969823,
+      "count_escapes": 2487.5840463930563,
+      "prefix_sum": 22247.377474199766,
+      "scatter_escapes": 950.0381715826358,
+      "dense_decode": 2364.847248735635,
+      "fix_escapes": 26204.8161641503
+    }
+  },
+  "best_decode": {
+    "chunk_size": 1024,
+    "decode_vector": "quad64",
+    "decode_block": 512,
+    "decode_num_warps": 4,
+    "fix_block": 128,
+    "fix_num_warps": 4,
+    "n_chunks": 262144,
+    "n_escapes": 26168,
+    "ratio": 1.3327270457910005,
+    "encode_gbs": 472.3358808409411,
+    "decode_gbs": 2169.0975673680173,
+    "stage_gbs": {
+      "dense_encode": 1619.1641255969823,
+      "count_escapes": 2487.5840463930563,
+      "prefix_sum": 22247.377474199766,
+      "scatter_escapes": 950.0381715826358,
+      "dense_decode": 2364.847248735635,
+      "fix_escapes": 26204.8161641503
+    }
+  },
+  "best_harmonic_mean": {
+    "chunk_size": 1024,
+    "decode_vector": "quad64",
+    "decode_block": 512,
+    "decode_num_warps": 4,
+    "fix_block": 128,
+    "fix_num_warps": 4,
+    "n_chunks": 262144,
+    "n_escapes": 26168,
+    "ratio": 1.3327270457910005,
+    "encode_gbs": 472.3358808409411,
+    "decode_gbs": 2169.0975673680173,
+    "stage_gbs": {
+      "dense_encode": 1619.1641255969823,
+      "count_escapes": 2487.5840463930563,
+      "prefix_sum": 22247.377474199766,
+      "scatter_escapes": 950.0381715826358,
+      "dense_decode": 2364.847248735635,
+      "fix_escapes": 26204.8161641503
+    }
+  },
+  "full_results": [
+    {
+      "numel": 268435456,
+      "raw_bytes": 536870912,
+      "chunk_size": 1024,
+      "decode_block": 512,
+      "decode_num_warps": 4,
+      "decode_vector": "quad64",
+      "fix_block": 128,
+      "fix_num_warps": 4,
+      "n_chunks": 262144,
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698,
+      "compressed_bytes": 402836360,
+      "ratio": 1.3327270457910005,
+      "stage_s": {
+        "dense_encode": 0.0003315728798042983,
+        "count_escapes": 0.00021582021028734743,
+        "prefix_sum": 2.4131874088197947e-05,
+        "scatter_escapes": 0.0005651045695412904,
+        "dense_decode": 0.00022702139103785156,
+        "fix_escapes": 2.0487490110099317e-05
+      },
+      "stage_gbs": {
+        "dense_encode": 1619.1641255969823,
+        "count_escapes": 2487.5840463930563,
+        "prefix_sum": 22247.377474199766,
+        "scatter_escapes": 950.0381715826358,
+        "dense_decode": 2364.847248735635,
+        "fix_escapes": 26204.8161641503
+      },
+      "encode_total_s": 0.001136629533721134,
+      "decode_total_s": 0.0002475088811479509
+    },
+    {
+      "numel": 268435456,
+      "raw_bytes": 536870912,
+      "chunk_size": 2048,
+      "decode_block": 512,
+      "decode_num_warps": 4,
+      "decode_vector": "quad64",
+      "fix_block": 128,
+      "fix_num_warps": 4,
+      "n_chunks": 131072,
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698,
+      "compressed_bytes": 402836360,
+      "ratio": 1.3327270457910005,
+      "stage_s": {
+        "dense_encode": 0.0003327606851235032,
+        "count_escapes": 0.00017649639979936183,
+        "prefix_sum": 2.2632505279034375e-05,
+        "scatter_escapes": 0.0006619133905041963,
+        "dense_decode": 0.0002281795651651919,
+        "fix_escapes": 2.5110895512625576e-05
+      },
+      "stage_gbs": {
+        "dense_encode": 1613.3844411359528,
+        "count_escapes": 3041.823587395017,
+        "prefix_sum": 23721.23215618248,
+        "scatter_escapes": 811.0893656208582,
+        "dense_decode": 2352.8439613395235,
+        "fix_escapes": 21379.99864361927
+      },
+      "encode_total_s": 0.0011938029807060956,
+      "decode_total_s": 0.0002532904606778175
+    },
+    {
+      "numel": 268435456,
+      "raw_bytes": 536870912,
+      "chunk_size": 4096,
+      "decode_block": 512,
+      "decode_num_warps": 4,
+      "decode_vector": "quad64",
+      "fix_block": 128,
+      "fix_num_warps": 4,
+      "n_chunks": 65536,
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698,
+      "compressed_bytes": 402836360,
+      "ratio": 1.3327270457910005,
+      "stage_s": {
+        "dense_encode": 0.0003330146602820605,
+        "count_escapes": 0.00017256472026929258,
+        "prefix_sum": 1.9648994784802197e-05,
+        "scatter_escapes": 0.0008393996604718268,
+        "dense_decode": 0.00022752201999537647,
+        "fix_escapes": 2.1162815392017366e-05
+      },
+      "stage_gbs": {
+        "dense_encode": 1612.1539860896064,
+        "count_escapes": 3111.127878063351,
+        "prefix_sum": 27323.072649764796,
+        "scatter_escapes": 639.5891460073079,
+        "dense_decode": 2359.643747936617,
+        "fix_escapes": 25368.59591009371
+      },
+      "encode_total_s": 0.0013646280358079821,
+      "decode_total_s": 0.00024868483538739386
+    }
+  ]
+}

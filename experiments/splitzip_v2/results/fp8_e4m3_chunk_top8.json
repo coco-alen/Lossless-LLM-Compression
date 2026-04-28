@@ -1,0 +1,19 @@
+{
+  "fmt": "e4m3",
+  "numel": 268435456,
+  "chunk_size": 256,
+  "global_top8_coverage": 0.9899740219116211,
+  "chunk_local_top8_coverage": 0.9923364333808422,
+  "global_top8_values": [
+    6,
+    7,
+    5,
+    4,
+    8,
+    3,
+    2,
+    0
+  ],
+  "global_top8_ratio_est": 1.1137699312345377,
+  "chunk_local_top8_ratio_est": 1.08042949240238
+}

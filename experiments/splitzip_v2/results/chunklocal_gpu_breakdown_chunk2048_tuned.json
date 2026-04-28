@@ -1,0 +1,32 @@
+{
+  "numel": 268435456,
+  "raw_bytes": 536870912,
+  "chunk_size": 2048,
+  "decode_block": 1024,
+  "decode_num_warps": 4,
+  "fix_block": 128,
+  "fix_num_warps": 4,
+  "n_chunks": 131072,
+  "n_escapes": 26168,
+  "coverage": 0.9999025166034698,
+  "compressed_bytes": 403360648,
+  "ratio": 1.3309947677394647,
+  "stage_s": {
+    "dense_encode": 0.0003313187696039677,
+    "count_escapes": 0.00017418152885511517,
+    "prefix_sum": 2.239709021523595e-05,
+    "scatter_escapes": 0.0006569156493060291,
+    "dense_decode": 0.00026324843056499956,
+    "fix_escapes": 1.467767870053649e-05
+  },
+  "stage_gbs": {
+    "dense_encode": 1620.4059692776632,
+    "count_escapes": 3082.2493953797543,
+    "prefix_sum": 23970.56523149537,
+    "scatter_escapes": 817.2600433056432,
+    "dense_decode": 2039.4078355860868,
+    "fix_escapes": 36577.37186878035
+  },
+  "encode_total_s": 0.0011848130379803479,
+  "decode_total_s": 0.000277926109265536
+}

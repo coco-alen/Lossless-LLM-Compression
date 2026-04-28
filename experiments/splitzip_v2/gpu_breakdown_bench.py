@@ -11,9 +11,10 @@ from experiments.splitzip_v2.codec_gpu import (
     ChunkLocalSplitZipGPU,
     _count_escapes_chunk,
     _dec_4bit,
+    _dec_4bit_pair32,
+    _dec_4bit_quad64,
     _enc_4bit,
-    _fix_escapes_chunk_blocked,
-    _next_power_of_2,
+    _fix_escapes_local_linear,
     _write_escapes_chunk,
 )
 
@@ -35,7 +36,18 @@ def make_input(numel: int, device: str, seed: int):
     return torch.randn(numel, dtype=torch.bfloat16, device=device, generator=gen)
 
 
-def run(numel: int, chunk_size: int, device: str, warmup: int, iters: int):
+def run(
+    numel: int,
+    chunk_size: int,
+    device: str,
+    warmup: int,
+    iters: int,
+    decode_block: int = 256,
+    decode_num_warps: int = 4,
+    decode_vector: str = "pair32",
+    fix_block: int = 256,
+    fix_num_warps: int = 4,
+):
     x = make_input(numel, device, seed=7)
     codec = ChunkLocalSplitZipGPU(device=device, chunk_size=chunk_size)
     coverage = codec.calibrate(x)
@@ -47,15 +59,15 @@ def run(numel: int, chunk_size: int, device: str, warmup: int, iters: int):
     flat = x.contiguous().view(torch.int16)
     n = int(flat.numel())
     n_pairs = (n + 1) // 2
-    block = 256
+    enc_block = 256
     n_chunks = (n + chunk_size - 1) // chunk_size
     pk = torch.empty(n_pairs, dtype=torch.uint8, device=device)
     sm = torch.empty(n, dtype=torch.uint8, device=device)
     counts = torch.empty(n_chunks, dtype=torch.int32, device=device)
 
     def dense_encode():
-        _enc_4bit[((n_pairs + block * 4 - 1) // (block * 4),)](
-            flat, codec.enc_lut, pk, sm, n, BLOCK=block
+        _enc_4bit[((n_pairs + enc_block * 4 - 1) // (enc_block * 4),)](
+            flat, codec.enc_lut, pk, sm, n, BLOCK=enc_block
         )
 
     def count_escapes():
@@ -65,6 +77,7 @@ def run(numel: int, chunk_size: int, device: str, warmup: int, iters: int):
     count_escapes()
     starts = torch.cumsum(counts, dim=0) - counts
     n_esc = int((starts[-1] + counts[-1]).item()) if n_chunks else 0
+    chunk_id = torch.empty(n_esc, dtype=torch.int32, device=device)
     local_pos = torch.empty(n_esc, dtype=torch.uint16, device=device)
     esc_val = torch.empty(n_esc, dtype=torch.uint8, device=device)
     out = torch.empty(n, dtype=torch.int16, device=device)
@@ -75,29 +88,48 @@ def run(numel: int, chunk_size: int, device: str, warmup: int, iters: int):
     def scatter_escapes():
         if n_esc:
             _write_escapes_chunk[(n_chunks,)](
-                flat, codec.common_lut, starts, local_pos, esc_val, n, CHUNK=chunk_size
+                flat, codec.common_lut, starts, chunk_id, local_pos, esc_val, n, CHUNK=chunk_size
             )
 
     def dense_decode():
-        _dec_4bit[((n_pairs + block * 4 - 1) // (block * 4),)](
-            pk, sm, codec.dec_lut, out, n, BLOCK=block
-        )
-
-    max_count = int(counts.max().item()) if n_chunks else 0
-    block_esc = min(1024, _next_power_of_2(max_count)) if max_count else 1
-    fix_grid = (n_chunks, (max_count + block_esc - 1) // block_esc) if n_esc else (1, 1)
+        if decode_vector == "quad64" and n % 4 == 0:
+            n_quads = n // 4
+            _dec_4bit_quad64[((n_quads + decode_block - 1) // decode_block,)](
+                pk.view(torch.int16),
+                sm.view(torch.int32),
+                codec.dec_lut,
+                out.view(torch.int64),
+                n_quads,
+                BLOCK=decode_block,
+                num_warps=decode_num_warps,
+            )
+        elif n % 2 == 0:
+            _dec_4bit_pair32[((n_pairs + decode_block - 1) // decode_block,)](
+                pk,
+                sm,
+                codec.dec_lut,
+                out.view(torch.int32),
+                n_pairs,
+                BLOCK=decode_block,
+                num_warps=decode_num_warps,
+            )
+        else:
+            _dec_4bit[((n_pairs + decode_block * 4 - 1) // (decode_block * 4),)](
+                pk, sm, codec.dec_lut, out, n, BLOCK=decode_block, num_warps=decode_num_warps
+            )
 
     def fix_escapes():
         if n_esc:
-            _fix_escapes_chunk_blocked[fix_grid](
-                counts,
-                starts,
+            _fix_escapes_local_linear[((n_esc + fix_block - 1) // fix_block,)](
+                chunk_id,
                 local_pos,
                 esc_val,
                 sm,
                 out,
+                n_esc,
                 CHUNK=chunk_size,
-                BLOCK_ESC=block_esc,
+                BLOCK_ESC=fix_block,
+                num_warps=fix_num_warps,
             )
 
     scatter_escapes()
@@ -117,6 +149,11 @@ def run(numel: int, chunk_size: int, device: str, warmup: int, iters: int):
         "numel": n,
         "raw_bytes": raw_bytes,
         "chunk_size": chunk_size,
+        "decode_block": decode_block,
+        "decode_num_warps": decode_num_warps,
+        "decode_vector": decode_vector,
+        "fix_block": fix_block,
+        "fix_num_warps": fix_num_warps,
         "n_chunks": n_chunks,
         "n_escapes": n_esc,
         "coverage": coverage,
@@ -136,9 +173,28 @@ def main():
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--warmup", type=int, default=20)
     parser.add_argument("--iters", type=int, default=100)
+    parser.add_argument("--decode-block", type=int, default=256)
+    parser.add_argument("--decode-num-warps", type=int, default=4)
+    parser.add_argument("--decode-vector", choices=["pair32", "quad64"], default="pair32")
+    parser.add_argument("--fix-block", type=int, default=256)
+    parser.add_argument("--fix-num-warps", type=int, default=4)
     parser.add_argument("--output", type=Path, default=Path("experiments/splitzip_v2/results/chunklocal_gpu_breakdown.json"))
     args = parser.parse_args()
-    write_json(args.output, run(args.numel, args.chunk_size, args.device, args.warmup, args.iters))
+    write_json(
+        args.output,
+        run(
+            args.numel,
+            args.chunk_size,
+            args.device,
+            args.warmup,
+            args.iters,
+            decode_block=args.decode_block,
+            decode_num_warps=args.decode_num_warps,
+            decode_vector=args.decode_vector,
+            fix_block=args.fix_block,
+            fix_num_warps=args.fix_num_warps,
+        ),
+    )
     print(f"Wrote {args.output}")
 
 

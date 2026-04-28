@@ -1,0 +1,2329 @@
+{
+  "results": [
+    {
+      "model": {
+        "display_name": "Qwen3-30B-A3B",
+        "hf_name": "Qwen/Qwen3-30B-A3B",
+        "family": "Qwen-MoE"
+      },
+      "meta": {
+        "num_hidden_layers": 48,
+        "num_attention_heads": 32,
+        "num_key_value_heads": 4,
+        "head_dim": 128,
+        "hidden_size": 2048,
+        "model_type": "qwen3_moe",
+        "prompt_tokens": 1024,
+        "block_rows_total": 49152,
+        "block_width": 1024
+      },
+      "codec_note": "Mooncake measures real payload transfer. The included compressed payload uses the CPU reference serializer for portability; GPU codec stage timings should come from gpu_breakdown_bench.py.",
+      "rows": [
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 512,
+          "matrix_shape": [
+            512,
+            1024
+          ],
+          "raw_bytes": 1048576,
+          "native_mooncake": {
+            "median_ms": 0.7029699627310038,
+            "mean_ms": 0.6930960031847159,
+            "times_ms": [
+              0.7573908660560846,
+              0.7818331941962242,
+              0.7051560096442699,
+              0.8137060794979334,
+              0.6902818568050861,
+              0.6011920049786568,
+              0.7029699627310038,
+              0.5222910549491644,
+              0.6630429998040199
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 823900,
+            "compressed_bytes_without_wire_header": 823812,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 262144,
+              "sign_mantissa": 524288,
+              "chunk_counts": 32,
+              "local_pos_uint16": 24888,
+              "escape_values": 12444,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.272698142978517,
+            "ratio_without_wire_header": 1.2728340932154423,
+            "n_chunks": 8,
+            "n_escapes": 12444,
+            "encode_ms_cpu_reference": 241.79573403671384,
+            "decode_ms_cpu_reference": 201.2275899760425,
+            "transfer": {
+              "median_ms": 0.7039241027086973,
+              "mean_ms": 0.6891448930319812,
+              "times_ms": [
+                0.709958141669631,
+                0.770527170971036,
+                0.7253969088196754,
+                0.6580979097634554,
+                0.6755429785698652,
+                0.7039241027086973,
+                0.8302170317620039,
+                0.578251900151372,
+                0.5503878928720951
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 1024,
+          "matrix_shape": [
+            1024,
+            1024
+          ],
+          "raw_bytes": 2097152,
+          "native_mooncake": {
+            "median_ms": 1.0426980443298817,
+            "mean_ms": 1.147131125132243,
+            "times_ms": [
+              1.7359748017042875,
+              1.1998831760138273,
+              1.1742280330508947,
+              1.3159271329641342,
+              0.9321339894086123,
+              0.9560829494148493,
+              0.9463189635425806,
+              1.020933035761118,
+              1.0426980443298817
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 1647546,
+            "compressed_bytes_without_wire_header": 1647458,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 524288,
+              "sign_mantissa": 1048576,
+              "chunk_counts": 64,
+              "local_pos_uint16": 49676,
+              "escape_values": 24838,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2728943531773924,
+            "ratio_without_wire_header": 1.2729623456258066,
+            "n_chunks": 16,
+            "n_escapes": 24838,
+            "encode_ms_cpu_reference": 211.29094902426004,
+            "decode_ms_cpu_reference": 181.7344850860536,
+            "transfer": {
+              "median_ms": 0.639607897028327,
+              "mean_ms": 0.6938292127516534,
+              "times_ms": [
+                1.084446907043457,
+                0.5965910386294127,
+                0.639607897028327,
+                0.6478610448539257,
+                0.7533389143645763,
+                0.5550929345190525,
+                0.5759471096098423,
+                0.5432311445474625,
+                0.8483459241688251
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 2048,
+          "matrix_shape": [
+            2048,
+            1024
+          ],
+          "raw_bytes": 4194304,
+          "native_mooncake": {
+            "median_ms": 2.181367948651314,
+            "mean_ms": 2.255353507482343,
+            "times_ms": [
+              2.5548869743943214,
+              3.216011915355921,
+              2.38090381026268,
+              2.1808070596307516,
+              1.6422080807387829,
+              2.4238398764282465,
+              2.181367948651314,
+              2.1210750564932823,
+              1.5970808453857899
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 3260992,
+            "compressed_bytes_without_wire_header": 3260904,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 1048576,
+              "sign_mantissa": 2097152,
+              "chunk_counts": 128,
+              "local_pos_uint16": 76688,
+              "escape_values": 38344,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2862049339587462,
+            "ratio_without_wire_header": 1.2862396439760262,
+            "n_chunks": 32,
+            "n_escapes": 38344,
+            "encode_ms_cpu_reference": 340.35935695283115,
+            "decode_ms_cpu_reference": 362.9317518789321,
+            "transfer": {
+              "median_ms": 1.7049149610102177,
+              "mean_ms": 1.7707961507969432,
+              "times_ms": [
+                1.5452371444553137,
+                1.5020749997347593,
+                1.7049149610102177,
+                1.597131136804819,
+                1.7156528774648905,
+                1.3951731380075216,
+                2.8601621743291616,
+                1.7961750272661448,
+                1.8206438980996609
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 4096,
+          "matrix_shape": [
+            4096,
+            1024
+          ],
+          "raw_bytes": 8388608,
+          "native_mooncake": {
+            "median_ms": 4.207971040159464,
+            "mean_ms": 4.225442599919107,
+            "times_ms": [
+              3.2728021033108234,
+              3.252407070249319,
+              2.804260002449155,
+              3.3503861632198095,
+              4.814931191504002,
+              4.588140873238444,
+              4.773190012201667,
+              6.9648949429392815,
+              4.207971040159464
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 6501690,
+            "compressed_bytes_without_wire_header": 6501602,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 2097152,
+              "sign_mantissa": 4194304,
+              "chunk_counts": 256,
+              "local_pos_uint16": 139916,
+              "escape_values": 69958,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2902196198219231,
+            "ratio_without_wire_header": 1.2902370831065944,
+            "n_chunks": 64,
+            "n_escapes": 69958,
+            "encode_ms_cpu_reference": 320.73802314698696,
+            "decode_ms_cpu_reference": 403.50596490316093,
+            "transfer": {
+              "median_ms": 3.442623885348439,
+              "mean_ms": 3.537944078238474,
+              "times_ms": [
+                3.442623885348439,
+                3.414924954995513,
+                3.333039116114378,
+                4.264181014150381,
+                3.7377530243247747,
+                3.5513818729668856,
+                3.307702951133251,
+                3.345636883750558,
+                3.4442530013620853
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 8192,
+          "matrix_shape": [
+            8192,
+            1024
+          ],
+          "raw_bytes": 16777216,
+          "native_mooncake": {
+            "median_ms": 9.745019022375345,
+            "mean_ms": 10.94848535851472,
+            "times_ms": [
+              8.132718037813902,
+              8.505831006914377,
+              9.223398985341191,
+              8.967230096459389,
+              9.745019022375345,
+              14.893867075443268,
+              11.820406885817647,
+              12.517479015514255,
+              14.730418100953102
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 12893509,
+            "compressed_bytes_without_wire_header": 12893421,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 4194304,
+              "sign_mantissa": 8388608,
+              "chunk_counts": 512,
+              "local_pos_uint16": 206654,
+              "escape_values": 103327,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.30121412254802,
+            "ratio_without_wire_header": 1.3012230035767853,
+            "n_chunks": 128,
+            "n_escapes": 103327,
+            "encode_ms_cpu_reference": 491.0290839616209,
+            "decode_ms_cpu_reference": 562.5252681784332,
+            "transfer": {
+              "median_ms": 8.141137892380357,
+              "mean_ms": 8.892799882839123,
+              "times_ms": [
+                8.732483023777604,
+                11.79567794315517,
+                10.959835024550557,
+                7.308651925995946,
+                7.655861089006066,
+                7.906786864623427,
+                9.525984060019255,
+                8.141137892380357,
+                8.008781122043729
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 16384,
+          "matrix_shape": [
+            16384,
+            1024
+          ],
+          "raw_bytes": 33554432,
+          "native_mooncake": {
+            "median_ms": 17.92486198246479,
+            "mean_ms": 18.047021029310095,
+            "times_ms": [
+              20.010304171591997,
+              18.97502806968987,
+              18.15624302253127,
+              17.618380021303892,
+              16.319182934239507,
+              17.92486198246479,
+              20.908620906993747,
+              16.79709297604859,
+              15.713475178927183
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 25649121,
+            "compressed_bytes_without_wire_header": 25649033,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 8388608,
+              "sign_mantissa": 16777216,
+              "chunk_counts": 1024,
+              "local_pos_uint16": 321446,
+              "escape_values": 160723,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3082098213034279,
+            "ratio_without_wire_header": 1.3082143096778736,
+            "n_chunks": 256,
+            "n_escapes": 160723,
+            "encode_ms_cpu_reference": 473.13240892253816,
+            "decode_ms_cpu_reference": 491.7073149699718,
+            "transfer": {
+              "median_ms": 14.344905037432909,
+              "mean_ms": 14.937783565579188,
+              "times_ms": [
+                18.67146696895361,
+                15.867531998082995,
+                15.748046105727553,
+                14.344905037432909,
+                13.508932897821069,
+                13.440852984786034,
+                13.972071930766106,
+                14.025146141648293,
+                14.861098024994135
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 32768,
+          "matrix_shape": [
+            32768,
+            1024
+          ],
+          "raw_bytes": 67108864,
+          "native_mooncake": {
+            "median_ms": 34.97579297982156,
+            "mean_ms": 34.46035283721156,
+            "times_ms": [
+              35.64603999257088,
+              33.85802311822772,
+              34.97579297982156,
+              29.7652471344918,
+              31.6920920740813,
+              32.47439302504063,
+              40.80634703859687,
+              35.09864606894553,
+              35.82659410312772
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 51120433,
+            "compressed_bytes_without_wire_header": 51120345,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 16777216,
+              "sign_mantissa": 33554432,
+              "chunk_counts": 2048,
+              "local_pos_uint16": 524422,
+              "escape_values": 262211,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3127600855806523,
+            "ratio_without_wire_header": 1.3127623454027941,
+            "n_chunks": 512,
+            "n_escapes": 262211,
+            "encode_ms_cpu_reference": 648.6334630753845,
+            "decode_ms_cpu_reference": 717.3235039226711,
+            "transfer": {
+              "median_ms": 28.730096062645316,
+              "mean_ms": 30.4749208347251,
+              "times_ms": [
+                26.843160158023238,
+                28.39591004885733,
+                28.730096062645316,
+                33.044573152437806,
+                40.22549604997039,
+                33.47104205749929,
+                32.705501886084676,
+                26.817036094143987,
+                24.041472002863884
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 65536,
+          "matrix_shape": [
+            65536,
+            1024
+          ],
+          "raw_bytes": 134217728,
+          "native_mooncake": {
+            "median_ms": 71.99784507974982,
+            "mean_ms": 73.54342629615631,
+            "times_ms": [
+              86.52723720297217,
+              71.99784507974982,
+              79.07169219106436,
+              78.3786850515753,
+              80.16368793323636,
+              65.94529189169407,
+              63.66564612835646,
+              68.627939093858,
+              67.51281209290028
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 102157284,
+            "compressed_bytes_without_wire_header": 102157196,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 33554432,
+              "sign_mantissa": 67108864,
+              "chunk_counts": 4096,
+              "local_pos_uint16": 993192,
+              "escape_values": 496596,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3138341461779661,
+            "ratio_without_wire_header": 1.3138352779377382,
+            "n_chunks": 1024,
+            "n_escapes": 496596,
+            "encode_ms_cpu_reference": 1007.9609600361437,
+            "decode_ms_cpu_reference": 1046.8831569887698,
+            "transfer": {
+              "median_ms": 50.54657510481775,
+              "mean_ms": 51.79244023747742,
+              "times_ms": [
+                50.42958399280906,
+                46.030300902202725,
+                53.5634309053421,
+                52.37241508439183,
+                50.34288507886231,
+                54.08847494982183,
+                59.463672107085586,
+                49.294624011963606,
+                50.54657510481775
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs1_seq",
+          "batch_size": 1,
+          "seq_len": 131072,
+          "matrix_shape": [
+            131072,
+            1024
+          ],
+          "raw_bytes": 268435456,
+          "native_mooncake": {
+            "median_ms": 132.02564511448145,
+            "mean_ms": 134.0484391225295,
+            "times_ms": [
+              143.08394421823323,
+              120.25714386254549,
+              126.59403309226036,
+              133.50154599174857,
+              168.91007078811526,
+              128.09133203700185,
+              115.16686389222741,
+              132.02564511448145,
+              138.80537310615182
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 204136759,
+            "compressed_bytes_without_wire_header": 204136671,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 67108864,
+              "sign_mantissa": 134217728,
+              "chunk_counts": 8192,
+              "local_pos_uint16": 1867914,
+              "escape_values": 933957,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3149785335819895,
+            "ratio_without_wire_header": 1.3149791004478564,
+            "n_chunks": 2048,
+            "n_escapes": 933957,
+            "encode_ms_cpu_reference": 1627.1683531813323,
+            "decode_ms_cpu_reference": 1741.5972179733217,
+            "transfer": {
+              "median_ms": 106.25735018402338,
+              "mean_ms": 105.75243934161134,
+              "times_ms": [
+                95.41655704379082,
+                118.09663008898497,
+                107.6118410564959,
+                105.66744487732649,
+                102.02539782039821,
+                117.06545692868531,
+                90.28098895214498,
+                109.35028712265193,
+                106.25735018402338
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 128,
+          "matrix_shape": [
+            2048,
+            1024
+          ],
+          "raw_bytes": 4194304,
+          "native_mooncake": {
+            "median_ms": 1.8544408958405256,
+            "mean_ms": 1.9565119615031614,
+            "times_ms": [
+              1.8544408958405256,
+              1.95782701484859,
+              2.3308799136430025,
+              1.8414058722555637,
+              2.1993881091475487,
+              2.329926937818527,
+              1.6855839639902115,
+              1.7567609902471304,
+              1.6523939557373524
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 3260992,
+            "compressed_bytes_without_wire_header": 3260904,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 1048576,
+              "sign_mantissa": 2097152,
+              "chunk_counts": 128,
+              "local_pos_uint16": 76688,
+              "escape_values": 38344,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2862049339587462,
+            "ratio_without_wire_header": 1.2862396439760262,
+            "n_chunks": 32,
+            "n_escapes": 38344,
+            "encode_ms_cpu_reference": 276.0081139858812,
+            "decode_ms_cpu_reference": 344.1458058077842,
+            "transfer": {
+              "median_ms": 2.0265609491616488,
+              "mean_ms": 2.378108859476116,
+              "times_ms": [
+                3.974149003624916,
+                3.0294139869511127,
+                3.106449032202363,
+                2.1277470514178276,
+                1.916377805173397,
+                2.0265609491616488,
+                1.542234094813466,
+                1.9649968016892672,
+                1.7150510102510452
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 256,
+          "matrix_shape": [
+            4096,
+            1024
+          ],
+          "raw_bytes": 8388608,
+          "native_mooncake": {
+            "median_ms": 3.5738018341362476,
+            "mean_ms": 3.6344313476648598,
+            "times_ms": [
+              3.5738018341362476,
+              3.5002478398382664,
+              3.8448069244623184,
+              4.052888136357069,
+              3.5478330682963133,
+              3.637440036982298,
+              3.369690151885152,
+              3.626994090154767,
+              3.5561800468713045
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 6501690,
+            "compressed_bytes_without_wire_header": 6501602,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 2097152,
+              "sign_mantissa": 4194304,
+              "chunk_counts": 256,
+              "local_pos_uint16": 139916,
+              "escape_values": 69958,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2902196198219231,
+            "ratio_without_wire_header": 1.2902370831065944,
+            "n_chunks": 64,
+            "n_escapes": 69958,
+            "encode_ms_cpu_reference": 326.268516946584,
+            "decode_ms_cpu_reference": 376.73907820135355,
+            "transfer": {
+              "median_ms": 2.7858440298587084,
+              "mean_ms": 2.889893897291687,
+              "times_ms": [
+                3.1728879548609257,
+                2.73185595870018,
+                2.6995730586349964,
+                2.5747520849108696,
+                2.728025894612074,
+                2.7858440298587084,
+                3.0042121652513742,
+                3.1812319066375494,
+                3.1306620221585035
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 512,
+          "matrix_shape": [
+            8192,
+            1024
+          ],
+          "raw_bytes": 16777216,
+          "native_mooncake": {
+            "median_ms": 9.074871893972158,
+            "mean_ms": 9.551102735309136,
+            "times_ms": [
+              10.243401862680912,
+              8.647035108879209,
+              8.173281094059348,
+              9.074871893972158,
+              7.872304879128933,
+              9.504888905212283,
+              8.858967805281281,
+              11.763526126742363,
+              11.821646941825747
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 12893509,
+            "compressed_bytes_without_wire_header": 12893421,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 4194304,
+              "sign_mantissa": 8388608,
+              "chunk_counts": 512,
+              "local_pos_uint16": 206654,
+              "escape_values": 103327,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.30121412254802,
+            "ratio_without_wire_header": 1.3012230035767853,
+            "n_chunks": 128,
+            "n_escapes": 103327,
+            "encode_ms_cpu_reference": 345.7107769791037,
+            "decode_ms_cpu_reference": 352.67887194640934,
+            "transfer": {
+              "median_ms": 5.904634017497301,
+              "mean_ms": 6.117664872565204,
+              "times_ms": [
+                5.7273260317742825,
+                5.724397022277117,
+                7.353181950747967,
+                6.508979015052319,
+                6.101119797676802,
+                5.904634017497301,
+                5.884862970560789,
+                6.000411929562688,
+                5.854071117937565
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 1024,
+          "matrix_shape": [
+            16384,
+            1024
+          ],
+          "raw_bytes": 33554432,
+          "native_mooncake": {
+            "median_ms": 22.664244985207915,
+            "mean_ms": 23.20468472316861,
+            "times_ms": [
+              20.15149686485529,
+              22.664244985207915,
+              22.05104217864573,
+              24.087677942588925,
+              27.506227139383554,
+              29.932414181530476,
+              24.072075029835105,
+              19.465485122054815,
+              18.911499064415693
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 25649121,
+            "compressed_bytes_without_wire_header": 25649033,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 8388608,
+              "sign_mantissa": 16777216,
+              "chunk_counts": 1024,
+              "local_pos_uint16": 321446,
+              "escape_values": 160723,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3082098213034279,
+            "ratio_without_wire_header": 1.3082143096778736,
+            "n_chunks": 256,
+            "n_escapes": 160723,
+            "encode_ms_cpu_reference": 403.3051209989935,
+            "decode_ms_cpu_reference": 391.7604850139469,
+            "transfer": {
+              "median_ms": 14.627085998654366,
+              "mean_ms": 14.523220895272162,
+              "times_ms": [
+                13.992435997352004,
+                16.07633801177144,
+                15.806677984073758,
+                15.578041085973382,
+                14.627085998654366,
+                14.695481164380908,
+                14.040399808436632,
+                13.737451052293181,
+                12.155076954513788
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 2048,
+          "matrix_shape": [
+            32768,
+            1024
+          ],
+          "raw_bytes": 67108864,
+          "native_mooncake": {
+            "median_ms": 35.03691009245813,
+            "mean_ms": 35.08528800577753,
+            "times_ms": [
+              35.213442984968424,
+              32.04399184323847,
+              32.44899399578571,
+              36.4339139778167,
+              32.1323259267956,
+              31.87314816750586,
+              35.03691009245813,
+              35.28873506002128,
+              45.2961300034076
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 51120433,
+            "compressed_bytes_without_wire_header": 51120345,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 16777216,
+              "sign_mantissa": 33554432,
+              "chunk_counts": 2048,
+              "local_pos_uint16": 524422,
+              "escape_values": 262211,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3127600855806523,
+            "ratio_without_wire_header": 1.3127623454027941,
+            "n_chunks": 512,
+            "n_escapes": 262211,
+            "encode_ms_cpu_reference": 665.9573318902403,
+            "decode_ms_cpu_reference": 755.2793498616666,
+            "transfer": {
+              "median_ms": 30.03641404211521,
+              "mean_ms": 30.761603317740892,
+              "times_ms": [
+                26.38489310629666,
+                27.744018007069826,
+                26.804910972714424,
+                27.437969809398055,
+                33.581637078896165,
+                30.03641404211521,
+                34.547256072983146,
+                32.127785962074995,
+                38.189544808119535
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 4096,
+          "matrix_shape": [
+            65536,
+            1024
+          ],
+          "raw_bytes": 134217728,
+          "native_mooncake": {
+            "median_ms": 76.70167903415859,
+            "mean_ms": 76.98273702731564,
+            "times_ms": [
+              74.8109738342464,
+              79.0950059890747,
+              77.7299189940095,
+              65.66866394132376,
+              68.95137205719948,
+              76.70167903415859,
+              102.49180602841079,
+              80.5812121834606,
+              66.81400118395686
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 102157284,
+            "compressed_bytes_without_wire_header": 102157196,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 33554432,
+              "sign_mantissa": 67108864,
+              "chunk_counts": 4096,
+              "local_pos_uint16": 993192,
+              "escape_values": 496596,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3138341461779661,
+            "ratio_without_wire_header": 1.3138352779377382,
+            "n_chunks": 1024,
+            "n_escapes": 496596,
+            "encode_ms_cpu_reference": 955.1765930373222,
+            "decode_ms_cpu_reference": 1103.084263857454,
+            "transfer": {
+              "median_ms": 55.453239008784294,
+              "mean_ms": 56.88811510076953,
+              "times_ms": [
+                58.49017505533993,
+                54.23031700775027,
+                55.03886588849127,
+                59.26721985451877,
+                60.483061941340566,
+                52.390272030606866,
+                52.616415079683065,
+                55.453239008784294,
+                64.02347004041076
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 8192,
+          "matrix_shape": [
+            131072,
+            1024
+          ],
+          "raw_bytes": 268435456,
+          "native_mooncake": {
+            "median_ms": 137.59188121184707,
+            "mean_ms": 141.5602630780389,
+            "times_ms": [
+              152.6599209755659,
+              145.5727049615234,
+              130.5902141612023,
+              133.88464110903442,
+              164.04159809462726,
+              137.59188121184707,
+              145.51601791754365,
+              135.5455571319908,
+              128.6398321390152
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 204136759,
+            "compressed_bytes_without_wire_header": 204136671,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 67108864,
+              "sign_mantissa": 134217728,
+              "chunk_counts": 8192,
+              "local_pos_uint16": 1867914,
+              "escape_values": 933957,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3149785335819895,
+            "ratio_without_wire_header": 1.3149791004478564,
+            "n_chunks": 2048,
+            "n_escapes": 933957,
+            "encode_ms_cpu_reference": 1679.5825520530343,
+            "decode_ms_cpu_reference": 1793.7002680264413,
+            "transfer": {
+              "median_ms": 110.16345210373402,
+              "mean_ms": 107.92257036599848,
+              "times_ms": [
+                95.34078114666045,
+                101.28802992403507,
+                122.77184799313545,
+                142.61167705990374,
+                111.72481207177043,
+                90.1836499106139,
+                110.16345210373402,
+                111.66295106522739,
+                85.55593201890588
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 16384,
+          "matrix_shape": [
+            262144,
+            1024
+          ],
+          "raw_bytes": 536870912,
+          "native_mooncake": {
+            "median_ms": 282.98501181416214,
+            "mean_ms": 283.1430345152815,
+            "times_ms": [
+              283.79089990630746,
+              253.6878138780594,
+              282.98501181416214,
+              278.79231702536345,
+              307.7643031720072,
+              298.13907598145306,
+              252.3281287867576,
+              265.95721393823624,
+              324.84254613518715
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 408189936,
+            "compressed_bytes_without_wire_header": 408189848,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 134217728,
+              "sign_mantissa": 268435456,
+              "chunk_counts": 16384,
+              "local_pos_uint16": 3680176,
+              "escape_values": 1840088,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3152477919004844,
+            "ratio_without_wire_header": 1.3152480754494413,
+            "n_chunks": 4096,
+            "n_escapes": 1840088,
+            "encode_ms_cpu_reference": 2981.324047083035,
+            "decode_ms_cpu_reference": 3118.8892771024257,
+            "transfer": {
+              "median_ms": 218.96791411563754,
+              "mean_ms": 214.1194393237432,
+              "times_ms": [
+                187.36709794029593,
+                201.56071987003088,
+                246.48659396916628,
+                218.96791411563754,
+                176.33351986296475,
+                207.51836500130594,
+                241.34970805607736,
+                219.6710049174726,
+                227.82003018073738
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 32768,
+          "matrix_shape": [
+            524288,
+            1024
+          ],
+          "raw_bytes": 1073741824,
+          "native_mooncake": {
+            "median_ms": 543.3253969531506,
+            "mean_ms": 552.5637049900574,
+            "times_ms": [
+              514.0745299868286,
+              553.085109917447,
+              602.6238892227411,
+              543.3253969531506,
+              543.2428549975157,
+              477.1175370551646,
+              590.5546438880265,
+              539.9587680585682,
+              609.0906148310751
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 816202063,
+            "compressed_bytes_without_wire_header": 816201975,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 268435456,
+              "sign_mantissa": 536870912,
+              "chunk_counts": 32768,
+              "local_pos_uint16": 7241882,
+              "escape_values": 3620941,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3155343176337941,
+            "ratio_without_wire_header": 1.315534459470035,
+            "n_chunks": 8192,
+            "n_escapes": 3620941,
+            "encode_ms_cpu_reference": 5197.896630037576,
+            "decode_ms_cpu_reference": 5150.602472014725,
+            "transfer": {
+              "median_ms": 428.09413792565465,
+              "mean_ms": 433.9575253220068,
+              "times_ms": [
+                426.8731861375272,
+                416.85694199986756,
+                450.96591697074473,
+                428.09413792565465,
+                460.69393400102854,
+                484.2655889224261,
+                459.1786868404597,
+                360.86822603829205,
+                417.8211090620607
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "bs16_seq",
+          "batch_size": 16,
+          "seq_len": 65536,
+          "matrix_shape": [
+            1048576,
+            1024
+          ],
+          "raw_bytes": 2147483648,
+          "native_mooncake": {
+            "median_ms": 1271.064026048407,
+            "mean_ms": 1407.9476406073404,
+            "times_ms": [
+              1170.0602560304105,
+              1438.7891788501292,
+              1263.4923218283802,
+              1935.4148169513792,
+              1184.6658128779382,
+              1148.378968006,
+              1271.064026048407,
+              1396.4440310373902,
+              1863.2193538360298
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 1632320544,
+            "compressed_bytes_without_wire_header": 1632320456,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 536870912,
+              "sign_mantissa": 1073741824,
+              "chunk_counts": 65536,
+              "local_pos_uint16": 14428112,
+              "escape_values": 7214056,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3156016787839926,
+            "ratio_without_wire_header": 1.315601749709372,
+            "n_chunks": 16384,
+            "n_escapes": 7214056,
+            "encode_ms_cpu_reference": 9032.482957001776,
+            "decode_ms_cpu_reference": 9089.298145845532,
+            "transfer": {
+              "median_ms": 913.4032868314534,
+              "mean_ms": 977.5825941986922,
+              "times_ms": [
+                961.4474808331579,
+                893.1607380509377,
+                981.373867020011,
+                1309.0526470914483,
+                1138.5588839184493,
+                900.1079420559108,
+                900.1540949102491,
+                800.9844070766121,
+                913.4032868314534
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 1,
+          "seq_len": 1024,
+          "matrix_shape": [
+            1024,
+            1024
+          ],
+          "raw_bytes": 2097152,
+          "native_mooncake": {
+            "median_ms": 1.1990910861641169,
+            "mean_ms": 1.2052090217669804,
+            "times_ms": [
+              1.3150470331311226,
+              1.2319469824433327,
+              1.1518129613250494,
+              1.1736350134015083,
+              1.2233899906277657,
+              1.2886200565844774,
+              1.1378820054233074,
+              1.125456066802144,
+              1.1990910861641169
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 1647546,
+            "compressed_bytes_without_wire_header": 1647458,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 524288,
+              "sign_mantissa": 1048576,
+              "chunk_counts": 64,
+              "local_pos_uint16": 49676,
+              "escape_values": 24838,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2728943531773924,
+            "ratio_without_wire_header": 1.2729623456258066,
+            "n_chunks": 16,
+            "n_escapes": 24838,
+            "encode_ms_cpu_reference": 216.04735287837684,
+            "decode_ms_cpu_reference": 270.97310894168913,
+            "transfer": {
+              "median_ms": 0.9676399640738964,
+              "mean_ms": 1.2263890562785997,
+              "times_ms": [
+                1.0777998249977827,
+                0.9134269785135984,
+                0.8547049947082996,
+                0.9676399640738964,
+                0.7605708669871092,
+                2.4963640607893467,
+                0.746134901419282,
+                1.2804069556295872,
+                1.9404529593884945
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 2,
+          "seq_len": 1024,
+          "matrix_shape": [
+            2048,
+            1024
+          ],
+          "raw_bytes": 4194304,
+          "native_mooncake": {
+            "median_ms": 1.9980540964752436,
+            "mean_ms": 2.050416518209709,
+            "times_ms": [
+              2.271846169605851,
+              2.1002590656280518,
+              1.737338025122881,
+              1.8377460073679686,
+              2.52969516441226,
+              1.9980540964752436,
+              2.135348040610552,
+              1.9235201179981232,
+              1.9199419766664505
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 3260992,
+            "compressed_bytes_without_wire_header": 3260904,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 1048576,
+              "sign_mantissa": 2097152,
+              "chunk_counts": 128,
+              "local_pos_uint16": 76688,
+              "escape_values": 38344,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2862049339587462,
+            "ratio_without_wire_header": 1.2862396439760262,
+            "n_chunks": 32,
+            "n_escapes": 38344,
+            "encode_ms_cpu_reference": 312.80727800913155,
+            "decode_ms_cpu_reference": 413.5269720572978,
+            "transfer": {
+              "median_ms": 2.6890048757195473,
+              "mean_ms": 2.6290268999420934,
+              "times_ms": [
+                3.2001049257814884,
+                3.1287490855902433,
+                2.0043249242007732,
+                3.6548550706356764,
+                2.7935421094298363,
+                2.6890048757195473,
+                2.3440399672836065,
+                2.0044620614498854,
+                1.842159079387784
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 4,
+          "seq_len": 1024,
+          "matrix_shape": [
+            4096,
+            1024
+          ],
+          "raw_bytes": 8388608,
+          "native_mooncake": {
+            "median_ms": 4.420560086145997,
+            "mean_ms": 4.500425110260646,
+            "times_ms": [
+              4.643541062250733,
+              5.083596101030707,
+              4.844389855861664,
+              3.9455739315599203,
+              3.9518841076642275,
+              3.628917969763279,
+              3.56319104321301,
+              4.420560086145997,
+              6.422171834856272
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 6501690,
+            "compressed_bytes_without_wire_header": 6501602,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 2097152,
+              "sign_mantissa": 4194304,
+              "chunk_counts": 256,
+              "local_pos_uint16": 139916,
+              "escape_values": 69958,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.2902196198219231,
+            "ratio_without_wire_header": 1.2902370831065944,
+            "n_chunks": 64,
+            "n_escapes": 69958,
+            "encode_ms_cpu_reference": 347.9957268573344,
+            "decode_ms_cpu_reference": 340.75307683087885,
+            "transfer": {
+              "median_ms": 3.56747186742723,
+              "mean_ms": 3.903132009630402,
+              "times_ms": [
+                4.209097009152174,
+                6.116956938058138,
+                3.5025489050894976,
+                3.56747186742723,
+                3.1464810017496347,
+                3.4911041148006916,
+                3.6865300498902798,
+                3.846519161015749,
+                3.561479039490223
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 8,
+          "seq_len": 1024,
+          "matrix_shape": [
+            8192,
+            1024
+          ],
+          "raw_bytes": 16777216,
+          "native_mooncake": {
+            "median_ms": 12.396362842991948,
+            "mean_ms": 12.398550209278861,
+            "times_ms": [
+              10.242830030620098,
+              9.863822953775525,
+              14.043963979929686,
+              10.49128407612443,
+              12.183950049802661,
+              14.510608976706862,
+              12.396362842991948,
+              13.304176973178983,
+              14.549952000379562
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 12893509,
+            "compressed_bytes_without_wire_header": 12893421,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 4194304,
+              "sign_mantissa": 8388608,
+              "chunk_counts": 512,
+              "local_pos_uint16": 206654,
+              "escape_values": 103327,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.30121412254802,
+            "ratio_without_wire_header": 1.3012230035767853,
+            "n_chunks": 128,
+            "n_escapes": 103327,
+            "encode_ms_cpu_reference": 390.9246299881488,
+            "decode_ms_cpu_reference": 409.7184238489717,
+            "transfer": {
+              "median_ms": 6.470985943451524,
+              "mean_ms": 7.614720871465074,
+              "times_ms": [
+                6.434628972783685,
+                5.724865011870861,
+                6.019549909979105,
+                5.627123871818185,
+                6.470985943451524,
+                17.162681091576815,
+                6.879845168441534,
+                6.510919891297817,
+                7.701887981966138
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 16,
+          "seq_len": 1024,
+          "matrix_shape": [
+            16384,
+            1024
+          ],
+          "raw_bytes": 33554432,
+          "native_mooncake": {
+            "median_ms": 21.08719409443438,
+            "mean_ms": 21.680572665193015,
+            "times_ms": [
+              18.398313084617257,
+              25.115784956142306,
+              24.21571989543736,
+              24.00318905711174,
+              24.165448965504766,
+              21.08719409443438,
+              20.23204299621284,
+              19.236264983192086,
+              18.671195954084396
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 25649121,
+            "compressed_bytes_without_wire_header": 25649033,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 8388608,
+              "sign_mantissa": 16777216,
+              "chunk_counts": 1024,
+              "local_pos_uint16": 321446,
+              "escape_values": 160723,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3082098213034279,
+            "ratio_without_wire_header": 1.3082143096778736,
+            "n_chunks": 256,
+            "n_escapes": 160723,
+            "encode_ms_cpu_reference": 536.9614579249173,
+            "decode_ms_cpu_reference": 527.8895918745548,
+            "transfer": {
+              "median_ms": 13.705143937841058,
+              "mean_ms": 13.605820170293251,
+              "times_ms": [
+                16.18085498921573,
+                11.860951082780957,
+                13.977668015286326,
+                12.267590966075659,
+                14.561109943315387,
+                14.406958827748895,
+                13.705143937841058,
+                13.2649268489331,
+                12.227176921442151
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 32,
+          "seq_len": 1024,
+          "matrix_shape": [
+            32768,
+            1024
+          ],
+          "raw_bytes": 67108864,
+          "native_mooncake": {
+            "median_ms": 36.11466009169817,
+            "mean_ms": 36.222470665557516,
+            "times_ms": [
+              32.36429509706795,
+              34.82391079887748,
+              35.61007487587631,
+              38.492044899612665,
+              36.11466009169817,
+              40.906187146902084,
+              38.919202983379364,
+              36.390568129718304,
+              32.38129196688533
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 51120433,
+            "compressed_bytes_without_wire_header": 51120345,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 16777216,
+              "sign_mantissa": 33554432,
+              "chunk_counts": 2048,
+              "local_pos_uint16": 524422,
+              "escape_values": 262211,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3127600855806523,
+            "ratio_without_wire_header": 1.3127623454027941,
+            "n_chunks": 512,
+            "n_escapes": 262211,
+            "encode_ms_cpu_reference": 654.7519648447633,
+            "decode_ms_cpu_reference": 735.9360649716109,
+            "transfer": {
+              "median_ms": 25.951997144147754,
+              "mean_ms": 26.66740903320412,
+              "times_ms": [
+                25.183826219290495,
+                25.404918007552624,
+                21.891277050599456,
+                25.02748090773821,
+                25.951997144147754,
+                27.251351159065962,
+                31.02371492423117,
+                26.652274886146188,
+                31.619841000065207
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 64,
+          "seq_len": 1024,
+          "matrix_shape": [
+            65536,
+            1024
+          ],
+          "raw_bytes": 134217728,
+          "native_mooncake": {
+            "median_ms": 78.55196297168732,
+            "mean_ms": 79.9652043885241,
+            "times_ms": [
+              64.84710006043315,
+              83.76254700124264,
+              78.55196297168732,
+              86.4595789462328,
+              124.87201602198184,
+              81.56454283744097,
+              66.93731900304556,
+              66.18164083920419,
+              66.5101318154484
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 102157284,
+            "compressed_bytes_without_wire_header": 102157196,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 33554432,
+              "sign_mantissa": 67108864,
+              "chunk_counts": 4096,
+              "local_pos_uint16": 993192,
+              "escape_values": 496596,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3138341461779661,
+            "ratio_without_wire_header": 1.3138352779377382,
+            "n_chunks": 1024,
+            "n_escapes": 496596,
+            "encode_ms_cpu_reference": 925.8849180769175,
+            "decode_ms_cpu_reference": 1117.8381501231343,
+            "transfer": {
+              "median_ms": 60.72010891512036,
+              "mean_ms": 64.38289277462496,
+              "times_ms": [
+                56.852577021345496,
+                60.36749994382262,
+                88.91804795712233,
+                63.22148605249822,
+                52.733285119757056,
+                52.378580905497074,
+                77.06129504367709,
+                67.19315401278436,
+                60.72010891512036
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 128,
+          "seq_len": 1024,
+          "matrix_shape": [
+            131072,
+            1024
+          ],
+          "raw_bytes": 268435456,
+          "native_mooncake": {
+            "median_ms": 142.98640890046954,
+            "mean_ms": 149.56012052587337,
+            "times_ms": [
+              129.29443595930934,
+              141.5237388573587,
+              142.63736899010837,
+              178.341408027336,
+              166.92873905412853,
+              142.98640890046954,
+              163.327595917508,
+              136.2021469976753,
+              144.79924202896655
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 204136759,
+            "compressed_bytes_without_wire_header": 204136671,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 67108864,
+              "sign_mantissa": 134217728,
+              "chunk_counts": 8192,
+              "local_pos_uint16": 1867914,
+              "escape_values": 933957,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3149785335819895,
+            "ratio_without_wire_header": 1.3149791004478564,
+            "n_chunks": 2048,
+            "n_escapes": 933957,
+            "encode_ms_cpu_reference": 1749.1423541214317,
+            "decode_ms_cpu_reference": 1770.0960668735206,
+            "transfer": {
+              "median_ms": 132.61102885007858,
+              "mean_ms": 126.8420210884263,
+              "times_ms": [
+                132.61102885007858,
+                140.4770880471915,
+                112.16296092607081,
+                133.64043296314776,
+                134.2656179331243,
+                106.26955796033144,
+                132.81127996742725,
+                119.3434321321547,
+                129.99679101631045
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq1024_bs",
+          "batch_size": 256,
+          "seq_len": 1024,
+          "matrix_shape": [
+            262144,
+            1024
+          ],
+          "raw_bytes": 536870912,
+          "native_mooncake": {
+            "median_ms": 318.7519609928131,
+            "mean_ms": 306.8890603155726,
+            "times_ms": [
+              318.7519609928131,
+              301.8530129920691,
+              335.11477103456855,
+              319.7658727876842,
+              296.12426296807826,
+              258.2603299524635,
+              329.50072712264955,
+              274.1255590226501,
+              328.50504596717656
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 408189936,
+            "compressed_bytes_without_wire_header": 408189848,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 134217728,
+              "sign_mantissa": 268435456,
+              "chunk_counts": 16384,
+              "local_pos_uint16": 3680176,
+              "escape_values": 1840088,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3152477919004844,
+            "ratio_without_wire_header": 1.3152480754494413,
+            "n_chunks": 4096,
+            "n_escapes": 1840088,
+            "encode_ms_cpu_reference": 2884.3423700891435,
+            "decode_ms_cpu_reference": 3393.6329351272434,
+            "transfer": {
+              "median_ms": 219.84502603299916,
+              "mean_ms": 222.41580512167678,
+              "times_ms": [
+                233.02839091047645,
+                206.4483598805964,
+                214.90564406849444,
+                239.19459711760283,
+                241.87037604860961,
+                226.32640600204468,
+                201.83032006025314,
+                218.2931259740144,
+                219.84502603299916
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 1,
+          "seq_len": 32768,
+          "matrix_shape": [
+            32768,
+            1024
+          ],
+          "raw_bytes": 67108864,
+          "native_mooncake": {
+            "median_ms": 40.93345208093524,
+            "mean_ms": 44.634834345844055,
+            "times_ms": [
+              37.23146999254823,
+              35.735758021473885,
+              35.51149391569197,
+              35.500971833243966,
+              40.93345208093524,
+              49.17159304022789,
+              53.944057086482644,
+              61.072186101228,
+              52.61252704076469
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 51120433,
+            "compressed_bytes_without_wire_header": 51120345,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 16777216,
+              "sign_mantissa": 33554432,
+              "chunk_counts": 2048,
+              "local_pos_uint16": 524422,
+              "escape_values": 262211,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3127600855806523,
+            "ratio_without_wire_header": 1.3127623454027941,
+            "n_chunks": 512,
+            "n_escapes": 262211,
+            "encode_ms_cpu_reference": 664.9667238816619,
+            "decode_ms_cpu_reference": 617.275286000222,
+            "transfer": {
+              "median_ms": 29.02242378331721,
+              "mean_ms": 28.539909955321086,
+              "times_ms": [
+                29.02242378331721,
+                26.83202992193401,
+                30.448989011347294,
+                25.882602902129292,
+                33.595832996070385,
+                30.774676939472556,
+                29.73313909024,
+                23.95543293096125,
+                26.614062022417784
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 2,
+          "seq_len": 32768,
+          "matrix_shape": [
+            65536,
+            1024
+          ],
+          "raw_bytes": 134217728,
+          "native_mooncake": {
+            "median_ms": 75.26244595646858,
+            "mean_ms": 75.28487362691925,
+            "times_ms": [
+              65.2279770001769,
+              75.26244595646858,
+              77.08826591260731,
+              94.46732397191226,
+              79.4341410510242,
+              68.21224396117032,
+              70.3908409923315,
+              70.83283993415534,
+              76.64778386242688
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 102157284,
+            "compressed_bytes_without_wire_header": 102157196,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 33554432,
+              "sign_mantissa": 67108864,
+              "chunk_counts": 4096,
+              "local_pos_uint16": 993192,
+              "escape_values": 496596,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3138341461779661,
+            "ratio_without_wire_header": 1.3138352779377382,
+            "n_chunks": 1024,
+            "n_escapes": 496596,
+            "encode_ms_cpu_reference": 1031.928479904309,
+            "decode_ms_cpu_reference": 1119.759782915935,
+            "transfer": {
+              "median_ms": 53.899295860901475,
+              "mean_ms": 55.8344385224498,
+              "times_ms": [
+                53.27538098208606,
+                53.899295860901475,
+                59.58772194571793,
+                62.23571510054171,
+                57.62921809218824,
+                50.695682875812054,
+                62.92865891009569,
+                49.49521692469716,
+                52.76305601000786
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 4,
+          "seq_len": 32768,
+          "matrix_shape": [
+            131072,
+            1024
+          ],
+          "raw_bytes": 268435456,
+          "native_mooncake": {
+            "median_ms": 137.17221305705607,
+            "mean_ms": 144.84090932334462,
+            "times_ms": [
+              132.26441503502429,
+              141.8942240998149,
+              170.56579398922622,
+              135.48314687795937,
+              145.6783760804683,
+              183.91785211861134,
+              137.17221305705607,
+              128.46987578086555,
+              128.12228687107563
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 204136759,
+            "compressed_bytes_without_wire_header": 204136671,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 67108864,
+              "sign_mantissa": 134217728,
+              "chunk_counts": 8192,
+              "local_pos_uint16": 1867914,
+              "escape_values": 933957,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3149785335819895,
+            "ratio_without_wire_header": 1.3149791004478564,
+            "n_chunks": 2048,
+            "n_escapes": 933957,
+            "encode_ms_cpu_reference": 1721.8706719577312,
+            "decode_ms_cpu_reference": 1808.7873959448189,
+            "transfer": {
+              "median_ms": 119.2399908322841,
+              "mean_ms": 115.98741113104754,
+              "times_ms": [
+                138.78187187947333,
+                111.2878059502691,
+                97.72962401621044,
+                109.95380417443812,
+                121.373939095065,
+                119.2399908322841,
+                125.32781204208732,
+                96.12987702712417,
+                124.0619751624763
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 8,
+          "seq_len": 32768,
+          "matrix_shape": [
+            262144,
+            1024
+          ],
+          "raw_bytes": 536870912,
+          "native_mooncake": {
+            "median_ms": 280.90739087201655,
+            "mean_ms": 284.48823371177747,
+            "times_ms": [
+              280.90739087201655,
+              263.2061180192977,
+              253.15449782647192,
+              262.2025089804083,
+              336.3933260552585,
+              284.69608491286635,
+              332.6175599358976,
+              300.9537279140204,
+              246.26288888975978
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 408189936,
+            "compressed_bytes_without_wire_header": 408189848,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 134217728,
+              "sign_mantissa": 268435456,
+              "chunk_counts": 16384,
+              "local_pos_uint16": 3680176,
+              "escape_values": 1840088,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3152477919004844,
+            "ratio_without_wire_header": 1.3152480754494413,
+            "n_chunks": 4096,
+            "n_escapes": 1840088,
+            "encode_ms_cpu_reference": 2970.466314116493,
+            "decode_ms_cpu_reference": 3299.268183996901,
+            "transfer": {
+              "median_ms": 215.21107712760568,
+              "mean_ms": 230.0603466315402,
+              "times_ms": [
+                240.6490920111537,
+                238.1659778766334,
+                276.4374539256096,
+                206.98168291710317,
+                204.99664777889848,
+                278.2827790360898,
+                215.21107712760568,
+                212.97288802452385,
+                196.84552098624408
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 16,
+          "seq_len": 32768,
+          "matrix_shape": [
+            524288,
+            1024
+          ],
+          "raw_bytes": 1073741824,
+          "native_mooncake": {
+            "median_ms": 582.3035000357777,
+            "mean_ms": 571.0287684729943,
+            "times_ms": [
+              560.7601960655302,
+              549.3498791474849,
+              583.9612029958516,
+              583.9807039592415,
+              624.6712331194431,
+              582.3035000357777,
+              589.5205810666084,
+              548.0833840556443,
+              516.6282358113676
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 816202063,
+            "compressed_bytes_without_wire_header": 816201975,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 268435456,
+              "sign_mantissa": 536870912,
+              "chunk_counts": 32768,
+              "local_pos_uint16": 7241882,
+              "escape_values": 3620941,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3155343176337941,
+            "ratio_without_wire_header": 1.315534459470035,
+            "n_chunks": 8192,
+            "n_escapes": 3620941,
+            "encode_ms_cpu_reference": 5163.132112007588,
+            "decode_ms_cpu_reference": 5529.937451938167,
+            "transfer": {
+              "median_ms": 443.2666818611324,
+              "mean_ms": 443.05250687628154,
+              "times_ms": [
+                394.9375059455633,
+                440.3758200351149,
+                495.9884050767869,
+                367.4956909380853,
+                473.3422459103167,
+                443.2666818611324,
+                398.84518389590085,
+                464.7822070401162,
+                508.4388211835176
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 32,
+          "seq_len": 32768,
+          "matrix_shape": [
+            1048576,
+            1024
+          ],
+          "raw_bytes": 2147483648,
+          "native_mooncake": {
+            "median_ms": 1233.2623950205743,
+            "mean_ms": 1397.384598566633,
+            "times_ms": [
+              1233.2623950205743,
+              1286.5970500279218,
+              2112.137346994132,
+              1202.8002990409732,
+              1223.2805050443858,
+              1557.1849499829113,
+              1607.0506318937987,
+              1208.7614298798144,
+              1145.3867792151868
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 1632320544,
+            "compressed_bytes_without_wire_header": 1632320456,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 536870912,
+              "sign_mantissa": 1073741824,
+              "chunk_counts": 65536,
+              "local_pos_uint16": 14428112,
+              "escape_values": 7214056,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3156016787839926,
+            "ratio_without_wire_header": 1.315601749709372,
+            "n_chunks": 16384,
+            "n_escapes": 7214056,
+            "encode_ms_cpu_reference": 9067.595068132505,
+            "decode_ms_cpu_reference": 9450.1670319587,
+            "transfer": {
+              "median_ms": 953.3290499821305,
+              "mean_ms": 951.0095253224588,
+              "times_ms": [
+                984.7974858712405,
+                993.5840861871839,
+                953.3290499821305,
+                843.2745691388845,
+                891.0407070070505,
+                873.3915719203651,
+                990.8889029175043,
+                1123.0673489626497,
+                905.7120059151202
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 64,
+          "seq_len": 32768,
+          "matrix_shape": [
+            2097152,
+            1024
+          ],
+          "raw_bytes": 4294967296,
+          "native_mooncake": {
+            "median_ms": 2110.066619934514,
+            "mean_ms": 2212.4361471635184,
+            "times_ms": [
+              2395.2259190846235,
+              2177.66947299242,
+              2067.039285087958,
+              1996.881348080933,
+              2050.4956061486155,
+              2110.066619934514,
+              2359.2534651979804,
+              2837.5045200809836,
+              1917.789087863639
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 3264463279,
+            "compressed_bytes_without_wire_header": 3264463191,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 1073741824,
+              "sign_mantissa": 2147483648,
+              "chunk_counts": 131072,
+              "local_pos_uint16": 28737754,
+              "escape_values": 14368877,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3156733370625242,
+            "ratio_without_wire_header": 1.3156733725290763,
+            "n_chunks": 32768,
+            "n_escapes": 14368877,
+            "encode_ms_cpu_reference": 16778.492277953774,
+            "decode_ms_cpu_reference": 18476.50178708136,
+            "transfer": {
+              "median_ms": 1710.6461799703538,
+              "mean_ms": 1832.567729573283,
+              "times_ms": [
+                1858.660861151293,
+                1731.3131419941783,
+                1821.614193962887,
+                1643.6498970724642,
+                1710.6461799703538,
+                1594.791512005031,
+                2864.4079400692135,
+                1648.2994530815631,
+                1619.7263868525624
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        },
+        {
+          "sweep": "seq32768_bs",
+          "batch_size": 128,
+          "seq_len": 32768,
+          "matrix_shape": [
+            4194304,
+            1024
+          ],
+          "raw_bytes": 8589934592,
+          "native_mooncake": {
+            "median_ms": 4623.140419833362,
+            "mean_ms": 4745.053512613393,
+            "times_ms": [
+              4154.7029400244355,
+              4171.279608970508,
+              4761.6060429718345,
+              5238.157988060266,
+              4605.782115831971,
+              4623.140419833362,
+              4620.893857907504,
+              5566.623064922169,
+              4963.295574998483
+            ],
+            "ok": true
+          },
+          "splitzip_mooncake": {
+            "codec": "chunklocal_cpu_reference_transport_payload",
+            "coverage": 0.9833207130432129,
+            "encoded_bytes": 6528842976,
+            "compressed_bytes_without_wire_header": 6528842888,
+            "payload_breakdown": {
+              "header": 88,
+              "packed_codes": 2147483648,
+              "sign_mantissa": 4294967296,
+              "chunk_counts": 262144,
+              "local_pos_uint16": 57419856,
+              "escape_values": 28709928,
+              "decode_lut": 16
+            },
+            "ratio_vs_wire_payload": 1.3156901802626537,
+            "ratio_without_wire_header": 1.3156901979963835,
+            "n_chunks": 65536,
+            "n_escapes": 28709928,
+            "encode_ms_cpu_reference": 31606.02247202769,
+            "decode_ms_cpu_reference": 35724.67564395629,
+            "transfer": {
+              "median_ms": 3780.6099301669747,
+              "mean_ms": 4241.125032072887,
+              "times_ms": [
+                3638.669329928234,
+                4331.722888862714,
+                4020.0982219539583,
+                3780.6099301669747,
+                5450.88996598497,
+                3665.0852309539914,
+                3577.6950609870255,
+                6230.679604923353,
+                3474.6750548947603
+              ],
+              "ok": true
+            },
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

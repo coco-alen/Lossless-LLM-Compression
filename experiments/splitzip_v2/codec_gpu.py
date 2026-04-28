@@ -11,6 +11,58 @@ from experiments.splitzip.lossless_fast import _dec_4bit, _enc_4bit
 
 
 @triton.jit
+def _dec_4bit_pair32(pk, sm, dlut, out32, n_pairs, BLOCK: tl.constexpr):
+    offs = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
+    mask = offs < n_pairs
+    packed = tl.load(pk + offs, mask=mask, other=0).to(tl.int32)
+    pos0 = offs * 2
+    pos1 = pos0 + 1
+
+    exp0 = tl.load(dlut + ((packed >> 4) & 0x0F), mask=mask, other=0).to(tl.int32)
+    exp1 = tl.load(dlut + (packed & 0x0F), mask=mask, other=0).to(tl.int32)
+    sm0 = tl.load(sm + pos0, mask=mask, other=0).to(tl.int32)
+    sm1 = tl.load(sm + pos1, mask=mask, other=0).to(tl.int32)
+
+    raw0 = ((sm0 & 0x80) << 8) | (exp0 << 7) | (sm0 & 0x7F)
+    raw1 = ((sm1 & 0x80) << 8) | (exp1 << 7) | (sm1 & 0x7F)
+    pair = (raw0 & 0xFFFF) | ((raw1 & 0xFFFF) << 16)
+    tl.store(out32 + offs, pair, mask=mask)
+
+
+@triton.jit
+def _dec_4bit_quad64(pk16, sm32, dlut, out64, n_quads, BLOCK: tl.constexpr):
+    offs = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
+    mask = offs < n_quads
+    packed = tl.load(pk16 + offs, mask=mask, other=0).to(tl.int32)
+    p0 = packed & 0xFF
+    p1 = (packed >> 8) & 0xFF
+
+    sm_pack = tl.load(sm32 + offs, mask=mask, other=0).to(tl.int32)
+    sm0 = sm_pack & 0xFF
+    sm1 = (sm_pack >> 8) & 0xFF
+    sm2 = (sm_pack >> 16) & 0xFF
+    sm3 = (sm_pack >> 24) & 0xFF
+
+    exp0 = tl.load(dlut + ((p0 >> 4) & 0x0F), mask=mask, other=0).to(tl.int32)
+    exp1 = tl.load(dlut + (p0 & 0x0F), mask=mask, other=0).to(tl.int32)
+    exp2 = tl.load(dlut + ((p1 >> 4) & 0x0F), mask=mask, other=0).to(tl.int32)
+    exp3 = tl.load(dlut + (p1 & 0x0F), mask=mask, other=0).to(tl.int32)
+
+    raw0 = ((sm0 & 0x80) << 8) | (exp0 << 7) | (sm0 & 0x7F)
+    raw1 = ((sm1 & 0x80) << 8) | (exp1 << 7) | (sm1 & 0x7F)
+    raw2 = ((sm2 & 0x80) << 8) | (exp2 << 7) | (sm2 & 0x7F)
+    raw3 = ((sm3 & 0x80) << 8) | (exp3 << 7) | (sm3 & 0x7F)
+
+    quad = (
+        raw0.to(tl.uint64)
+        | (raw1.to(tl.uint64) << 16)
+        | (raw2.to(tl.uint64) << 32)
+        | (raw3.to(tl.uint64) << 48)
+    )
+    tl.store(out64 + offs, quad, mask=mask)
+
+
+@triton.jit
 def _count_escapes_chunk(inp, common_lut, counts, n: tl.constexpr, CHUNK: tl.constexpr):
     pid = tl.program_id(0)
     offs = pid * CHUNK + tl.arange(0, CHUNK)
@@ -23,7 +75,7 @@ def _count_escapes_chunk(inp, common_lut, counts, n: tl.constexpr, CHUNK: tl.con
 
 
 @triton.jit
-def _write_escapes_chunk(inp, common_lut, starts, local_pos, esc_val,
+def _write_escapes_chunk(inp, common_lut, starts, chunk_id, local_pos, esc_val,
                          n: tl.constexpr, CHUNK: tl.constexpr):
     pid = tl.program_id(0)
     base = pid * CHUNK
@@ -36,48 +88,23 @@ def _write_escapes_chunk(inp, common_lut, starts, local_pos, esc_val,
     rank = tl.cumsum(esc.to(tl.int32), 0) - 1
     start = tl.load(starts + pid)
     out = start + rank
+    tl.store(chunk_id + out, pid, mask=esc)
     tl.store(local_pos + out, (offs - base).to(tl.uint16), mask=esc)
     tl.store(esc_val + out, exp.to(tl.uint8), mask=esc)
 
 
 @triton.jit
-def _fix_escapes_chunk(counts, starts, local_pos, esc_val, sm, out,
-                       CHUNK: tl.constexpr, BLOCK_ESC: tl.constexpr):
-    pid = tl.program_id(0)
-    count = tl.load(counts + pid)
-    start = tl.load(starts + pid)
-    offs = tl.arange(0, BLOCK_ESC)
-    mask = offs < count
-    src = start + offs
-    local = tl.load(local_pos + src, mask=mask, other=0).to(tl.int32)
-    exp = tl.load(esc_val + src, mask=mask, other=0).to(tl.int32)
-    pos = pid * CHUNK + local
-    s = tl.load(sm + pos, mask=mask, other=0).to(tl.int32)
-    fixed = ((s & 0x80) << 8) | (exp << 7) | (s & 0x7F)
-    tl.store(out + pos, fixed.to(tl.int16), mask=mask)
-
-
-@triton.jit
-def _fix_escapes_chunk_blocked(counts, starts, local_pos, esc_val, sm, out,
-                               CHUNK: tl.constexpr, BLOCK_ESC: tl.constexpr):
-    chunk = tl.program_id(0)
-    block = tl.program_id(1)
-    count = tl.load(counts + chunk)
-    start = tl.load(starts + chunk)
-    offs = block * BLOCK_ESC + tl.arange(0, BLOCK_ESC)
-    mask = offs < count
-    src = start + offs
-    local = tl.load(local_pos + src, mask=mask, other=0).to(tl.int32)
-    exp = tl.load(esc_val + src, mask=mask, other=0).to(tl.int32)
+def _fix_escapes_local_linear(chunk_id, local_pos, esc_val, sm, out,
+                              n_esc, CHUNK: tl.constexpr, BLOCK_ESC: tl.constexpr):
+    offs = tl.program_id(0) * BLOCK_ESC + tl.arange(0, BLOCK_ESC)
+    mask = offs < n_esc
+    chunk = tl.load(chunk_id + offs, mask=mask, other=0).to(tl.int32)
+    local = tl.load(local_pos + offs, mask=mask, other=0).to(tl.int32)
+    exp = tl.load(esc_val + offs, mask=mask, other=0).to(tl.int32)
     pos = chunk * CHUNK + local
     s = tl.load(sm + pos, mask=mask, other=0).to(tl.int32)
     fixed = ((s & 0x80) << 8) | (exp << 7) | (s & 0x7F)
     tl.store(out + pos, fixed.to(tl.int16), mask=mask)
-
-
-def _next_power_of_2(x: int) -> int:
-    return 1 << (max(1, int(x)) - 1).bit_length()
-
 
 @dataclass
 class ChunkLocalGPUEncoded:
@@ -85,6 +112,7 @@ class ChunkLocalGPUEncoded:
     sm: torch.Tensor
     counts: torch.Tensor
     starts: torch.Tensor
+    chunk_id: torch.Tensor
     local_pos: torch.Tensor
     esc_val: torch.Tensor
     n: int
@@ -93,10 +121,12 @@ class ChunkLocalGPUEncoded:
 
     @property
     def compressed_bytes(self) -> int:
+        # counts/starts are construction scratch data; decode uses compact chunk_id
+        # plus local offsets, so they are not part of the transmitted payload.
         return (
             self.pk.numel()
             + self.sm.numel()
-            + self.counts.numel() * 4
+            + self.chunk_id.numel() * 4
             + self.local_pos.numel() * 2
             + self.esc_val.numel()
         )
@@ -161,33 +191,50 @@ class ChunkLocalSplitZipGPU:
         offsets = torch.cumsum(counts, dim=0)
         starts = offsets - counts
         n_esc = int(offsets[-1].item()) if offsets.numel() else 0
+        chunk_id = torch.empty(n_esc, dtype=torch.int32, device=self.device)
         local_pos = torch.empty(n_esc, dtype=torch.uint16, device=self.device)
         esc_val = torch.empty(n_esc, dtype=torch.uint8, device=self.device)
         if n_esc:
             _write_escapes_chunk[(n_chunks,)](
-                flat, self.common_lut, starts, local_pos, esc_val, n, CHUNK=self.chunk_size
+                flat, self.common_lut, starts, chunk_id, local_pos, esc_val, n, CHUNK=self.chunk_size
             )
-        return ChunkLocalGPUEncoded(pk, sm, counts, starts, local_pos, esc_val, n, n_esc, self.chunk_size)
+        return ChunkLocalGPUEncoded(pk, sm, counts, starts, chunk_id, local_pos, esc_val, n, n_esc, self.chunk_size)
 
     def decode(self, encoded: ChunkLocalGPUEncoded) -> torch.Tensor:
         self._check_ready()
         n_pairs = (encoded.n + 1) // 2
         out = torch.empty(encoded.n, dtype=torch.int16, device=self.device)
-        block = 256
-        _dec_4bit[((n_pairs + block * 4 - 1) // (block * 4),)](
-            encoded.pk, encoded.sm, self.dec_lut, out, encoded.n, BLOCK=block
-        )
+        if encoded.n % 4 == 0:
+            block = 512
+            n_quads = encoded.n // 4
+            _dec_4bit_quad64[((n_quads + block - 1) // block,)](
+                encoded.pk.view(torch.int16),
+                encoded.sm.view(torch.int32),
+                self.dec_lut,
+                out.view(torch.int64),
+                n_quads,
+                BLOCK=block,
+                num_warps=4,
+            )
+        elif encoded.n % 2 == 0:
+            block = 1024
+            _dec_4bit_pair32[((n_pairs + block - 1) // block,)](
+                encoded.pk, encoded.sm, self.dec_lut, out.view(torch.int32), n_pairs, BLOCK=block, num_warps=4
+            )
+        else:
+            block = 1024
+            _dec_4bit[((n_pairs + block * 4 - 1) // (block * 4),)](
+                encoded.pk, encoded.sm, self.dec_lut, out, encoded.n, BLOCK=block, num_warps=4
+            )
         if encoded.n_esc:
-            max_count = int(encoded.counts.max().item())
-            block_esc = min(1024, _next_power_of_2(max_count))
-            grid = (encoded.counts.numel(), (max_count + block_esc - 1) // block_esc)
-            _fix_escapes_chunk_blocked[grid](
-                encoded.counts,
-                encoded.starts,
+            block_esc = 128
+            _fix_escapes_local_linear[((encoded.n_esc + block_esc - 1) // block_esc,)](
+                encoded.chunk_id,
                 encoded.local_pos,
                 encoded.esc_val,
                 encoded.sm,
                 out,
+                encoded.n_esc,
                 CHUNK=encoded.chunk_size,
                 BLOCK_ESC=block_esc,
             )

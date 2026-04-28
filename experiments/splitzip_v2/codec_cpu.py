@@ -29,9 +29,9 @@ def bf16_sign_mantissa(tensor: torch.Tensor) -> torch.Tensor:
 def build_topk_codebook(exponents: torch.Tensor, k: int = 16):
     if k <= 0 or k > 16:
         raise ValueError("BF16 nibble codebook requires 1 <= k <= 16")
-    vals, counts = torch.unique(exponents.cpu(), return_counts=True)
+    counts = torch.bincount(exponents.cpu().to(torch.long).view(-1), minlength=256)
     order = torch.argsort(counts, descending=True)
-    top_vals = vals[order[: min(k, vals.numel())]].to(torch.uint8)
+    top_vals = order[:k].to(torch.uint8)
 
     enc_lut = torch.zeros(256, dtype=torch.uint8)
     common_lut = torch.zeros(256, dtype=torch.bool)
@@ -40,7 +40,7 @@ def build_topk_codebook(exponents: torch.Tensor, k: int = 16):
         enc_lut[value] = code
         dec_lut[code] = value
         common_lut[value] = True
-    coverage = float(common_lut[exponents.long()].float().mean().item())
+    coverage = float(counts[order[:k]].sum().item() / max(int(counts.sum().item()), 1))
     return enc_lut, dec_lut, common_lut, coverage
 
 
@@ -152,22 +152,14 @@ class ChunkLocalSplitZipCPU:
 
         t0 = time.perf_counter()
         n_chunks = math.ceil(n / self.chunk_size)
-        counts = torch.zeros(n_chunks, dtype=torch.int32)
-        pos_parts = []
-        val_parts = []
-        for chunk_id in range(n_chunks):
-            start = chunk_id * self.chunk_size
-            end = min(n, start + self.chunk_size)
-            esc = ~common[start:end]
-            counts[chunk_id] = int(esc.sum().item())
-            if counts[chunk_id] > 0:
-                local = torch.nonzero(esc, as_tuple=False).flatten().to(torch.uint16)
-                pos_parts.append(local)
-                val_parts.append(exp[start:end][esc].to(torch.uint8))
-        if pos_parts:
-            local_pos = torch.cat(pos_parts).contiguous()
-            esc_val = torch.cat(val_parts).contiguous()
+        esc_idx = torch.nonzero(~common, as_tuple=False).flatten().to(torch.int64)
+        if esc_idx.numel():
+            chunk_ids = torch.div(esc_idx, self.chunk_size, rounding_mode="floor")
+            counts = torch.bincount(chunk_ids, minlength=n_chunks).to(torch.int32)
+            local_pos = (esc_idx - chunk_ids * self.chunk_size).to(torch.uint16).contiguous()
+            esc_val = exp[esc_idx].to(torch.uint8).contiguous()
         else:
+            counts = torch.zeros(n_chunks, dtype=torch.int32)
             local_pos = torch.empty(0, dtype=torch.uint16)
             esc_val = torch.empty(0, dtype=torch.uint8)
         timings["chunk_escape_compaction"] = time.perf_counter() - t0
@@ -196,15 +188,14 @@ class ChunkLocalSplitZipCPU:
         timings["decode_dense"] = time.perf_counter() - t0
 
         t0 = time.perf_counter()
-        starts = torch.cumsum(encoded.chunk_counts, dim=0) - encoded.chunk_counts
-        for chunk_id, count in enumerate(encoded.chunk_counts.tolist()):
-            if count == 0:
-                continue
-            src_start = int(starts[chunk_id].item())
-            src_end = src_start + int(count)
-            dst = chunk_id * encoded.chunk_size + encoded.local_pos[src_start:src_end].to(torch.int64)
+        if encoded.local_pos.numel():
+            chunk_ids = torch.repeat_interleave(
+                torch.arange(encoded.n_chunks, dtype=torch.int64),
+                encoded.chunk_counts.to(torch.int64),
+            )
+            dst = chunk_ids * encoded.chunk_size + encoded.local_pos.to(torch.int64)
             s = encoded.sign_mantissa[dst].to(torch.int32)
-            e = encoded.escape_values[src_start:src_end].to(torch.int32)
+            e = encoded.escape_values.to(torch.int32)
             raw[dst] = (((s & 0x80) << 8) | (e << 7) | (s & 0x7F)).to(torch.int16)
         timings["fix_escapes"] = time.perf_counter() - t0
 
@@ -224,4 +215,3 @@ def reviewer_compaction_paragraph() -> str:
         "atomic append operations and the associated contention; decode mirrors this "
         "layout by launching independent chunk-local fix-up programs."
     )
-

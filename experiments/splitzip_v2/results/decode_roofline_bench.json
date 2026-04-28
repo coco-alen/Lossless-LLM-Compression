@@ -1,0 +1,84 @@
+{
+  "numel": 268435456,
+  "raw_bytes": 536870912,
+  "mandatory_bytes": 939524096,
+  "rows": [
+    {
+      "block": 128,
+      "num_warps": 4,
+      "seconds": 0.000322365730535239,
+      "raw_gbs": 1665.4093817869782,
+      "mandatory_traffic_gbs": 2914.466418127212
+    },
+    {
+      "block": 128,
+      "num_warps": 8,
+      "seconds": 0.0004002753901295364,
+      "raw_gbs": 1341.2538598145113,
+      "mandatory_traffic_gbs": 2347.1942546753944
+    },
+    {
+      "block": 256,
+      "num_warps": 4,
+      "seconds": 0.00022682013921439647,
+      "raw_gbs": 2366.9455184159606,
+      "mandatory_traffic_gbs": 4142.154657227931
+    },
+    {
+      "block": 256,
+      "num_warps": 8,
+      "seconds": 0.00026196915889158844,
+      "raw_gbs": 2049.36685780701,
+      "mandatory_traffic_gbs": 3586.392001162268
+    },
+    {
+      "block": 512,
+      "num_warps": 4,
+      "seconds": 0.00022602440090849996,
+      "raw_gbs": 2375.278553298049,
+      "mandatory_traffic_gbs": 4156.737468271585
+    },
+    {
+      "block": 512,
+      "num_warps": 8,
+      "seconds": 0.00022900333162397145,
+      "raw_gbs": 2344.380355485631,
+      "mandatory_traffic_gbs": 4102.665622099854
+    },
+    {
+      "block": 1024,
+      "num_warps": 4,
+      "seconds": 0.00022876612143591047,
+      "raw_gbs": 2346.8112700874985,
+      "mandatory_traffic_gbs": 4106.919722653122
+    },
+    {
+      "block": 1024,
+      "num_warps": 8,
+      "seconds": 0.00022704751929268242,
+      "raw_gbs": 2364.575106006467,
+      "mandatory_traffic_gbs": 4138.006435511318
+    },
+    {
+      "block": 2048,
+      "num_warps": 4,
+      "seconds": 0.0002333424100652337,
+      "raw_gbs": 2300.7858359306015,
+      "mandatory_traffic_gbs": 4026.375212878553
+    },
+    {
+      "block": 2048,
+      "num_warps": 8,
+      "seconds": 0.0002306728600524366,
+      "raw_gbs": 2327.4125611394356,
+      "mandatory_traffic_gbs": 4072.971981994012
+    }
+  ],
+  "best": {
+    "block": 512,
+    "num_warps": 4,
+    "seconds": 0.00022602440090849996,
+    "raw_gbs": 2375.278553298049,
+    "mandatory_traffic_gbs": 4156.737468271585
+  }
+}

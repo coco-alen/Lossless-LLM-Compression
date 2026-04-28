@@ -75,10 +75,14 @@ def decode_splitzip_payload(payload: bytes, expected: torch.Tensor):
 
 
 def run_model(model_spec, args):
+    print(f"[{model_spec.display_name}] loading activation blocks", flush=True)
     blocks, meta = load_model_activation_blocks(model_spec.hf_name, torch.device(args.device))
     codec = ChunkLocalSplitZipCPU(chunk_size=args.chunk_size)
     calib_rows = min(args.calibration_rows, sum(int(block.shape[0]) for block in blocks))
+    print(f"[{model_spec.display_name}] calibrating codec on {calib_rows} rows", flush=True)
     coverage = codec.calibrate(matrix_for_rows(blocks, calib_rows))
+    print(f"[{model_spec.display_name}] codebook coverage={coverage:.6f}", flush=True)
+    print(f"[{model_spec.display_name}] initializing Mooncake engines", flush=True)
     prefill = init_engine("prefill", args.prefill_port, args.protocol, args.mooncake_device, args.metadata)
     decode = init_engine("decode", args.decode_port, args.protocol, args.mooncake_device, args.metadata)
     target = f"localhost:{args.decode_port}"
@@ -86,14 +90,23 @@ def run_model(model_spec, args):
     rows = []
     for point in requested_transfer_grid():
         total_rows = point["batch_size"] * point["seq_len"]
+        print(
+            f"[{model_spec.display_name}] prepare {point['sweep']} bs={point['batch_size']} "
+            f"seq={point['seq_len']} rows={total_rows}",
+            flush=True,
+        )
         matrix = matrix_for_rows(blocks, total_rows)
         payload = matrix.view(torch.uint8).numpy().tobytes()
         shape = tuple(matrix.shape)
+        print(f"[{model_spec.display_name}] native transfer bytes={len(payload)}", flush=True)
         raw = transfer_median_ms(prefill, decode, target, payload, args.warmup, args.runs)
         splitzip = None
         if not args.native_only:
+            print(f"[{model_spec.display_name}] encode compressed payload", flush=True)
             comp_payload, encoded, encode_ms = splitzip_payload(codec, matrix)
+            print(f"[{model_spec.display_name}] compressed transfer bytes={len(comp_payload)}", flush=True)
             comp_transfer = transfer_median_ms(prefill, decode, target, comp_payload, args.warmup, args.runs)
+            print(f"[{model_spec.display_name}] decode/verify compressed payload", flush=True)
             ok, decode_ms = decode_splitzip_payload(comp_payload, matrix)
             splitzip = {
                 "codec": "chunklocal_cpu_reference_transport_payload",
@@ -145,7 +158,7 @@ def main():
     parser.add_argument("--warmup", type=int, default=3)
     parser.add_argument("--runs", type=int, default=9)
     parser.add_argument("--chunk-size", type=int, default=65536)
-    parser.add_argument("--calibration-rows", type=int, default=65536)
+    parser.add_argument("--calibration-rows", type=int, default=4096)
     parser.add_argument("--native-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--output", type=Path, default=Path("experiments/splitzip_v2/results/mooncake_kv_sweep.json"))

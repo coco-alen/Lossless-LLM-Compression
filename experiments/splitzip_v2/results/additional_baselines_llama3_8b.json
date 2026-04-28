@@ -1,0 +1,372 @@
+{
+  "model": "NousResearch/Meta-Llama-3-8B",
+  "activation_meta": {
+    "num_hidden_layers": 32,
+    "num_attention_heads": 32,
+    "num_key_value_heads": 8,
+    "head_dim": 128,
+    "hidden_size": 4096,
+    "model_type": "llama",
+    "prompt_tokens": 1024,
+    "block_rows_total": 32768,
+    "block_width": 2048
+  },
+  "rows": [
+    {
+      "shape": [
+        1024,
+        4096
+      ],
+      "methods": [
+        {
+          "method": "nvcomp_cascaded",
+          "algorithm": "Cascaded",
+          "ok": true,
+          "raw_bytes": 8388608,
+          "compressed_bytes": 8391768,
+          "ratio": 0.9996234404954951,
+          "encode_s": {
+            "mean": 0.00035157107282429934,
+            "std": 3.3090825161789744e-05,
+            "stderr": 1.046423771656654e-05
+          },
+          "decode_s": {
+            "mean": 0.00018287767888978124,
+            "std": 0.00010240975855076855,
+            "stderr": 3.23848091648333e-05
+          },
+          "encode_gbs": {
+            "mean": 24.050160760563063,
+            "std": 2.242176416252177,
+            "stderr": 0.7090384391270655
+          },
+          "decode_gbs": {
+            "mean": 63.232889325228555,
+            "std": 34.760548944862364,
+            "stderr": 10.992250738352778
+          }
+        },
+        {
+          "method": "nvcomp_bitcomp",
+          "algorithm": "Bitcomp",
+          "ok": true,
+          "raw_bytes": 8388608,
+          "compressed_bytes": 8403016,
+          "ratio": 0.9982853775358752,
+          "encode_s": {
+            "mean": 7.969425991177559e-05,
+            "std": 2.405289284589467e-05,
+            "stderr": 7.606192570899654e-06
+          },
+          "decode_s": {
+            "mean": 0.00015859958657529205,
+            "std": 9.892083389392259e-05,
+            "stderr": 3.1281514314797844e-05
+          },
+          "encode_gbs": {
+            "mean": 114.62727107898328,
+            "std": 34.75146958469182,
+            "stderr": 10.989379592569184
+          },
+          "decode_gbs": {
+            "mean": 81.37730651860647,
+            "std": 50.78176537199656,
+            "stderr": 16.05860421797769
+          }
+        },
+        {
+          "method": "zipserv_tca_tbe",
+          "ok": true,
+          "raw_bytes": 8388608,
+          "compressed_bytes": 7810920,
+          "ratio": 1.0739590214725026,
+          "encode_s": null,
+          "decode_s": {
+            "mean": 1.013039145618677e-05,
+            "std": 2.3105713346389166e-07,
+            "stderr": 7.306668113754082e-08
+          },
+          "encode_gbs": null,
+          "decode_gbs": {
+            "mean": 828.4395435733504,
+            "std": 18.317003159721597,
+            "stderr": 5.792344989322122
+          },
+          "note": "ZipServ compression is CPU-side in the public wrapper; decode uses GPU-resident inputs if the local binding exposes decompress_bf16_gpu_resident."
+        },
+        {
+          "method": "falcon",
+          "status": "external_required",
+          "note": "Pass --falcon-root when a local Falcon checkout is available."
+        }
+      ]
+    },
+    {
+      "shape": [
+        4096,
+        4096
+      ],
+      "methods": [
+        {
+          "method": "nvcomp_cascaded",
+          "algorithm": "Cascaded",
+          "ok": true,
+          "raw_bytes": 33554432,
+          "compressed_bytes": 33566808,
+          "ratio": 0.9996313024461545,
+          "encode_s": {
+            "mean": 0.0005071140872314572,
+            "std": 7.992672759584303e-06,
+            "stderr": 2.527505051266979e-06
+          },
+          "decode_s": {
+            "mean": 0.00022563663660548627,
+            "std": 7.340234638256876e-05,
+            "stderr": 2.3211860016953843e-05
+          },
+          "encode_gbs": {
+            "mean": 66.18209558804183,
+            "std": 1.0345502504905784,
+            "stderr": 0.3271535145447957
+          },
+          "decode_gbs": {
+            "mean": 164.43221169821155,
+            "std": 53.89063942026291,
+            "stderr": 17.04171651308868
+          }
+        },
+        {
+          "method": "nvcomp_bitcomp",
+          "algorithm": "Bitcomp",
+          "ok": true,
+          "raw_bytes": 33554432,
+          "compressed_bytes": 33611848,
+          "ratio": 0.9982917928225785,
+          "encode_s": {
+            "mean": 0.00013734444044530392,
+            "std": 7.62615097952118e-06,
+            "stderr": 2.411600687561103e-06
+          },
+          "decode_s": {
+            "mean": 0.00019068862602580338,
+            "std": 7.711534551787304e-05,
+            "stderr": 2.438601343873357e-05
+          },
+          "encode_gbs": {
+            "mean": 244.95691053778165,
+            "std": 13.000233827222647,
+            "stderr": 4.111034900879145
+          },
+          "decode_gbs": {
+            "mean": 206.11995506253498,
+            "std": 83.1280186168998,
+            "stderr": 26.287387620628333
+          }
+        },
+        {
+          "method": "zipserv_tca_tbe",
+          "ok": true,
+          "raw_bytes": 33554432,
+          "compressed_bytes": 28363368,
+          "ratio": 1.183020013702181,
+          "encode_s": null,
+          "decode_s": {
+            "mean": 3.063362091779709e-05,
+            "std": 4.321657814183044e-06,
+            "stderr": 1.3666281960683149e-06
+          },
+          "encode_gbs": null,
+          "decode_gbs": {
+            "mean": 1110.0593926804233,
+            "std": 115.95208151435342,
+            "stderr": 36.667267702286274
+          },
+          "note": "ZipServ compression is CPU-side in the public wrapper; decode uses GPU-resident inputs if the local binding exposes decompress_bf16_gpu_resident."
+        },
+        {
+          "method": "falcon",
+          "status": "external_required",
+          "note": "Pass --falcon-root when a local Falcon checkout is available."
+        }
+      ]
+    },
+    {
+      "shape": [
+        16384,
+        4096
+      ],
+      "methods": [
+        {
+          "method": "nvcomp_cascaded",
+          "algorithm": "Cascaded",
+          "ok": true,
+          "raw_bytes": 134217728,
+          "compressed_bytes": 134266968,
+          "ratio": 0.9996332679531424,
+          "encode_s": {
+            "mean": 0.0013837019121274352,
+            "std": 1.3098458451987074e-05,
+            "stderr": 4.142096254536241e-06
+          },
+          "decode_s": {
+            "mean": 0.0009648360195569694,
+            "std": 9.764428183558536e-05,
+            "stderr": 3.0877833109185665e-05
+          },
+          "encode_gbs": {
+            "mean": 97.0068302139006,
+            "std": 0.9169563917803253,
+            "stderr": 0.28996707130755267
+          },
+          "decode_gbs": {
+            "mean": 140.40500358028478,
+            "std": 14.267373355301629,
+            "stderr": 4.511739603075191
+          }
+        },
+        {
+          "method": "nvcomp_bitcomp",
+          "algorithm": "Bitcomp",
+          "ok": true,
+          "raw_bytes": 134217728,
+          "compressed_bytes": 134447176,
+          "ratio": 0.9982933966571377,
+          "encode_s": {
+            "mean": 0.0004476935137063265,
+            "std": 4.411958264327413e-05,
+            "stderr": 1.3951837056877836e-05
+          },
+          "decode_s": {
+            "mean": 0.0008736078743822873,
+            "std": 0.0001234317329225323,
+            "stderr": 3.903254115767937e-05
+          },
+          "encode_gbs": {
+            "mean": 302.14054526024086,
+            "std": 26.546326621781805,
+            "stderr": 8.394685563559372
+          },
+          "decode_gbs": {
+            "mean": 156.40922151487263,
+            "std": 22.067426634418133,
+            "stderr": 6.978333026342514
+          }
+        },
+        {
+          "method": "zipserv_tca_tbe",
+          "ok": true,
+          "raw_bytes": 134217728,
+          "compressed_bytes": 109634824,
+          "ratio": 1.224225324610363,
+          "encode_s": null,
+          "decode_s": {
+            "mean": 9.820784907788038e-05,
+            "std": 3.487798673227522e-07,
+            "stderr": 1.1029387827512305e-07
+          },
+          "encode_gbs": null,
+          "decode_gbs": {
+            "mean": 1366.68559209355,
+            "std": 4.856232117943003,
+            "stderr": 1.5356754339163332
+          },
+          "note": "ZipServ compression is CPU-side in the public wrapper; decode uses GPU-resident inputs if the local binding exposes decompress_bf16_gpu_resident."
+        },
+        {
+          "method": "falcon",
+          "status": "external_required",
+          "note": "Pass --falcon-root when a local Falcon checkout is available."
+        }
+      ]
+    },
+    {
+      "shape": [
+        65536,
+        4096
+      ],
+      "methods": [
+        {
+          "method": "nvcomp_cascaded",
+          "algorithm": "Cascaded",
+          "ok": true,
+          "raw_bytes": 536870912,
+          "compressed_bytes": 537067608,
+          "ratio": 0.9996337593310971,
+          "encode_s": {
+            "mean": 0.0048032850259915,
+            "std": 0.00011540998235139807,
+            "stderr": 3.64958408950253e-05
+          },
+          "decode_s": {
+            "mean": 0.003500526447896846,
+            "std": 0.0004017366216128933,
+            "stderr": 0.00012704027437979696
+          },
+          "encode_gbs": {
+            "mean": 111.82793893989728,
+            "std": 2.6054600352299646,
+            "stderr": 0.8239188063869235
+          },
+          "decode_gbs": {
+            "mean": 155.16519707293503,
+            "std": 17.612596477207404,
+            "stderr": 5.569592037743327
+          }
+        },
+        {
+          "method": "nvcomp_bitcomp",
+          "algorithm": "Bitcomp",
+          "ok": true,
+          "raw_bytes": 536870912,
+          "compressed_bytes": 537788488,
+          "ratio": 0.9982937976165827,
+          "encode_s": {
+            "mean": 0.0015784668270498515,
+            "std": 0.00011037923858890552,
+            "stderr": 3.490498003360914e-05
+          },
+          "decode_s": {
+            "mean": 0.0036756049434188754,
+            "std": 0.00043875278181100714,
+            "stderr": 0.0001387458120257679
+          },
+          "encode_gbs": {
+            "mean": 341.5293846734146,
+            "std": 22.393551880788394,
+            "stderr": 7.081462884443873
+          },
+          "decode_gbs": {
+            "mean": 147.69253499219252,
+            "std": 15.280088617703399,
+            "stderr": 4.831988288115658
+          }
+        },
+        {
+          "method": "zipserv_tca_tbe",
+          "ok": true,
+          "raw_bytes": 536870912,
+          "compressed_bytes": 434522568,
+          "ratio": 1.2355420674030446,
+          "encode_s": null,
+          "decode_s": {
+            "mean": 0.0003674932871945202,
+            "std": 1.1148360893390875e-06,
+            "stderr": 3.5254212600664756e-07
+          },
+          "encode_gbs": null,
+          "decode_gbs": {
+            "mean": 1460.9119952491726,
+            "std": 4.424614190330216,
+            "stderr": 1.3991858608945242
+          },
+          "note": "ZipServ compression is CPU-side in the public wrapper; decode uses GPU-resident inputs if the local binding exposes decompress_bf16_gpu_resident."
+        },
+        {
+          "method": "falcon",
+          "status": "external_required",
+          "note": "Pass --falcon-root when a local Falcon checkout is available."
+        }
+      ]
+    }
+  ]
+}

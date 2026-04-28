@@ -67,6 +67,7 @@ def nvcomp_algorithm_bench(cpu_bf16: torch.Tensor, algorithm: str, device: str, 
 
 
 def zipserv_bench(cpu_bf16: torch.Tensor, zipserv_root: Path, device: str, repeats: int):
+    sys.path.insert(0, str(zipserv_root / "bindings"))
     sys.path.insert(0, str(zipserv_root / "python"))
     import bf16_zip
 
