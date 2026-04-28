@@ -54,10 +54,10 @@ Existing lossless neural-network compression methods are not well suited to this
 We present SplitZip, a GPU-friendly lossless compression scheme for KV-cache transfer. 
 SplitZip exploits the observation that most redundancy in floating-point KV activations lies in the exponent field. 
 It encodes the most frequent exponent values with fixed-length codes, and records rare exponents through a compact escape stream. 
-A calibrated top-16 exponent codebook enables fast online encoding, while the regular dense path and sparse escape correction make both encodeing and decoding efficient on GPUs.
-On real BF16 activation tensors, SplitZip achieves 332.5 GB/s compression throughput and 1232.1 GB/s decompression throughput, substantially outperforming prior lossless compressors on the latency-critical codec path. 
+A calibrated top-16 exponent codebook enables fast online encoding, while the regular dense path and sparse escape correction make both encoding and decoding efficient on GPUs.
+On real BF16 activation tensors, SplitZip achieves 435.3 GB/s compression throughput and 1763.8 GB/s decompression throughput, substantially outperforming prior lossless compressors on the latency-critical codec path. 
 End-to-end transfer experiments show up to 1.33$\times$ speedup for BF16 KV-cache transfer under CPU-RDMA and RoCE settings. 
-SplitZip also provides additional gains on FP8 KV caches, achieving up to 1.15$\times$ speedup over native FP8 transfer.
+SplitZip also provides additional gains on FP8 KV caches, achieving up to 1.17$\times$ speedup over native FP8 transfer.
 \end{abstract}
 
 \input{sections/introduction}

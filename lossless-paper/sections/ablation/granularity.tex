@@ -13,10 +13,10 @@
         \toprule
         \textbf{Metric} & \textbf{Tensor} & \textbf{Token} & \textbf{Channel} \\
         \midrule
-        Coverage & 99.60\% & 99.74\% & 99.98\% \\
-        Compression & $1.323\times$ & $1.322\times$ & $1.329\times$ \\
-        Encode(GB/s) & 93.9 & 0.082 & 0.020 \\
-        Decode(GB/s) & 222.2 & 0.173 & 0.060 \\
+        Coverage & 99.84\% & 99.90\% & 99.90\% \\
+        Compression & $1.324\times$ & $1.324\times$ & $1.327\times$ \\
+        Encode(GB/s) & 435.3 & N/A & N/A \\
+        Decode(GB/s) & 1763.8 & N/A & N/A \\
         \bottomrule
     \end{tabular}
     \vspace{-1.0em}
@@ -25,8 +25,8 @@
 Some prior compression designs use finer-grained codebooks to improve locality, compression ratio, or parallelism.
 We evaluate this idea on per-tensor, per-token and per-channel codebooks.
 
-Table~\ref{tab:ablation_granularity} shows that finer-grained calibration increases top-16 coverage, reaching 99.98\% with per-channel codebooks.
-However, the projected compression ratio improves only marginally, from $1.323\times$ to $1.329\times$.
-In contrast, throughput drops by several orders of magnitude: per-token and per-channel calibration both fall from hundreds of GB/s to sub-GB/s performance.
-This is because fine-grained calibration requires many small codebooks, introducing extra storage, irregular lookup patterns, and more complex GPU execution.
+Table~\ref{tab:ablation_granularity} shows that finer-grained calibration increases top-16 coverage, reaching 99.90\% with per-token and per-channel codebooks.
+However, the projected compression ratio improves only marginally, from $1.324\times$ to $1.327\times$ after accounting for codebook storage.
+The current high-throughput kernel implements the per-tensor codebook; per-token and per-channel rows report full-shape coverage and projected size only.
+Supporting these finer granularities would require many small codebooks, introducing extra storage, irregular lookup patterns, and more complex GPU execution.
 Therefore, SplitZip uses a single global codebook, which preserves nearly the same compression ratio while maintaining a simple and high-throughput dense path.

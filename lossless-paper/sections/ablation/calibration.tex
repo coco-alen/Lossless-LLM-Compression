@@ -13,11 +13,11 @@
         \toprule
         \textbf{Eval set} & \textbf{Domain} & \textbf{A$\rightarrow$B} & \textbf{B$\rightarrow$B} \\
         \midrule
-        WikiText-2 & Language & 99.65\% & 99.65\% \\
-        HumanEval & Code & 99.66\% & 99.66\% \\
-        GSM8K & Math & 99.64\% & 99.64\% \\
-        MMLU & Knowledge & 99.63\% & 99.63\% \\
-        PTB & Language & 99.55\% & 99.58\% \\
+        WikiText-2 & Language & 99.83\% & 99.83\% \\
+        HumanEval & Code & 99.81\% & 99.81\% \\
+        GSM8K & Math & 99.79\% & 99.79\% \\
+        MMLU & Knowledge & 99.78\% & 99.78\% \\
+        PTB & Language & 99.76\% & 99.76\% \\
         \bottomrule
     \end{tabular}
     \vspace{-1.7em}
@@ -28,6 +28,5 @@ To test whether this codebook is dataset-specific, we calibrate on WikiText-2 tr
 Table~\ref{tab:ablation_calibration} compares cross-dataset calibration, denoted A$\rightarrow$B, with oracle calibration on each target dataset, denoted B$\rightarrow$B.
 
 The calibrated exponent set generalizes well.
-Coverage remains between 99.55\% and 99.66\% across all evaluated datasets, and matches the oracle result on WikiText-2 test, HumanEval~\cite{chen2021humaneval}, GSM8K~\cite{cobbe2021gsm8k}, and MMLU~\cite{hendrycks2021mmlu}.
-Even on PTB~\cite{zhou2020ptb}, the gap is only 0.03 percentage points.
+Coverage remains between 99.76\% and 99.83\% across all evaluated datasets, and matches the oracle result on WikiText-2 test, HumanEval~\cite{chen2021humaneval}, GSM8K~\cite{cobbe2021gsm8k}, MMLU~\cite{hendrycks2021mmlu}, and PTB~\cite{zhou2020ptb} in this run.
 This shows that high-frequency KV-cache exponents are stable across domains, enabling SplitZip to use a fixed offline codebook.

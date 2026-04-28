@@ -5,10 +5,10 @@
     \label{sec:setup}
 
     \textbf{Platform and timing protocol.}
-    All codec experiments are conducted on NVIDIA H200 GPUs. We report compression and decompression throughput in GB/s, where the byte count is the uncompressed native tensor size. Each codec benchmark first verifies bitwise round-trip correctness and then times repeated GPU executions after warm-up. For the baseline comparison, all methods operate on the same Qwen3-32B real-activation BF16 tensor with 32M elements. For transfer studies, we compose measured \splitzip encode/decode time, measured GPU host-device DMA time, and a staged layer-pipeline transfer model. The transport modes are CPU-RDMA at 376~Gb/s and RoCE 4$\times$200G at 700~Gb/s effective payload bandwidth. The breakdown uses additive sequential accounting. All codec throughput measurements were taken 10 times, and take average value as result.
+    All codec experiments are conducted on NVIDIA H200 GPUs. We report compression and decompression throughput in GB/s, where the byte count is the uncompressed native tensor size. Each codec benchmark first verifies bitwise round-trip correctness and then times repeated GPU executions after warm-up. For the baseline comparison, all methods operate on real BF16 activation tensors assembled as two-dimensional KV blocks. For transfer studies, we compose measured \splitzip encode/decode time, measured GPU host-device DMA time, and a staged layer-pipeline transfer model. The transport modes are CPU-RDMA at 376~Gb/s and RoCE 4$\times$200G at 700~Gb/s effective payload bandwidth. The breakdown uses additive sequential accounting. All codec throughput measurements were taken 10 times, and we report the average value.
     
     \textbf{Datasets and workloads.}
-    Transfer workloads use authentic BF16 KV blocks extracted from one 1024-token forward pass per model and then assembled to target sequence lengths. We evaluate Llama-3-8B and Qwen3-30B-A3B from 512 to 64K tokens under both transport modes. For Qwen3-32B, we measure the codec throughput, compression ratio and transmission breakdown. The batch size here is consistently 1. Since we flatten all activation values into a single tensor for processing, cases where the batch size is not 1 are equivalent to the scenario involving longer sequences. FP8 experiments also use Qwen3-32B and evaluate exact compression of native E4M3 and E5M2 tensors from 1K to 64K tokens.For all experiments, we calibrate the BF16 top-16 codebook on WikiText-2\cite{merity2016wikitext2} training subset.
+    Transfer workloads use authentic BF16 KV blocks extracted from one 1024-token forward pass per model and then assembled to target sequence lengths. We evaluate Llama-3-8B and Qwen3-30B-A3B from 512 to 64K tokens under both transport modes. For Qwen3-32B, we measure the codec throughput, compression ratio, and transmission breakdown using the chunk-local implementation with chunk size 1024. The batch size here is consistently 1. Since we flatten all activation values into a single tensor for processing, cases where the batch size is not 1 are equivalent to the scenario involving longer sequences. FP8 experiments also use Qwen3-32B and evaluate exact compression of native E4M3 and E5M2 tensors from 1K to 64K tokens. For all experiments, we calibrate the BF16 top-16 codebook on WikiText-2\cite{merity2016wikitext2} training subset.
     
     \textbf{Baselines and ablations.}
     For BF16 codec comparison, we compare nvCOMP LZ4\cite{nvidia2026nvcomp}, DFloat11\cite{dfloat11}, ZipNN\cite{zipnn}, and our \splitzip. For transfer-time studies, the native baseline moves raw BF16 or FP8 cache bytes, while \splitzip performs encode, compressed transfer, and decode. We further ablate BF16 top-8 3-bit coding versus top-16 4-bit coding, explicit escape-position storage versus sentinel-only escape discovery, pre-calibrated versus dynamic top-16 codebooks, and calibration granularity and generalizability. Ablation Experiments are on Qwen3-32B KV values.
@@ -33,8 +33,8 @@
     Figure~\ref{fig:baseline_comparison} compares SplitZip with existing lossless compressors.
     SplitZip achieves a competitive compression ratio, although it is not the highest-ratio method among the baselines.
     Its main advantage is codec throughput.
-    For compression, SplitZip is $24.8\times$ faster than nvCOMP LZ4, $289\times$ faster than ZipNN and about $8.0\times 10^4$ faster than DFloat11.
-    For decompression, SplitZip is $9.0\times$ faster than nvCOMP LZ4, $747\times$ faster than ZipNN and $2.6\times$ faster than DFloat11.
+    For compression, SplitZip is $32.5\times$ faster than nvCOMP LZ4, $379\times$ faster than ZipNN and about $1.0\times 10^5$ faster than DFloat11.
+    For decompression, SplitZip is $12.9\times$ faster than nvCOMP LZ4, $1069\times$ faster than ZipNN and $3.8\times$ faster than DFloat11.
     These results show that SplitZip sacrifices a modest amount of compression ratio in exchange for substantially higher codec throughput, which is critical when compression and decompression lie on the serving critical path.
 
     This throughput advantage comes from SplitZip's GPU-friendly codec design.
@@ -94,11 +94,11 @@
     \paragraph{Transmission-time breakdown.}
     Figure~\ref{fig:qwen32_transmission_breakdown} further breaks down the Qwen3-32B transfer time under RoCE $4\times200$G.
     This breakdown uses additive accounting for encode, compressed transfer, and decode time.
-    At sequence length $2$K, SplitZip is slightly slower than native transfer, taking $31.3$~ms compared with $28.2$~ms, because encode and decode overheads remain visible.
+    At sequence length $2$K, SplitZip slightly reduces transfer time from $56.5$~ms to $53.1$~ms.
     However, the advantage increases with sequence length.
-    At $16$K, SplitZip reduces transfer time from $208.5$~ms to $180.2$~ms.
-    At $64$K, it reduces transfer time from $829.5$~ms to $700.4$~ms.
-    In this long-context regime, compressed transfer accounts for $90.5\%$ of the SplitZip time, while encoding and decoding account for only $7.6\%$ and $1.9\%$, respectively.
+    At $16$K, SplitZip reduces transfer time from $441.4$~ms to $353.8$~ms.
+    At $64$K, it reduces transfer time from $1749.3$~ms to $1397.0$~ms.
+    In this long-context regime, compressed transfer accounts for $92.9\%$ of the SplitZip time, while encoding and decoding account for only $5.7\%$ and $1.4\%$, respectively.
     This confirms that SplitZip keeps codec overhead small enough for long-context KV-cache transfer to remain primarily communication-bound.
 
     \paragraph{FP8 Result.}
@@ -107,17 +107,17 @@
     Table~\ref{tab:fp8_exact_results} and Figure~\ref{fig:fp8_transfer_time} report the FP8 results of SplitZip.
     Since FP8 already halves the KV-cache size compared with BF16, the remaining lossless compression opportunity is smaller.
     Nevertheless, SplitZip still provides additional compression over native FP8.
-    E4M3 Top-8 achieves only a modest ratio because its exponent field is already compact, while E5M2 offers more redundancy.
-    Among E5M2 variants, Top-8 provides the highest compression ratio, whereas Top-16 achieves higher coverage and a much lower escape rate.
+    E4M3 Top-8 expands the payload because its exponent field is already compact and the escape metadata is too large for this distribution.
+    E5M2 offers more redundancy, and the Top-16 variant achieves both the highest compression ratio and the lowest escape rate.
     
-    The codec throughput of E5M2 Top-8 and Top-16 is close because both FP8 implementations involve non-byte-aligned 3-bit GPU packing, whose bit-manipulation overhead becomes significant.
-    Thus, the lower escape rate of Top-16 does not translate into a large throughput advantage, unlike the BF16 case where 4-bit packing naturally aligns with byte-level operations.
+    The lower escape rate of E5M2 Top-16 also improves throughput: it reaches 249.7~GB/s encoding and 564.9~GB/s decoding, compared with 221.6~GB/s and 340.8~GB/s for E5M2 Top-8.
+    This mirrors the BF16 trend that reducing escapes is more important than shrinking the dense code width when sparse correction dominates the tail cost.
     
     For end-to-end transfer, all FP8 variants are slower than native FP8 at short sequence lengths because codec overhead dominates.
     As the sequence length increases, transfer time becomes the bottleneck and SplitZip begins to improve performance.
-    E5M2 Top-16 reaches positive speedup earlier due to its high coverage and low escape rate, but its final speedup is limited by its lower compression ratio.
-    E5M2 Top-8 requires longer contexts to amortize its higher escape overhead, but eventually achieves the best long-context speedup because of its higher compression ratio.
-    This suggests that Top-16 is preferable for medium-length contexts, while Top-8 is more attractive when very long-context transfer dominates.
+    E5M2 Top-16 reaches positive speedup earlier due to its high coverage and low escape rate, and reaches $1.17\times$ speedup at 64K.
+    E5M2 Top-8 requires longer contexts to amortize its higher escape overhead and reaches $1.06\times$ at 64K, while E4M3 Top-8 remains slower than native FP8.
+    This suggests that Top-16 is the preferable FP8 setting for the measured Qwen3-32B workload.
 
 
 \subsection{Ablation Study}

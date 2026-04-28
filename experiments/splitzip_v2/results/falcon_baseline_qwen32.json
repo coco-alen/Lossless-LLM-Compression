@@ -1,0 +1,187 @@
+{
+  "method": "falcon_fp32_cast",
+  "model": "Qwen/Qwen3-32B",
+  "shape": [
+    65536,
+    4096
+  ],
+  "falcon_root": "/data02/home/yilian2/project/Falcon",
+  "binary": "experiments/splitzip_v2/results/falcon/falcon_float_bench",
+  "command": [
+    "experiments/splitzip_v2/results/falcon/falcon_float_bench",
+    "--input",
+    "experiments/splitzip_v2/results/falcon/Qwen_Qwen3-32B_65536x4096_fp32.bin",
+    "--num-elements",
+    "268435456",
+    "--repeats",
+    "10",
+    "--device",
+    "0",
+    "--streams",
+    "16"
+  ],
+  "config": {
+    "num_elements": "268435456",
+    "chunk_size": "8396800",
+    "streams": "16",
+    "repeats": "10"
+  },
+  "export": {
+    "path": "experiments/splitzip_v2/results/falcon/Qwen_Qwen3-32B_65536x4096_fp32.bin",
+    "num_elements": 268435456,
+    "reused": false,
+    "activation_meta": {
+      "num_hidden_layers": 64,
+      "num_attention_heads": 64,
+      "num_key_value_heads": 8,
+      "head_dim": 128,
+      "hidden_size": 5120,
+      "model_type": "qwen3",
+      "prompt_tokens": 1024,
+      "block_rows_total": 65536,
+      "block_width": 2048
+    }
+  },
+  "summary": {
+    "ok": true,
+    "compressed_bytes": {
+      "mean": 960049280.0,
+      "std": 0.0,
+      "stderr": 0.0
+    },
+    "ratio_vs_fp32_input": {
+      "mean": 1.118423654252415,
+      "std": 0.0,
+      "stderr": 0.0
+    },
+    "ratio_vs_bf16_payload": {
+      "mean": 0.5592118271262075,
+      "std": 0.0,
+      "stderr": 0.0
+    },
+    "encode_gbs_fp32_input": {
+      "mean": 17.717599999999997,
+      "std": 1.2759446792257276,
+      "stderr": 0.4034891354726227
+    },
+    "decode_gbs_fp32_input": {
+      "mean": 28.883879999999998,
+      "std": 2.4590970387974163,
+      "stderr": 0.7776347629975283
+    },
+    "encode_gbs_bf16_equiv": {
+      "mean": 8.858799999999999,
+      "std": 0.6379723396128638,
+      "stderr": 0.20174456773631136
+    },
+    "decode_gbs_bf16_equiv": {
+      "mean": 14.441939999999999,
+      "std": 1.2295485193987081,
+      "stderr": 0.38881738149876416
+    }
+  },
+  "repeats": [
+    {
+      "repeat": 0,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 70.6728,
+      "decomp_ms": 44.7723,
+      "comp_gbs_fp32": 14.1497,
+      "decomp_gbs_fp32": 22.3352
+    },
+    {
+      "repeat": 1,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 54.798,
+      "decomp_ms": 34.2903,
+      "comp_gbs_fp32": 18.2489,
+      "decomp_gbs_fp32": 29.1628
+    },
+    {
+      "repeat": 2,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 54.9477,
+      "decomp_ms": 34.8061,
+      "comp_gbs_fp32": 18.1991,
+      "decomp_gbs_fp32": 28.7306
+    },
+    {
+      "repeat": 3,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 55.9145,
+      "decomp_ms": 33.05,
+      "comp_gbs_fp32": 17.8844,
+      "decomp_gbs_fp32": 30.2572
+    },
+    {
+      "repeat": 4,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 55.3428,
+      "decomp_ms": 33.3737,
+      "comp_gbs_fp32": 18.0692,
+      "decomp_gbs_fp32": 29.9637
+    },
+    {
+      "repeat": 5,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 56.1389,
+      "decomp_ms": 36.0432,
+      "comp_gbs_fp32": 17.813,
+      "decomp_gbs_fp32": 27.7445
+    },
+    {
+      "repeat": 6,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 54.6838,
+      "decomp_ms": 33.6961,
+      "comp_gbs_fp32": 18.2869,
+      "decomp_gbs_fp32": 29.677
+    },
+    {
+      "repeat": 7,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 54.3665,
+      "decomp_ms": 33.2929,
+      "comp_gbs_fp32": 18.3937,
+      "decomp_gbs_fp32": 30.0365
+    },
+    {
+      "repeat": 8,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 56.3995,
+      "decomp_ms": 32.5555,
+      "comp_gbs_fp32": 17.7306,
+      "decomp_gbs_fp32": 30.7168
+    },
+    {
+      "repeat": 9,
+      "ok": true,
+      "compressed_bytes": 960049280,
+      "ratio_vs_fp32": 1.11842,
+      "comp_ms": 54.3465,
+      "decomp_ms": 33.0967,
+      "comp_gbs_fp32": 18.4005,
+      "decomp_gbs_fp32": 30.2145
+    }
+  ],
+  "note": "Falcon exposes FP32/FP64 floating-point codecs in this checkout, not BF16. This benchmark casts the same BF16 activation values to FP32 before running Falcon. BF16-equivalent ratio and throughput are reported against the original BF16 payload size.",
+  "stdout_tail": "FALCON_CONFIG num_elements=268435456 chunk_size=8396800 streams=16 repeats=10\ntotalChunks: 32\nFALCON_RESULT repeat=0 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=70.6728 decomp_ms=44.7723 comp_gbs=14.1497 decomp_gbs=22.3352 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=1 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=54.798 decomp_ms=34.2903 comp_gbs=18.2489 decomp_gbs=29.1628 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=2 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=54.9477 decomp_ms=34.8061 comp_gbs=18.1991 decomp_gbs=28.7306 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=3 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=55.9145 decomp_ms=33.05 comp_gbs=17.8844 decomp_gbs=30.2572 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=4 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=55.3428 decomp_ms=33.3737 comp_gbs=18.0692 decomp_gbs=29.9637 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=5 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=56.1389 decomp_ms=36.0432 comp_gbs=17.813 decomp_gbs=27.7445 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=6 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=54.6838 decomp_ms=33.6961 comp_gbs=18.2869 decomp_gbs=29.677 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=7 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=54.3665 decomp_ms=33.2929 comp_gbs=18.3937 decomp_gbs=30.0365 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=8 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=56.3995 decomp_ms=32.5555 comp_gbs=17.7306 decomp_gbs=30.7168 raw_gb=1.07374\ntotalChunks: 32\nFALCON_RESULT repeat=9 ok=1 compressed_bytes=960049280 ratio_fp32=1.11842 comp_ms=54.3465 decomp_ms=33.0967 comp_gbs=18.4005 decomp_gbs=30.2145 raw_gb=1.07374"
+}

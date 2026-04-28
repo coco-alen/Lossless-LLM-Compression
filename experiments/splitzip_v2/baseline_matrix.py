@@ -46,8 +46,9 @@ BASELINES = [
     {
         "name": "falcon",
         "family": "Falcon",
-        "status": "external_required",
-        "notes": "Provide --falcon-root when source is available; adapter records exact command and result JSON.",
+        "status": "implemented_fp32_cast_adapter",
+        "runner": "experiments.splitzip_v2.falcon_baseline_bench",
+        "notes": "The local Falcon checkout exposes FP32/FP64 codecs, not BF16. The adapter casts the same BF16 activation values to FP32 and reports both Falcon-native FP32 throughput and BF16-equivalent payload metrics.",
     },
 ]
 
@@ -77,4 +78,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

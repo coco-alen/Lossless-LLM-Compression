@@ -1,0 +1,68 @@
+{
+  "note": "Rows combine existing baseline measurements with current SplitZip v2 and Falcon measurements. For strict apples-to-apples plotting, rerun every baseline on the same Qwen/Qwen3-32B 65536x4096 tensor.",
+  "splitzip_source": "experiments/splitzip_v2/results/paper_rerun_v2_qwen32_chunk1024.json",
+  "falcon_source": "experiments/splitzip_v2/results/falcon_baseline_qwen32.json",
+  "rows": [
+    {
+      "method": "nvcomp_lz4",
+      "label": "nvCOMP LZ4",
+      "ratio": 1.019,
+      "encode_gbs": 13.399,
+      "decode_gbs": 137.109,
+      "encode_stderr": 0.424,
+      "decode_stderr": 8.796,
+      "source": "existing measured baseline"
+    },
+    {
+      "method": "zipnn",
+      "label": "ZipNN",
+      "ratio": 1.515,
+      "encode_gbs": 1.15,
+      "decode_gbs": 1.65,
+      "encode_stderr": null,
+      "decode_stderr": null,
+      "source": "user-provided reported value"
+    },
+    {
+      "method": "dfloat11",
+      "label": "DFloat11",
+      "ratio": 1.423,
+      "encode_gbs": 0.004,
+      "decode_gbs": 468.157,
+      "encode_stderr": 0.00005,
+      "decode_stderr": 2.499,
+      "source": "existing measured baseline"
+    },
+    {
+      "method": "zipserv",
+      "label": "ZipServ",
+      "ratio": 1.373,
+      "encode_gbs": 0.046,
+      "decode_gbs": 499.5,
+      "encode_stderr": null,
+      "decode_stderr": null,
+      "source": "measured/provided decode update"
+    },
+    {
+      "method": "falcon_fp32_cast_bf16_equiv",
+      "label": "Falcon",
+      "ratio": 0.559,
+      "encode_gbs": 8.859,
+      "decode_gbs": 14.442,
+      "encode_stderr": 0.202,
+      "decode_stderr": 0.389,
+      "source": "current Falcon FP32-cast run, BF16-equivalent payload metrics",
+      "caveat": "The local Falcon checkout exposes FP32/FP64 codecs, not BF16. BF16 activation values were cast to FP32 before compression."
+    },
+    {
+      "method": "splitzip_v2",
+      "label": "SplitZip",
+      "ratio": 1.324,
+      "encode_gbs": 435.288,
+      "decode_gbs": 1763.787,
+      "encode_stderr": 2.816,
+      "decode_stderr": 25.327,
+      "source": "current chunk-local Top-16, chunk size 1024"
+    }
+  ]
+}

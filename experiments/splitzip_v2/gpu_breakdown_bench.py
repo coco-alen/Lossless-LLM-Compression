@@ -48,6 +48,8 @@ def run(
     fix_block: int = 256,
     fix_num_warps: int = 4,
 ):
+    if device.startswith("cuda"):
+        torch.cuda.set_device(torch.device(device))
     x = make_input(numel, device, seed=7)
     codec = ChunkLocalSplitZipGPU(device=device, chunk_size=chunk_size)
     coverage = codec.calibrate(x)

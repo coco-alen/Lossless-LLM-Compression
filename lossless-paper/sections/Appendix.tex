@@ -37,18 +37,18 @@ Equivalently, the maximum physical communication bandwidth for fully hiding both
 \]
 Thus, a faster codec increases the range of communication bandwidths under which SplitZip behaves as a purely bandwidth-saving transformation with no exposed codec latency.
 
-In our implementation, SplitZip achieves a compression throughput of $G_{\mathrm{enc}} = 332.5~\mathrm{GB/s}$ and a decompression throughput of
-$G_{\mathrm{dec}} = 1232.1~\mathrm{GB/s}$. Since compression is the slower codec stage, the hiding threshold is determined by $G_{\mathrm{enc}}$:
+In our implementation, SplitZip achieves a compression throughput of $G_{\mathrm{enc}} = 435.3~\mathrm{GB/s}$ and a decompression throughput of
+$G_{\mathrm{dec}} = 1763.8~\mathrm{GB/s}$. Since compression is the slower codec stage, the hiding threshold is determined by $G_{\mathrm{enc}}$:
 \[
     B_{\mathrm{hide}}
     =
-    \frac{\min(332.5, 1232.1)}{1.32}
+    \frac{\min(435.3, 1763.8)}{1.324}
     =
-    \frac{332.5}{1.32}
+    \frac{435.3}{1.324}
     \approx
-    251.9~\mathrm{GB/s}.
+    328.8~\mathrm{GB/s}.
 \]
-Therefore, SplitZip can fully hide its codec overhead as long as the physical communication bandwidth is no higher than approximately $252~\mathrm{GB/s}$.
+Therefore, SplitZip can fully hide its codec overhead as long as the physical communication bandwidth is no higher than approximately $329~\mathrm{GB/s}$.
 
 This threshold is well above the bandwidth of common inter-node communication technologies. For example, 400~Gb/s and 800~Gb/s Ethernet correspond to approximately $50~\mathrm{GB/s}$ and $100~\mathrm{GB/s}$, respectively, and PCIe~5.0~x16 provides roughly $64~\mathrm{GB/s}$ per direction. 
 Thus, under typical datacenter interconnects, SplitZip's encoding and decoding overheads can in principle be fully covered by communication time. 

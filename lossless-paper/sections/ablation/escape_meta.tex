@@ -14,11 +14,11 @@
         \toprule
         \textbf{Metric} & \textbf{Top-16 + Pos.} & \textbf{Top-15 + Sent.} \\
         \midrule
-        Coverage & 99.67\% & 99.47\% \\
-        Escape rate & 0.33\% & 0.53\% \\
-        Ratio & $1.316\times$ & $1.329\times$ \\
-        Encode(GB/s) & 332.5  & 332.9  \\
-        Decode(GB/s) & 1232.1  & 395.0  \\
+        Coverage & 99.84\% & 99.73\% \\
+        Escape rate & 0.16\% & 0.27\% \\
+        Ratio & $1.324\times$ & $1.331\times$ \\
+        Encode(GB/s) & 435.3  & 396.0  \\
+        Decode(GB/s) & 1763.8  & 620.8  \\
         \bottomrule
     \end{tabular}
     \vspace{-1.4em}
@@ -26,12 +26,12 @@
 
 We also study whether SplitZip should explicitly store escape positions or reserve one code as an escape sentinel.
 The sentinel design uses only 15 frequent exponent values and reserves the remaining 4-bit code to mark escaped elements.
-This avoids storing explicit 32-bit positions and therefore slightly improves the compression ratio, from $1.316\times$ to $1.329\times$.
+This avoids storing explicit chunk-local positions and therefore slightly improves the compression ratio, from $1.324\times$ to $1.331\times$.
 However, this metadata saving comes at a large decoding cost.
 
-As shown in Table~\ref{tab:ablation_escape_position}, the Top-15 sentinel design reduces decode throughput from 1255.4~GB/s to 395.0~GB/s, a $3.18\times$ slowdown.
+As shown in Table~\ref{tab:ablation_escape_position}, the Top-15 sentinel design reduces decode throughput from 1763.8~GB/s to 620.8~GB/s, a $2.84\times$ slowdown.
 The reason is that the decoder can no longer treat all 4-bit codes uniformly.
 It must inspect the dense code stream to identify sentinel values and then merge escaped exponents back into the output, introducing irregular control flow and memory access.
 In contrast, the Top-16 design decodes every element through the same dense lookup path and applies rare escape corrections through a separate sparse overwrite.
-Although this requires explicit position metadata, the escape rate is only 0.40\%, making the metadata overhead small.
+Although this requires explicit position metadata, the escape rate is only 0.16\%, making the metadata overhead small.
 Therefore, SplitZip chooses Top-16 coding with explicit escape positions to prioritize decoding throughput and GPU regularity over a marginal compression-ratio gain.

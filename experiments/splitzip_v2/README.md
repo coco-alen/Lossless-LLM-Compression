@@ -10,7 +10,8 @@ This folder contains the code needed to rerun the v2 reviewer experiments once G
 - `mooncake_kv_sweep.py` transfers actual KV payloads through Mooncake for Llama-3-8B and Qwen3-30B-A3B over the requested BS/sequence grid.
 - `sglang_sweep.py` generates the native and SplitZip SGLang PD-disaggregation launch plan for Qwen3-32B.
 - `sglang_integration_notes.md` identifies the sender/receiver hook boundary needed for a correct compressed SGLang path.
-- `additional_baseline_bench.py` adds adapters for nvCOMP Cascaded/Bitcomp, ZipServ/TCA-TBE, and a Falcon command hook.
+- `additional_baseline_bench.py` adds adapters for nvCOMP Cascaded/Bitcomp and ZipServ/TCA-TBE.
+- `falcon_baseline_bench.py` builds a standalone Falcon FP32 adapter, exports the same real BF16 activation values as FP32, and reports Falcon-native and BF16-equivalent metrics.
 - `exponent_stability.py` records per-layer K/V exponent histograms for Qwen3-32B and Qwen3-Next.
 - `fp8_chunk_topk.py` compares FP8 global Top-8 against chunk-local Top-8 coverage and size estimates.
 - `orthogonality_analysis.py` composes SplitZip byte reduction with FlowKV/HybridServe/KVPR-style transfer reduction to show additive behavior under an explicit model.
@@ -44,6 +45,22 @@ conda run -n quant python -m experiments.splitzip_v2.gpu_breakdown_bench \
 ```
 
 The chunk size is configurable.  Any value up to 65,536 fits the `uint16` local offset format; smaller chunks usually improve per-program occupancy while adding a small count-table overhead.
+
+## Falcon Baseline
+
+The local Falcon implementation at `/data02/home/yilian2/project/Falcon` exposes FP32/FP64 floating-point compression kernels rather than a BF16-native codec.  To keep the workload tied to the same real activation distribution, the adapter casts BF16 activation values to FP32 before running Falcon and records BF16-equivalent ratios separately.
+
+```bash
+conda run -n quant python -m experiments.splitzip_v2.falcon_baseline_bench \
+  --falcon-root /data02/home/yilian2/project/Falcon \
+  --model Qwen/Qwen3-32B \
+  --rows 65536 \
+  --width 4096 \
+  --device cuda:0 \
+  --falcon-device 0 \
+  --repeats 10 \
+  --output experiments/splitzip_v2/results/falcon_baseline_qwen32.json
+```
 
 ## Mooncake KV Transfer
 
