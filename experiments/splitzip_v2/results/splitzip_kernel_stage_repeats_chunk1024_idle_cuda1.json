@@ -1,0 +1,191 @@
+{
+  "device": "cuda:1",
+  "numel": 268435456,
+  "chunk_size": 1024,
+  "measurement": "preallocated kernel-stage encode/decode, synthetic BF16 input",
+  "rows": [
+    {
+      "repeat": 0,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 471.474939349482,
+      "decode_gbs": 2157.5817984690134,
+      "stage_gbs": {
+        "dense_encode": 1616.8380034783975,
+        "count_escapes": 2466.1997037895644,
+        "prefix_sum": 18706.493462817372,
+        "scatter_escapes": 958.2465024545721,
+        "dense_decode": 2348.765405172244,
+        "fix_escapes": 26506.736505602876
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 1,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 469.8061303706671,
+      "decode_gbs": 2161.98145534351,
+      "stage_gbs": {
+        "dense_encode": 1611.1792999796842,
+        "count_escapes": 2460.3012113206464,
+        "prefix_sum": 21407.63392137492,
+        "scatter_escapes": 948.1300969167983,
+        "dense_decode": 2358.4738387642365,
+        "fix_escapes": 25949.996704977897
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 2,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 468.87838793061735,
+      "decode_gbs": 2143.356224108573,
+      "stage_gbs": {
+        "dense_encode": 1604.4638815139328,
+        "count_escapes": 2452.036150805188,
+        "prefix_sum": 20829.013315159496,
+        "scatter_escapes": 949.078383058134,
+        "dense_decode": 2346.243396583273,
+        "fix_escapes": 24786.364391605362
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 3,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 471.4092262272216,
+      "decode_gbs": 2199.2165250935377,
+      "stage_gbs": {
+        "dense_encode": 1609.1692780614587,
+        "count_escapes": 2451.5148402642626,
+        "prefix_sum": 26863.00842623539,
+        "scatter_escapes": 948.1157464716104,
+        "dense_decode": 2367.9342469783433,
+        "fix_escapes": 30865.756531760486
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 4,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 471.0231821167796,
+      "decode_gbs": 2165.070941007081,
+      "stage_gbs": {
+        "dense_encode": 1606.422360155693,
+        "count_escapes": 2469.4166759449527,
+        "prefix_sum": 24102.598023177427,
+        "scatter_escapes": 948.6826951336878,
+        "dense_decode": 2353.1580282831237,
+        "fix_escapes": 27087.208060998226
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 5,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 475.6422254340652,
+      "decode_gbs": 2216.1998527229107,
+      "stage_gbs": {
+        "dense_encode": 1612.3695436847804,
+        "count_escapes": 2492.047718217943,
+        "prefix_sum": 28905.443421184547,
+        "scatter_escapes": 955.7092122708958,
+        "dense_decode": 2358.3489120558797,
+        "fix_escapes": 36768.252537815104
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 6,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 476.6121224149375,
+      "decode_gbs": 2184.003151783867,
+      "stage_gbs": {
+        "dense_encode": 1616.7602458156794,
+        "count_escapes": 2493.9572678956742,
+        "prefix_sum": 31728.368636831077,
+        "scatter_escapes": 954.9870931555942,
+        "dense_decode": 2351.521094844143,
+        "fix_escapes": 30657.78739163435
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 7,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 472.17878651633293,
+      "decode_gbs": 2180.0103690977585,
+      "stage_gbs": {
+        "dense_encode": 1612.481552901747,
+        "count_escapes": 2474.1957497780572,
+        "prefix_sum": 22992.58622297022,
+        "scatter_escapes": 952.3667049185482,
+        "dense_decode": 2353.783242179979,
+        "fix_escapes": 29528.612743446043
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 8,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 475.0956625151359,
+      "decode_gbs": 2212.9411930472006,
+      "stage_gbs": {
+        "dense_encode": 1613.551802978387,
+        "count_escapes": 2486.8400527203858,
+        "prefix_sum": 28691.58353874049,
+        "scatter_escapes": 954.0907679461512,
+        "dense_decode": 2366.4754711805076,
+        "fix_escapes": 34108.80694644735
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    },
+    {
+      "repeat": 9,
+      "ratio": 1.3327270457910005,
+      "encode_gbs": 471.6608724652511,
+      "decode_gbs": 2198.0919065099247,
+      "stage_gbs": {
+        "dense_encode": 1613.7964503646988,
+        "count_escapes": 2462.3797658968447,
+        "prefix_sum": 24981.151913335438,
+        "scatter_escapes": 948.4344044261577,
+        "dense_decode": 2355.0911684703988,
+        "fix_escapes": 32972.81001111362
+      },
+      "n_escapes": 26168,
+      "coverage": 0.9999025166034698
+    }
+  ],
+  "summary": {
+    "ratio": {
+      "mean": 1.3327270457910005,
+      "min": 1.3327270457910005,
+      "max": 1.3327270457910005,
+      "neg": 0.0,
+      "pos": 0.0
+    },
+    "encode_gbs": {
+      "mean": 472.37815353404903,
+      "min": 468.87838793061735,
+      "max": 476.6121224149375,
+      "neg": 3.4997656034316833,
+      "pos": 4.233968880888483
+    },
+    "decode_gbs": {
+      "mean": 2181.8453417183377,
+      "min": 2143.356224108573,
+      "max": 2216.1998527229107,
+      "neg": 38.48911760976489,
+      "pos": 34.35451100457294
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "model": "Qwen/Qwen3-32B",
+  "shape": [
+    65536,
+    4096
+  ],
+  "chunk_size": 1024,
+  "device": "cuda:1",
+  "meta": {
+    "num_hidden_layers": 64,
+    "num_attention_heads": 64,
+    "num_key_value_heads": 8,
+    "head_dim": 128,
+    "hidden_size": 5120,
+    "model_type": "qwen3",
+    "prompt_tokens": 1024,
+    "block_rows_total": 65536,
+    "block_width": 2048
+  },
+  "top16": {
+    "coverage": 0.9984164088964462,
+    "escapes": 425092,
+    "escape_rate": 0.001583591103553772,
+    "compressed_bytes": 405628828,
+    "ratio": 1.3235521613370143,
+    "encode_gbs": {
+      "mean": 416.0124997833215,
+      "std": 12.316675947137714,
+      "stderr": 2.7540924674636535
+    },
+    "decode_gbs": {
+      "mean": 1718.1689387761548,
+      "std": 155.00592827266118,
+      "stderr": 34.66037925331269
+    }
+  }
+}

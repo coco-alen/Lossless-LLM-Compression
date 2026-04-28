@@ -1,0 +1,23 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Baseline codec comparison. Throughput is reported in GB/s. Subscripts and superscripts denote negative and positive fluctuation around the central value.}
+\label{tab:baseline_comparison}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc p{0.31\linewidth}}
+\toprule
+Method & Ratio & Encode & Decode & Source / caveat \\
+\midrule
+DietGPU & 1.429 & $343.957_{-262.979}^{+155.757}$ & $426.664_{-374.507}^{+204.059}$ & legacy 10-repeat baseline; Included for completeness; older 32768x4096 Qwen2.5 activation workload. \\
+nvCOMP LZ4 & 1.019 & $13.399_{-0.424}^{+0.424}$ & $137.109_{-8.796}^{+8.796}$ & existing measured baseline \\
+nvCOMP Cascaded & 1.000 & $111.828_{-0.824}^{+0.824}$ & $155.165_{-5.570}^{+5.570}$ & nvCOMP adapter, largest available shape; Shape [65536, 4096]. \\
+nvCOMP Bitcomp & 0.998 & $341.529_{-7.081}^{+7.081}$ & $147.693_{-4.832}^{+4.832}$ & nvCOMP adapter, largest available shape; Shape [65536, 4096]. \\
+DFloat11 & 1.423 & $4.00e-03_{-5.00e-05}^{+5.00e-05}$ & $468.157_{-2.499}^{+2.499}$ & existing measured baseline \\
+ZipNN & 1.515 & 1.150 & 1.650 & user-provided reported value; User-provided reported result. \\
+ZipServ & 1.236 & $0.054_{-2.11e-04}^{+2.11e-04}$ & 499.500 & ZipServ CPU encode bench + provided decode; Public wrapper encode; decode value kept at 499.5 GB/s per current baseline. \\
+ZipServ/TCA-TBE & 1.236 & N/A & $1460.912_{-1.399}^{+1.399}$ & GPU-resident ZipServ/TCA-TBE boundary; Decode-only GPU-resident path; public encode is CPU-side. \\
+Falcon & 0.559 & $8.859_{-1.784}^{+0.341}$ & $14.442_{-3.274}^{+0.916}$ & current Falcon FP32-cast run; Falcon exposes FP32/FP64 codecs here; BF16 values are cast to FP32 and reported as BF16-equivalent payload metrics. \\
+SplitZip & 1.324 & $472.378_{-3.500}^{+4.234}$ & $2181.845_{-38.489}^{+34.355}$ & current chunk-local Top-16; Chunk size 1024; ratio from real Qwen3-32B activations; throughput from idle preallocated kernel-stage repeats. \\
+\bottomrule
+\end{tabular}
+\end{table*}

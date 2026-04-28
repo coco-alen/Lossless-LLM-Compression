@@ -18,23 +18,16 @@
 \subsection{Results}
 \label{sec:exp_results}
 
-    \begin{figure}[t]
-        \centering
-        \includegraphics[width=\textwidth]{figure/baseline_comparison.pdf}
-        \caption{
-        Codec-level comparison on real BF16 activation tensors.
-        SplitZip achieves a competitive compression ratio while substantially improving both compression and decompression throughput over existing lossless compressors.
-        }
-        \label{fig:baseline_comparison}
-        \vspace{-1.2em}
-    \end{figure}
+    \input{lossless-paper/tables/baseline_comparison}
     
     \paragraph{Codec-level performance.}
-    Figure~\ref{fig:baseline_comparison} compares SplitZip with existing lossless compressors.
-    SplitZip achieves a competitive compression ratio, although it is not the highest-ratio method among the baselines.
+    Table~\ref{tab:baseline_comparison} compares SplitZip with existing lossless compressors.
+    The table includes the additional GPU-oriented baselines evaluated during the revision, including nvCOMP Cascaded, nvCOMP Bitcomp, ZipServ/TCA-TBE, and Falcon.
+    SplitZip achieves a competitive compression ratio, although it is not the highest-ratio method among all baselines.
     Its main advantage is codec throughput.
-    For compression, SplitZip is $32.5\times$ faster than nvCOMP LZ4, $379\times$ faster than ZipNN and about $1.0\times 10^5$ faster than DFloat11.
-    For decompression, SplitZip is $12.9\times$ faster than nvCOMP LZ4, $1069\times$ faster than ZipNN and $3.8\times$ faster than DFloat11.
+    On the current chunk-local implementation, SplitZip reaches 435.3~GB/s encoding and 1763.8~GB/s decoding.
+    It is faster than the measured nvCOMP GPU baselines on both encode and decode, and remains faster than the GPU-resident ZipServ/TCA-TBE decode path.
+    Falcon is listed with a caveat because the local implementation exposes FP32/FP64 codecs rather than a BF16-native path; its row reports BF16-equivalent throughput after casting the same real BF16 values to FP32.
     These results show that SplitZip sacrifices a modest amount of compression ratio in exchange for substantially higher codec throughput, which is critical when compression and decompression lie on the serving critical path.
 
     This throughput advantage comes from SplitZip's GPU-friendly codec design.
@@ -49,36 +42,21 @@
         \centering
         \includegraphics[width=\textwidth]{figure/transfer_time_vs_seq_len.pdf}
         \caption{
-        End-to-end KV-cache transfer time across sequence lengths, models, and network settings.
-        The dashed red line denotes the entropy-based theoretical optimum, ignoring encode/decode overhead and practical implementation constraints such as fixed-width bit alignment.
+        Mooncake KV-cache transfer time across sequence-length and batch-size sweeps.
+        Each row corresponds to one model, and each column corresponds to one workload sweep.
         }
         \label{fig:transfer_time_vs_seq_len}
         \vspace{-1.0em}
     \end{figure}
     
-    \paragraph{Transfer time across sequence lengths.}
-    Figure~\ref{fig:transfer_time_vs_seq_len} reports end-to-end transfer time for Llama-3-8B and Qwen3-30B-A3B under CPU-RDMA and RoCE $4\times200$G settings.
-    The results for \splitzip presented here \textit{take encoding and decoding overhead into account}.
-    The dashed red curve shows the zero-overhead theoretical optimum:
-    \[
-        T_{\mathrm{opt}} = \frac{T_{\mathrm{native}}}{\rho},
-    \]
-    where $T_{\mathrm{native}}$ is the native BF16 transfer time and $\rho$ is the entropy-based theoretical compression ratio.
-    This represents the best possible transfer time if compression only reduced the payload size and introduced no codec overhead.
-    
-    For short sequences, SplitZip can be slower than native transfer because the KV-cache payload is small and codec overhead is not fully amortized.
-    As sequence length increases, transfer time dominates and SplitZip becomes beneficial.
-    For Llama-3-8B, SplitZip starts to outperform native transfer from sequence length $2$K.
-    At $64$K, it achieves $1.326\times$ speedup under CPU-RDMA and $1.324\times$ speedup under RoCE $4\times200$G.
-    For Qwen3-30B-A3B, SplitZip becomes beneficial from sequence length $4$K.
-    At $64$K, it reaches $1.305\times$ speedup under CPU-RDMA and $1.273\times$ speedup under RoCE $4\times200$G.
-    At long sequence lengths, the SplitZip curves closely follow the theoretical optimum, indicating that most of the compression benefit is preserved despite encode and decode overhead.
+    \paragraph{Mooncake transfer time.}
+    Figure~\ref{fig:transfer_time_vs_seq_len} reports measured Mooncake transfer time for Llama-3-8B and Qwen3-30B-A3B.
+    For each model, we evaluate four sweeps: fixed batch size 1 while varying sequence length from 512 to 131K, fixed batch size 16 while varying sequence length from 128 to 64K, fixed sequence length 1024 while varying batch size from 1 to 256, and fixed sequence length 32768 while varying batch size from 1 to 128.
+    The plotted SplitZip curve uses the actual compressed payload transferred through Mooncake; CPU reference encode/decode times used for payload construction are not included in the transfer-only measurement.
 
-    One subtle point is that the speedup on Llama-3-8B at $64$K slightly exceeds the SplitZip compression ratio reported in Figure~\ref{fig:baseline_comparison}. 
-    This is because Figure~\ref{fig:baseline_comparison} measures the codec-level compression ratio on Qwen activation tensors, while the Llama-3-8B KV activations have lower exponent entropy and fewer escape values.
-    As a result, SplitZip obtains a slightly higher effective compression ratio on Llama-3-8B, allowing the end-to-end speedup to exceed the ratio shown in the codec-level comparison.
-    By contrast, on Qwen3-30B-A3B, even at $64$K context length, the remaining encode and decode overhead still prevents SplitZip from exactly reaching the zero-overhead theoretical optimum.
-    The resulting speedup remains within about $0.015\times$--$0.047\times$ of the theoretical curve, showing the importance of pipeline execution and transfer.
+    Across all eight panels, SplitZip reduces Mooncake transfer time once the payload becomes large enough for bandwidth to dominate.
+    At the largest point in each sweep, SplitZip achieves $1.27\times$, $1.29\times$, $1.53\times$, and $1.52\times$ speedup on Llama-3-8B, and $1.24\times$, $1.39\times$, $1.45\times$, and $1.22\times$ speedup on Qwen3-30B-A3B.
+    These measured Mooncake results replace the earlier staged-transfer simulation and directly validate that byte reduction translates into lower KV-cache transfer time.
     
     \begin{figure}[t]
         \centering
